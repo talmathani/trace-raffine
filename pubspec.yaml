@@ -17,6 +17,7 @@ dependencies:
   firebase_auth: ^6.5.7
   shared_preferences: ^2.5.5
   file_picker: ^11.0.3
+  flutter_bloc: ^9.1.1
 
 dev_dependencies:
   flutter_test:

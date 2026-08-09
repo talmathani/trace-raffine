@@ -2,20 +2,17 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../core/auth/auth_repository.dart';
 import '../../core/theme/app_theme.dart';
 import '../onboarding/services/agreement_service.dart';
 import '../onboarding/widgets/role_agreement_dialog.dart';
 import '../shells/administration_shell.dart';
 import '../shells/customer_shell.dart';
 import '../shells/designer_shell.dart';
+import '../../domain/repositories/auth_repository.dart';
+import 'data/repositories/auth_repository_impl.dart';
 import 'register_screen.dart';
 
-enum UserRole {
-  customer,
-  designer,
-  administration,
-}
+enum UserRole { customer, designer, administration }
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -29,7 +26,7 @@ class _LoginScreenState extends State<LoginScreen> {
   static const String _savedEmailKey = 'saved_login_email';
   static const String _savedRoleKey = 'saved_login_role';
 
-  final AuthRepository _authRepository = AuthRepository();
+  final AuthRepository _authRepository = AuthRepositoryImpl();
   final AgreementService _agreementService = AgreementService();
 
   final TextEditingController _emailController = TextEditingController();
@@ -40,9 +37,6 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePassword = true;
   bool _rememberAccount = true;
   bool _isLoading = false;
-
-
-
 
   @override
   void initState() {
@@ -60,14 +54,11 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _loadRememberedAccount() async {
     final preferences = await SharedPreferences.getInstance();
 
-    final remember =
-        preferences.getBool(_rememberAccountKey) ?? true;
+    final remember = preferences.getBool(_rememberAccountKey) ?? true;
 
-    final savedEmail =
-        preferences.getString(_savedEmailKey);
+    final savedEmail = preferences.getString(_savedEmailKey);
 
-    final savedRole =
-        preferences.getString(_savedRoleKey);
+    final savedRole = preferences.getString(_savedRoleKey);
 
     if (!mounted) {
       return;
@@ -92,21 +83,12 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _saveRememberedAccount() async {
     final preferences = await SharedPreferences.getInstance();
 
-    await preferences.setBool(
-      _rememberAccountKey,
-      _rememberAccount,
-    );
+    await preferences.setBool(_rememberAccountKey, _rememberAccount);
 
     if (_rememberAccount) {
-      await preferences.setString(
-        _savedEmailKey,
-        _emailController.text.trim(),
-      );
+      await preferences.setString(_savedEmailKey, _emailController.text.trim());
 
-      await preferences.setString(
-        _savedRoleKey,
-        _selectedRole.name,
-      );
+      await preferences.setString(_savedRoleKey, _selectedRole.name);
     } else {
       await preferences.remove(_savedEmailKey);
       await preferences.remove(_savedRoleKey);
@@ -123,7 +105,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final role = _selectedRole.name;
 
     final accepted = await _agreementService.hasAccepted(
-      uid: user.uid,
+      uid: user.id,
       role: role,
     );
 
@@ -138,10 +120,7 @@ class _LoginScreenState extends State<LoginScreen> {
         return RoleAgreementDialog(
           role: _selectedRole,
           onAccepted: () async {
-            await _agreementService.markAccepted(
-              uid: user.uid,
-              role: role,
-            );
+            await _agreementService.markAccepted(uid: user.id, role: role);
 
             if (!mounted) {
               return;
@@ -175,11 +154,9 @@ class _LoginScreenState extends State<LoginScreen> {
         break;
     }
 
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute<void>(
-        builder: (_) => destination,
-      ),
-    );
+    Navigator.of(
+      context,
+    ).pushReplacement(MaterialPageRoute<void>(builder: (_) => destination));
   }
 
   Future<void> _submit() async {
@@ -189,9 +166,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final password = _passwordController.text;
 
     if (email.isEmpty || password.isEmpty) {
-      _showMessage(
-        'أدخل البريد الإلكتروني وكلمة المرور أولاً.',
-      );
+      _showMessage('أدخل البريد الإلكتروني وكلمة المرور أولاً.');
       return;
     }
 
@@ -204,10 +179,24 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      await _authRepository.signInWithEmailAndPassword(
+      final user = await _authRepository.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
+
+      if (!user.emailVerified) {
+        if (!mounted) {
+          return;
+        }
+
+        await Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => const EmailVerificationScreen(),
+          ),
+        );
+
+        return;
+      }
 
       await _saveRememberedAccount();
 
@@ -235,33 +224,27 @@ class _LoginScreenState extends State<LoginScreen> {
         case 'invalid-credential':
         case 'wrong-password':
         case 'user-not-found':
-          message =
-              'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
+          message = 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
           break;
 
         case 'invalid-email':
-          message =
-              'صيغة البريد الإلكتروني غير صحيحة.';
+          message = 'صيغة البريد الإلكتروني غير صحيحة.';
           break;
 
         case 'user-disabled':
-          message =
-              'هذا الحساب معطّل حالياً.';
+          message = 'هذا الحساب معطّل حالياً.';
           break;
 
         case 'too-many-requests':
-          message =
-              'تمت محاولات كثيرة. حاول مرة أخرى لاحقاً.';
+          message = 'تمت محاولات كثيرة. حاول مرة أخرى لاحقاً.';
           break;
 
         case 'network-request-failed':
-          message =
-              'تعذر الاتصال بخدمة Firebase.';
+          message = 'تعذر الاتصال بخدمة Firebase.';
           break;
 
         default:
-          message =
-              'تعذر تسجيل الدخول حالياً. حاول مرة أخرى.';
+          message = 'تعذر تسجيل الدخول حالياً. حاول مرة أخرى.';
       }
 
       _showMessage(message);
@@ -270,13 +253,9 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
-      debugPrint(
-        'Unexpected login error: $error',
-      );
+      debugPrint('Unexpected login error: $error');
 
-      _showMessage(
-        'حدث خطأ غير متوقع أثناء تسجيل الدخول.',
-      );
+      _showMessage('حدث خطأ غير متوقع أثناء تسجيل الدخول.');
     } finally {
       if (mounted) {
         setState(() {
@@ -289,9 +268,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _forgotPassword() async {
     final initialEmail = _emailController.text.trim();
 
-    final controller = TextEditingController(
-      text: initialEmail,
-    );
+    final controller = TextEditingController(text: initialEmail);
 
     bool loading = false;
 
@@ -301,10 +278,7 @@ class _LoginScreenState extends State<LoginScreen> {
         barrierDismissible: !loading,
         builder: (dialogContext) {
           return StatefulBuilder(
-            builder: (
-              dialogContext,
-              setDialogState,
-            ) {
+            builder: (dialogContext, setDialogState) {
               return AlertDialog(
                 backgroundColor: AppTheme.obsidian,
                 title: const Text(
@@ -330,14 +304,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 18),
                     TextField(
                       controller: controller,
-                      keyboardType:
-                          TextInputType.emailAddress,
+                      keyboardType: TextInputType.emailAddress,
                       textDirection: TextDirection.ltr,
                       enabled: !loading,
                       decoration: const InputDecoration(
                         labelText: 'البريد الإلكتروني',
-                        prefixIcon:
-                            Icon(Icons.mail_outline_rounded),
+                        prefixIcon: Icon(Icons.mail_outline_rounded),
                       ),
                     ),
                   ],
@@ -347,9 +319,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     onPressed: loading
                         ? null
                         : () {
-                            Navigator.of(
-                              dialogContext,
-                            ).pop();
+                            Navigator.of(dialogContext).pop();
                           },
                     child: const Text('إلغاء'),
                   ),
@@ -357,13 +327,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     onPressed: loading
                         ? null
                         : () async {
-                            final email =
-                                controller.text.trim();
+                            final email = controller.text.trim();
 
                             if (email.isEmpty) {
-                              _showMessage(
-                                'اكتب بريدك الإلكتروني أولاً.',
-                              );
+                              _showMessage('اكتب بريدك الإلكتروني أولاً.');
                               return;
                             }
 
@@ -372,8 +339,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             });
 
                             try {
-                              await _authRepository
-                                  .sendPasswordResetEmail(
+                              await _authRepository.sendPasswordResetEmail(
                                 email: email,
                               );
 
@@ -381,16 +347,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                 return;
                               }
 
-                              if (context.mounted) {
-                                Navigator.of(context).pop();
+                              if (dialogContext.mounted) {
+                                Navigator.of(dialogContext).pop();
                               }
 
                               _showMessage(
                                 'تم إرسال رابط استرداد كلمة المرور إلى بريدك الإلكتروني.',
                               );
-                            } on FirebaseAuthException catch (
-                              error
-                            ) {
+                            } on FirebaseAuthException catch (error) {
                               if (!mounted) {
                                 return;
                               }
@@ -405,18 +369,15 @@ class _LoginScreenState extends State<LoginScreen> {
                                 'message=${error.message}',
                               );
 
-                              String message =
-                                  'تعذر إرسال رسالة الاسترداد.';
+                              String message = 'تعذر إرسال رسالة الاسترداد.';
 
                               switch (error.code) {
                                 case 'invalid-email':
-                                  message =
-                                      'صيغة البريد الإلكتروني غير صحيحة.';
+                                  message = 'صيغة البريد الإلكتروني غير صحيحة.';
                                   break;
 
                                 case 'user-not-found':
-                                  message =
-                                      'لا يوجد حساب مرتبط بهذا البريد.';
+                                  message = 'لا يوجد حساب مرتبط بهذا البريد.';
                                   break;
 
                                 case 'too-many-requests':
@@ -425,8 +386,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   break;
 
                                 case 'network-request-failed':
-                                  message =
-                                      'تعذر الاتصال بخدمة Firebase.';
+                                  message = 'تعذر الاتصال بخدمة Firebase.';
                                   break;
                               }
 
@@ -454,10 +414,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ? const SizedBox(
                             width: 20,
                             height: 20,
-                            child:
-                                CircularProgressIndicator(
-                              strokeWidth: 2,
-                            ),
+                            child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Text('إرسال الرابط'),
                   ),
@@ -481,12 +438,7 @@ class _LoginScreenState extends State<LoginScreen> {
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: Text(
-            message,
-            style: const TextStyle(
-              fontFamily: 'Cairo',
-            ),
-          ),
+          content: Text(message, style: const TextStyle(fontFamily: 'Cairo')),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -517,20 +469,14 @@ class _LoginScreenState extends State<LoginScreen> {
               vertical: 28,
             ),
             child: ConstrainedBox(
-              constraints:
-                  const BoxConstraints(maxWidth: 1080),
+              constraints: const BoxConstraints(maxWidth: 1080),
               child: isWide
                   ? Row(
-                      crossAxisAlignment:
-                          CrossAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Expanded(
-                          child: _buildBrandPanel(),
-                        ),
+                        Expanded(child: _buildBrandPanel()),
                         const SizedBox(width: 70),
-                        Expanded(
-                          child: _buildLoginPanel(),
-                        ),
+                        Expanded(child: _buildLoginPanel()),
                       ],
                     )
                   : Column(
@@ -549,8 +495,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Widget _buildBrandPanel() {
     return Column(
-      crossAxisAlignment:
-          CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
           'TRACÉ RAFINÉ',
@@ -563,11 +508,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
         const SizedBox(height: 14),
-        Container(
-          width: 72,
-          height: 1,
-          color: AppTheme.softRose,
-        ),
+        Container(width: 72, height: 1, color: AppTheme.softRose),
         const SizedBox(height: 30),
         const Text(
           'مرحباً بك\nفي عالم الحِرفة الرقمية.',
@@ -620,11 +561,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
         const SizedBox(height: 12),
-        Container(
-          width: 52,
-          height: 1,
-          color: AppTheme.softRose,
-        ),
+        Container(width: 52, height: 1, color: AppTheme.softRose),
       ],
     );
   }
@@ -636,9 +573,7 @@ class _LoginScreenState extends State<LoginScreen> {
       decoration: BoxDecoration(
         color: AppTheme.obsidian,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: AppTheme.divider,
-        ),
+        border: Border.all(color: AppTheme.divider),
         boxShadow: const [
           BoxShadow(
             blurRadius: 30,
@@ -648,8 +583,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ],
       ),
       child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.stretch,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const Text(
             'تسجيل الدخول',
@@ -676,14 +610,12 @@ class _LoginScreenState extends State<LoginScreen> {
           const SizedBox(height: 22),
           TextField(
             controller: _emailController,
-            keyboardType:
-                TextInputType.emailAddress,
+            keyboardType: TextInputType.emailAddress,
             textDirection: TextDirection.ltr,
             enabled: !_isLoading,
             decoration: const InputDecoration(
               labelText: 'البريد الإلكتروني',
-              prefixIcon:
-                  Icon(Icons.mail_outline_rounded),
+              prefixIcon: Icon(Icons.mail_outline_rounded),
             ),
           ),
           const SizedBox(height: 14),
@@ -692,10 +624,14 @@ class _LoginScreenState extends State<LoginScreen> {
             obscureText: _obscurePassword,
             textDirection: TextDirection.ltr,
             enabled: !_isLoading,
+            onSubmitted: (_) {
+              if (!_isLoading) {
+                _submit();
+              }
+            },
             decoration: InputDecoration(
               labelText: 'كلمة المرور',
-              prefixIcon:
-                  const Icon(Icons.lock_outline_rounded),
+              prefixIcon: const Icon(Icons.lock_outline_rounded),
               suffixIcon: IconButton(
                 tooltip: _obscurePassword
                     ? 'إظهار كلمة المرور'
@@ -704,8 +640,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ? null
                     : () {
                         setState(() {
-                          _obscurePassword =
-                              !_obscurePassword;
+                          _obscurePassword = !_obscurePassword;
                         });
                       },
                 icon: Icon(
@@ -725,8 +660,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ? null
                     : (value) {
                         setState(() {
-                          _rememberAccount =
-                              value ?? false;
+                          _rememberAccount = value ?? false;
                         });
                       },
               ),
@@ -741,11 +675,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               TextButton(
-                onPressed:
-                    _isLoading ? null : _forgotPassword,
-                child: const Text(
-                  'هل نسيت كلمة المرور؟',
-                ),
+                onPressed: _isLoading ? null : _forgotPassword,
+                child: const Text('هل نسيت كلمة المرور؟'),
               ),
             ],
           ),
@@ -753,35 +684,26 @@ class _LoginScreenState extends State<LoginScreen> {
           SizedBox(
             height: 54,
             child: ElevatedButton(
-              onPressed:
-                  _isLoading ? null : _submit,
+              onPressed: _isLoading ? null : _submit,
               child: _isLoading
                   ? const SizedBox(
                       width: 22,
                       height: 22,
-                      child:
-                          CircularProgressIndicator(
-                        strokeWidth: 2,
-                      ),
+                      child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Row(
-                      mainAxisAlignment:
-                          MainAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text('متابعة'),
                         SizedBox(width: 10),
-                        Icon(
-                          Icons.arrow_forward_rounded,
-                          size: 19,
-                        ),
+                        Icon(Icons.arrow_forward_rounded, size: 19),
                       ],
                     ),
             ),
           ),
           const SizedBox(height: 18),
           Row(
-            mainAxisAlignment:
-                MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Flexible(
                 child: Text(
@@ -798,9 +720,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     ? null
                     : () {
                         Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                const RegisterScreen(),
+                          MaterialPageRoute<void>(
+                            builder: (_) => const RegisterScreen(),
                           ),
                         );
                       },
@@ -819,9 +740,7 @@ class _LoginScreenState extends State<LoginScreen> {
       decoration: BoxDecoration(
         color: AppTheme.obsidian,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppTheme.divider,
-        ),
+        border: Border.all(color: AppTheme.divider),
       ),
       child: Row(
         children: [
@@ -843,8 +762,7 @@ class _LoginScreenState extends State<LoginScreen> {
             child: _buildRoleItem(
               role: UserRole.administration,
               label: 'الإدارة',
-              icon:
-                  Icons.admin_panel_settings_outlined,
+              icon: Icons.admin_panel_settings_outlined,
             ),
           ),
         ],
@@ -862,24 +780,13 @@ class _LoginScreenState extends State<LoginScreen> {
     return GestureDetector(
       onTap: () => _selectRole(role),
       child: AnimatedContainer(
-        duration:
-            const Duration(milliseconds: 180),
+        duration: const Duration(milliseconds: 180),
         curve: Curves.easeOut,
-        padding: const EdgeInsets.symmetric(
-          horizontal: 8,
-          vertical: 12,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
         decoration: BoxDecoration(
-          color: selected
-              ? AppTheme.obsidian
-              : Colors.transparent,
-          borderRadius:
-              BorderRadius.circular(12),
-          border: selected
-              ? Border.all(
-                  color: AppTheme.softRose,
-                )
-              : null,
+          color: selected ? AppTheme.obsidian : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          border: selected ? Border.all(color: AppTheme.softRose) : null,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -887,26 +794,19 @@ class _LoginScreenState extends State<LoginScreen> {
             Icon(
               icon,
               size: 21,
-              color: selected
-                  ? AppTheme.softRose
-                  : AppTheme.mutedText,
+              color: selected ? AppTheme.softRose : AppTheme.mutedText,
             ),
             const SizedBox(height: 6),
             Text(
               label,
               maxLines: 1,
-              overflow:
-                  TextOverflow.ellipsis,
+              overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'Cairo',
                 fontSize: 11,
-                fontWeight: selected
-                    ? FontWeight.w700
-                    : FontWeight.w500,
-                color: selected
-                    ? AppTheme.warmIvory
-                    : AppTheme.mutedText,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                color: selected ? AppTheme.warmIvory : AppTheme.mutedText,
               ),
             ),
           ],

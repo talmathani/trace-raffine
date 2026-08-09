@@ -1,7 +1,8 @@
-﻿import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
+import '../../domain/repositories/auth_repository.dart';
 import 'data/repositories/auth_repository_impl.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -12,12 +13,10 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  final AuthRepositoryImpl _authRepository = AuthRepositoryImpl();
+  final AuthRepository _authRepository = AuthRepositoryImpl();
 
-  final TextEditingController _emailController =
-      TextEditingController();
-  final TextEditingController _passwordController =
-      TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
       TextEditingController();
 
@@ -109,18 +108,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
           break;
 
         case 'operation-not-allowed':
-          message =
-              'تسجيل الدخول بالبريد الإلكتروني غير مفعّل في Firebase.';
+          message = 'تسجيل الدخول بالبريد الإلكتروني غير مفعّل في Firebase.';
           break;
 
         case 'network-request-failed':
-          message =
-              'تعذر الاتصال بخدمة Firebase. تحقق من الإنترنت.';
+          message = 'تعذر الاتصال بخدمة Firebase. تحقق من الإنترنت.';
           break;
 
         case 'too-many-requests':
-          message =
-              'تم تنفيذ محاولات كثيرة. انتظر قليلًا ثم حاول مرة أخرى.';
+          message = 'تم تنفيذ محاولات كثيرة. انتظر قليلًا ثم حاول مرة أخرى.';
           break;
       }
 
@@ -132,9 +128,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       debugPrint('Unexpected registration error: $error');
 
-      _showMessage(
-        'حدث خطأ أثناء إنشاء الحساب أو إرسال رسالة التفعيل.',
-      );
+      _showMessage('حدث خطأ أثناء إنشاء الحساب أو إرسال رسالة التفعيل.');
     } finally {
       if (mounted) {
         setState(() {
@@ -153,12 +147,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: Text(
-            message,
-            style: const TextStyle(
-              fontFamily: 'Cairo',
-            ),
-          ),
+          content: Text(message, style: const TextStyle(fontFamily: 'Cairo')),
         ),
       );
   }
@@ -172,27 +161,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
       labelText: label,
       prefixIcon: Icon(icon),
       suffixIcon: suffixIcon,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-      ),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('إنشاء حساب'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('إنشاء حساب'), centerTitle: true),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(
-                maxWidth: 480,
-              ),
+              constraints: const BoxConstraints(maxWidth: 480),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -227,9 +209,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
-                    autofillHints: const [
-                      AutofillHints.email,
-                    ],
+                    autofillHints: const [AutofillHints.email],
                     enabled: !_isLoading,
                     decoration: _inputDecoration(
                       label: 'البريد الإلكتروني',
@@ -241,9 +221,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     controller: _passwordController,
                     obscureText: _obscurePassword,
                     textInputAction: TextInputAction.next,
-                    autofillHints: const [
-                      AutofillHints.newPassword,
-                    ],
+                    autofillHints: const [AutofillHints.newPassword],
                     enabled: !_isLoading,
                     decoration: _inputDecoration(
                       label: 'كلمة المرور',
@@ -253,8 +231,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ? null
                             : () {
                                 setState(() {
-                                  _obscurePassword =
-                                      !_obscurePassword;
+                                  _obscurePassword = !_obscurePassword;
                                 });
                               },
                         icon: Icon(
@@ -270,9 +247,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     controller: _confirmPasswordController,
                     obscureText: _obscureConfirmPassword,
                     textInputAction: TextInputAction.done,
-                    autofillHints: const [
-                      AutofillHints.newPassword,
-                    ],
+                    autofillHints: const [AutofillHints.newPassword],
                     enabled: !_isLoading,
                     onSubmitted: (_) {
                       if (!_isLoading) {
@@ -308,9 +283,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ? const SizedBox(
                               width: 22,
                               height: 22,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                              ),
+                              child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : const Text(
                               'إنشاء الحساب',
@@ -348,10 +321,8 @@ class EmailVerificationScreen extends StatefulWidget {
       _EmailVerificationScreenState();
 }
 
-class _EmailVerificationScreenState
-    extends State<EmailVerificationScreen> {
-  final AuthRepositoryImpl _authRepository =
-      AuthRepositoryImpl();
+class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
+  final AuthRepositoryImpl _authRepository = AuthRepositoryImpl();
 
   bool _isChecking = false;
   bool _isSending = false;
@@ -366,29 +337,22 @@ class _EmailVerificationScreenState
     });
 
     try {
-      final verified =
-          await _authRepository.reloadAndCheckEmailVerification();
+      final verified = await _authRepository.reloadAndCheckEmailVerification();
 
       if (!mounted) {
         return;
       }
 
       if (verified) {
-        _showMessage(
-          'تم تأكيد البريد الإلكتروني بنجاح.',
-        );
+        _showMessage('تم تأكيد البريد الإلكتروني بنجاح.');
 
-        await Future<void>.delayed(
-          const Duration(milliseconds: 500),
-        );
+        await Future<void>.delayed(const Duration(milliseconds: 500));
 
         if (!mounted) {
           return;
         }
 
-        Navigator.of(context).popUntil(
-          (route) => route.isFirst,
-        );
+        Navigator.of(context).popUntil((route) => route.isFirst);
       } else {
         _showMessage(
           'لم يتم تأكيد البريد بعد. افتح رسالة التفعيل ثم حاول مرة أخرى.',
@@ -401,9 +365,7 @@ class _EmailVerificationScreenState
       );
 
       if (mounted) {
-        _showMessage(
-          'تعذر التحقق من البريد حاليًا. حاول مرة أخرى.',
-        );
+        _showMessage('تعذر التحقق من البريد حاليًا. حاول مرة أخرى.');
       }
     } finally {
       if (mounted) {
@@ -430,9 +392,7 @@ class _EmailVerificationScreenState
         return;
       }
 
-      _showMessage(
-        'تم إرسال رسالة تفعيل جديدة إلى بريدك الإلكتروني.',
-      );
+      _showMessage('تم إرسال رسالة تفعيل جديدة إلى بريدك الإلكتروني.');
     } on FirebaseAuthException catch (error) {
       debugPrint(
         'Email verification resend: '
@@ -447,13 +407,11 @@ class _EmailVerificationScreenState
 
       switch (error.code) {
         case 'too-many-requests':
-          message =
-              'تم إرسال عدة رسائل. انتظر قليلًا ثم حاول مرة أخرى.';
+          message = 'تم إرسال عدة رسائل. انتظر قليلًا ثم حاول مرة أخرى.';
           break;
 
         case 'network-request-failed':
-          message =
-              'تحقق من اتصال الإنترنت ثم حاول مرة أخرى.';
+          message = 'تحقق من اتصال الإنترنت ثم حاول مرة أخرى.';
           break;
 
         case 'user-disabled':
@@ -478,9 +436,7 @@ class _EmailVerificationScreenState
       return;
     }
 
-    Navigator.of(context).popUntil(
-      (route) => route.isFirst,
-    );
+    Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
   void _showMessage(String message) {
@@ -492,20 +448,14 @@ class _EmailVerificationScreenState
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: Text(
-            message,
-            style: const TextStyle(
-              fontFamily: 'Cairo',
-            ),
-          ),
+          content: Text(message, style: const TextStyle(fontFamily: 'Cairo')),
         ),
       );
   }
 
   @override
   Widget build(BuildContext context) {
-    final email =
-        _authRepository.currentUser?.email ?? '';
+    final email = _authRepository.currentUser?.email ?? '';
 
     return Scaffold(
       appBar: AppBar(
@@ -518,9 +468,7 @@ class _EmailVerificationScreenState
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(
-                maxWidth: 520,
-              ),
+              constraints: const BoxConstraints(maxWidth: 520),
               child: Column(
                 children: [
                   const SizedBox(height: 35),
@@ -531,9 +479,7 @@ class _EmailVerificationScreenState
                       shape: BoxShape.circle,
                       color: AppTheme.obsidian,
                       border: Border.all(
-                        color: AppTheme.softRose.withValues(
-                          alpha: 0.45,
-                        ),
+                        color: AppTheme.softRose.withValues(alpha: 0.45),
                       ),
                     ),
                     child: const Icon(
@@ -590,24 +536,16 @@ class _EmailVerificationScreenState
                     width: double.infinity,
                     height: 54,
                     child: ElevatedButton.icon(
-                      onPressed: _isChecking
-                          ? null
-                          : _checkVerification,
+                      onPressed: _isChecking ? null : _checkVerification,
                       icon: _isChecking
                           ? const SizedBox(
                               width: 20,
                               height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                              ),
+                              child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Icon(
-                              Icons.verified_outlined,
-                            ),
+                          : const Icon(Icons.verified_outlined),
                       label: Text(
-                        _isChecking
-                            ? 'جارٍ التحقق...'
-                            : 'تحقق من التفعيل',
+                        _isChecking ? 'جارٍ التحقق...' : 'تحقق من التفعيل',
                       ),
                     ),
                   ),
@@ -616,20 +554,14 @@ class _EmailVerificationScreenState
                     width: double.infinity,
                     height: 50,
                     child: OutlinedButton.icon(
-                      onPressed: _isSending
-                          ? null
-                          : _resendVerification,
+                      onPressed: _isSending ? null : _resendVerification,
                       icon: _isSending
                           ? const SizedBox(
                               width: 18,
                               height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                              ),
+                              child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Icon(
-                              Icons.refresh_rounded,
-                            ),
+                          : const Icon(Icons.refresh_rounded),
                       label: Text(
                         _isSending
                             ? 'جارٍ الإرسال...'
@@ -640,9 +572,7 @@ class _EmailVerificationScreenState
                   const SizedBox(height: 18),
                   TextButton.icon(
                     onPressed: _signOut,
-                    icon: const Icon(
-                      Icons.logout_rounded,
-                    ),
+                    icon: const Icon(Icons.logout_rounded),
                     label: const Text('تسجيل الخروج'),
                   ),
                 ],

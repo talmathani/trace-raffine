@@ -9,7 +9,7 @@ import '../shells/administration_shell.dart';
 import '../shells/customer_shell.dart';
 import '../shells/designer_shell.dart';
 import '../../domain/repositories/auth_repository.dart';
-import 'data/repositories/auth_repository_impl.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'register_screen.dart';
 
 enum UserRole { customer, designer, administration }
@@ -26,7 +26,7 @@ class _LoginScreenState extends State<LoginScreen> {
   static const String _savedEmailKey = 'saved_login_email';
   static const String _savedRoleKey = 'saved_login_role';
 
-  final AuthRepository _authRepository = AuthRepositoryImpl();
+  AuthRepository get _authRepository => context.read<AuthRepository>();
   final AgreementService _agreementService = AgreementService();
 
   final TextEditingController _emailController = TextEditingController();

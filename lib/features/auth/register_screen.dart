@@ -1,9 +1,9 @@
-import 'package:firebase_auth/firebase_auth.dart';
+﻿import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../domain/repositories/auth_repository.dart';
-import 'data/repositories/auth_repository_impl.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -13,7 +13,7 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  final AuthRepository _authRepository = AuthRepositoryImpl();
+  AuthRepository get _authRepository => context.read<AuthRepository>();
 
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -322,7 +322,7 @@ class EmailVerificationScreen extends StatefulWidget {
 }
 
 class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
-  final AuthRepositoryImpl _authRepository = AuthRepositoryImpl();
+  AuthRepository get _authRepository => context.read<AuthRepository>();
 
   bool _isChecking = false;
   bool _isSending = false;
@@ -584,3 +584,4 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
     );
   }
 }
+

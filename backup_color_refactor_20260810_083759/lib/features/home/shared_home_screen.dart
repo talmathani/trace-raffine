@@ -1,0 +1,372 @@
+﻿import 'package:flutter/material.dart';
+
+import '../../core/theme/app_theme.dart';
+import '../widgets/luxury_categories_header.dart';
+
+class SharedHomeScreen extends StatelessWidget {
+  const SharedHomeScreen({super.key});
+
+  static const List<HomeCategory> categories = [
+    HomeCategory(
+      title: 'فساتين السهرة والهوت كوتور',
+      subtitle: 'Evening Couture Designs',
+      icon: Icons.checkroom_rounded,
+    ),
+    HomeCategory(
+      title: 'تصاميم الساري الهندي',
+      subtitle: 'Indian Saree Designs',
+      icon: Icons.auto_awesome_rounded,
+    ),
+    HomeCategory(
+      title: 'العبايات والبالطوهات',
+      subtitle: 'Abayas & Coats',
+      icon: Icons.layers_rounded,
+    ),
+    HomeCategory(
+      title: 'الجلابيات والمخاور',
+      subtitle: 'Jalabiyas & Makhawer',
+      icon: Icons.pattern_rounded,
+    ),
+    HomeCategory(
+      title: 'تصاميم موزعة',
+      subtitle: 'Distributed Designs',
+      icon: Icons.scatter_plot_rounded,
+    ),
+    HomeCategory(
+      title: 'تصاميم الحواشي',
+      subtitle: 'Border Designs',
+      icon: Icons.border_style_rounded,
+    ),
+    HomeCategory(
+      title: 'الشعارات واللوغوهات',
+      subtitle: 'Logos & Symbols',
+      icon: Icons.diamond_rounded,
+    ),
+    HomeCategory(
+      title: 'جديد الأسبوع',
+      subtitle: 'New This Week',
+      icon: Icons.auto_awesome_mosaic_rounded,
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    final columns = width >= 1200
+        ? 4
+        : width >= 800
+            ? 3
+            : width >= 520
+                ? 2
+                : 1;
+
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        backgroundColor: AppTheme.obsidian,
+        appBar: AppBar(
+          title: const Text('الرئيسية'),
+        ),
+        body: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: _buildHero(),
+            ),
+            SliverToBoxAdapter(
+              child: _buildNewsTicker(),
+            ),
+            SliverToBoxAdapter(
+              child: const LuxuryCategoriesHeader(
+                height: 82,
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: _buildSectionHeader(),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+              sliver: SliverGrid(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    return _CategoryCard(
+                      category: categories[index],
+                      onTap: () {},
+                    );
+                  },
+                  childCount: categories.length,
+                ),
+                gridDelegate:
+                    SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: columns,
+                  crossAxisSpacing: 14,
+                  mainAxisSpacing: 14,
+                  childAspectRatio: columns == 1 ? 3.2 : 1.18,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHero() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+      padding: const EdgeInsets.all(26),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
+          colors: [
+            AppTheme.deepBurgundy,
+            AppTheme.burgundyBlack,
+            AppTheme.obsidian,
+          ],
+        ),
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(
+          color: AppTheme.divider,
+        ),
+      ),
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'TRACÉ RAFINÉ',
+            textDirection: TextDirection.ltr,
+            style: TextStyle(
+              fontFamily: 'CormorantGaramond',
+              fontSize: 32,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 3.5,
+              color: AppTheme.warmIvory,
+            ),
+          ),
+          SizedBox(height: 12),
+          Text(
+            'عالم الحِرفة الرقمية',
+            style: TextStyle(
+              fontFamily: 'Cairo',
+              fontSize: 25,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.warmIvory,
+            ),
+          ),
+          SizedBox(height: 8),
+          Text(
+            'اكتشف تصاميم التطريز الرقمي المختارة بعناية، '
+            'واستكشف مجموعاتنا المتخصصة في مساحة واحدة.',
+            style: TextStyle(
+              fontFamily: 'Cairo',
+              fontSize: 13,
+              height: 1.8,
+              color: AppTheme.mutedIvory,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNewsTicker() {
+    return Container(
+      height: 48,
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      decoration: BoxDecoration(
+        color: AppTheme.burgundyBlack,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: AppTheme.divider,
+        ),
+      ),
+      child: const Row(
+        children: [
+          SizedBox(width: 14),
+          Icon(
+            Icons.campaign_outlined,
+            size: 20,
+            color: AppTheme.softRose,
+          ),
+          SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'اكتشف أحدث التصاميم والمجموعات الجديدة في TRACÉ RAFINÉ',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontFamily: 'Cairo',
+                fontSize: 12,
+                color: AppTheme.mutedIvory,
+              ),
+            ),
+          ),
+          SizedBox(width: 14),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader() {
+    return const Padding(
+      padding: EdgeInsets.fromLTRB(20, 30, 20, 16),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'الأقسام',
+                  style: TextStyle(
+                    fontFamily: 'Cairo',
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.warmIvory,
+                  ),
+                ),
+                SizedBox(height: 3),
+                Text(
+                  'استكشف مجموعات التطريز الرقمي',
+                  style: TextStyle(
+                    fontFamily: 'Cairo',
+                    fontSize: 12,
+                    color: AppTheme.mutedText,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Icon(
+            Icons.auto_awesome_rounded,
+            color: AppTheme.softRose,
+            size: 21,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CategoryCard extends StatelessWidget {
+  const _CategoryCard({
+    required this.category,
+    required this.onTap,
+  });
+
+  final HomeCategory category;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppTheme.burgundyBlack,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: AppTheme.divider,
+            ),
+          ),
+          child: Row(
+            children: [
+              _LuxuryCategoryIcon(
+                icon: category.icon,
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      category.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontFamily: 'Cairo',
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.warmIvory,
+                        height: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      category.subtitle,
+                      textDirection: TextDirection.ltr,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontFamily: 'CormorantGaramond',
+                        fontSize: 12,
+                        color: AppTheme.softRose,
+                        letterSpacing: 0.7,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Icon(
+                Icons.chevron_left_rounded,
+                color: AppTheme.mutedText,
+                size: 20,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LuxuryCategoryIcon extends StatelessWidget {
+  const _LuxuryCategoryIcon({
+    required this.icon,
+  });
+
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 54,
+      height: 54,
+      decoration: BoxDecoration(
+        color: AppTheme.deepBurgundy,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppTheme.divider,
+        ),
+      ),
+      child: Icon(
+        icon,
+        size: 27,
+        color: AppTheme.softRose,
+      ),
+    );
+  }
+}
+
+class HomeCategory {
+  const HomeCategory({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+}
+
+
+
+
+

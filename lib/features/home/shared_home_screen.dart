@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../core/theme/app_theme.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../core/ui/luxury_ui.dart';
+import '../widgets/luxury_categories_header.dart';
 
 class SharedHomeScreen extends StatelessWidget {
   const SharedHomeScreen({super.key});
@@ -51,46 +53,39 @@ class SharedHomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
+
     final columns = width >= 1200
         ? 4
         : width >= 800
-            ? 3
-            : width >= 520
-                ? 2
-                : 1;
+        ? 3
+        : width >= 520
+        ? 2
+        : 1;
 
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: AppTheme.obsidian,
-        appBar: AppBar(
-          title: const Text('الرئيسية'),
-        ),
+        appBar: AppBar(title: const Text('الرئيسية')),
         body: CustomScrollView(
           slivers: [
-            SliverToBoxAdapter(
-              child: _buildHero(),
-            ),
-            SliverToBoxAdapter(
-              child: _buildNewsTicker(),
-            ),
-            SliverToBoxAdapter(
-              child: _buildSectionHeader(),
-            ),
+            SliverToBoxAdapter(child: _buildHero()),
+            SliverToBoxAdapter(child: _buildNewsTicker()),
+            const SliverToBoxAdapter(child: LuxuryCategoriesHeader(height: 82)),
+            SliverToBoxAdapter(child: _buildSectionHeader()),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 36),
               sliver: SliverGrid(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    return _CategoryCard(
-                      category: categories[index],
-                      onTap: () {},
-                    );
-                  },
-                  childCount: categories.length,
-                ),
-                gridDelegate:
-                    SliverGridDelegateWithFixedCrossAxisCount(
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final category = categories[index];
+
+                  return _CategoryCard(
+                    category: category,
+                    index: index,
+                    onTap: () {},
+                  );
+                }, childCount: categories.length),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: columns,
                   crossAxisSpacing: 14,
                   mainAxisSpacing: 14,
@@ -107,7 +102,7 @@ class SharedHomeScreen extends StatelessWidget {
   Widget _buildHero() {
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-      padding: const EdgeInsets.all(26),
+      padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topRight,
@@ -118,27 +113,57 @@ class SharedHomeScreen extends StatelessWidget {
             AppTheme.obsidian,
           ],
         ),
-        borderRadius: BorderRadius.circular(26),
-        border: Border.all(
-          color: AppTheme.divider,
-        ),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: AppTheme.divider),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.obsidian.withValues(alpha: 0.45),
+            blurRadius: 28,
+            offset: const Offset(0, 14),
+          ),
+        ],
       ),
-      child: const Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          Row(
+            children: [
+              Container(
+                width: 38,
+                height: 2,
+                decoration: BoxDecoration(
+                  color: AppTheme.softRose,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(width: 10),
+              const Text(
+                'DIGITAL EMBROIDERY',
+                textDirection: TextDirection.ltr,
+                style: TextStyle(
+                  fontFamily: 'CormorantGaramond',
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 2.8,
+                  color: AppTheme.softRose,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          const Text(
             'TRACÉ RAFINÉ',
             textDirection: TextDirection.ltr,
             style: TextStyle(
               fontFamily: 'CormorantGaramond',
-              fontSize: 32,
+              fontSize: 34,
               fontWeight: FontWeight.w600,
               letterSpacing: 3.5,
               color: AppTheme.warmIvory,
             ),
           ),
-          SizedBox(height: 12),
-          Text(
+          const SizedBox(height: 10),
+          const Text(
             'عالم الحِرفة الرقمية',
             style: TextStyle(
               fontFamily: 'Cairo',
@@ -147,8 +172,8 @@ class SharedHomeScreen extends StatelessWidget {
               color: AppTheme.warmIvory,
             ),
           ),
-          SizedBox(height: 8),
-          Text(
+          const SizedBox(height: 9),
+          const Text(
             'اكتشف تصاميم التطريز الرقمي المختارة بعناية، '
             'واستكشف مجموعاتنا المتخصصة في مساحة واحدة.',
             style: TextStyle(
@@ -157,6 +182,20 @@ class SharedHomeScreen extends StatelessWidget {
               height: 1.8,
               color: AppTheme.mutedIvory,
             ),
+          ),
+          const SizedBox(height: 22),
+          Row(
+            children: [
+              const LuxuryBadge(
+                label: 'تصاميم احترافية',
+                icon: Icons.verified_rounded,
+              ),
+              const SizedBox(width: 8),
+              LuxuryBadge(
+                label: 'TR Collection',
+                icon: Icons.auto_awesome_rounded,
+              ),
+            ],
           ),
         ],
       ),
@@ -170,17 +209,16 @@ class SharedHomeScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.burgundyBlack,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: AppTheme.divider,
-        ),
+        border: Border.all(color: AppTheme.divider),
       ),
       child: const Row(
         children: [
           SizedBox(width: 14),
-          Icon(
-            Icons.campaign_outlined,
-            size: 20,
-            color: AppTheme.softRose,
+          LuxuryIcon(
+            icon: Icons.campaign_outlined,
+            size: 17,
+            background: AppTheme.deepBurgundy,
+            borderRadius: 9,
           ),
           SizedBox(width: 10),
           Expanded(
@@ -204,39 +242,15 @@ class SharedHomeScreen extends StatelessWidget {
   Widget _buildSectionHeader() {
     return const Padding(
       padding: EdgeInsets.fromLTRB(20, 30, 20, 16),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'الأقسام',
-                  style: TextStyle(
-                    fontFamily: 'Cairo',
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.warmIvory,
-                  ),
-                ),
-                SizedBox(height: 3),
-                Text(
-                  'استكشف مجموعات التطريز الرقمي',
-                  style: TextStyle(
-                    fontFamily: 'Cairo',
-                    fontSize: 12,
-                    color: AppTheme.mutedText,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Icon(
-            Icons.auto_awesome_rounded,
-            color: AppTheme.softRose,
-            size: 21,
-          ),
-        ],
+      child: LuxurySectionHeader(
+        title: 'الأقسام',
+        subtitle: 'استكشف مجموعات التطريز الرقمي',
+        trailing: LuxuryIcon(
+          icon: Icons.auto_awesome_rounded,
+          size: 18,
+          background: AppTheme.deepBurgundy,
+          borderRadius: 10,
+        ),
       ),
     );
   }
@@ -245,75 +259,67 @@ class SharedHomeScreen extends StatelessWidget {
 class _CategoryCard extends StatelessWidget {
   const _CategoryCard({
     required this.category,
+    required this.index,
     required this.onTap,
   });
 
   final HomeCategory category;
+  final int index;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: AppTheme.burgundyBlack,
-      borderRadius: BorderRadius.circular(20),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: AppTheme.divider,
+    return LuxuryCard(
+      padding: EdgeInsets.zero,
+      borderRadius: 20,
+      onTap: onTap,
+      hoverLift: true,
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Row(
+          children: [
+            _LuxuryCategoryIcon(icon: category.icon, index: index),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    category.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: 'Cairo',
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.warmIvory,
+                      height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    category.subtitle,
+                    textDirection: TextDirection.ltr,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: 'CormorantGaramond',
+                      fontSize: 12,
+                      color: AppTheme.softRose,
+                      letterSpacing: 0.7,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          child: Row(
-            children: [
-              _LuxuryCategoryIcon(
-                icon: category.icon,
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      category.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontFamily: 'Cairo',
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.warmIvory,
-                        height: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      category.subtitle,
-                      textDirection: TextDirection.ltr,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontFamily: 'CormorantGaramond',
-                        fontSize: 12,
-                        color: AppTheme.softRose,
-                        letterSpacing: 0.7,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              const Icon(
-                Icons.chevron_left_rounded,
-                color: AppTheme.mutedText,
-                size: 20,
-              ),
-            ],
-          ),
+            const SizedBox(width: 8),
+            const Icon(
+              Icons.chevron_left_rounded,
+              color: AppTheme.mutedText,
+              size: 20,
+            ),
+          ],
         ),
       ),
     );
@@ -321,23 +327,29 @@ class _CategoryCard extends StatelessWidget {
 }
 
 class _LuxuryCategoryIcon extends StatelessWidget {
-  const _LuxuryCategoryIcon({
-    required this.icon,
-  });
+  const _LuxuryCategoryIcon({required this.icon, required this.index});
 
   final IconData icon;
+  final int index;
 
   @override
   Widget build(BuildContext context) {
+    final opacity = 0.10 + ((index % 4) * 0.025);
+
     return Container(
-      width: 54,
-      height: 54,
+      width: 56,
+      height: 56,
       decoration: BoxDecoration(
-        color: AppTheme.deepBurgundy,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppTheme.divider,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppTheme.softRose.withValues(alpha: opacity + 0.08),
+            AppTheme.deepBurgundy,
+          ],
         ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.softRose.withValues(alpha: 0.20)),
       ),
       child: ShaderMask(
         blendMode: BlendMode.srcIn,
@@ -345,17 +357,10 @@ class _LuxuryCategoryIcon extends StatelessWidget {
           return const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFF7D070),
-              Color(0xFFD4AF37),
-              Color(0xFFAA771C),
-            ],
+            colors: [Color(0xFFE0B5BE), Color(0xFFC98F9C), Color(0xFF8F5968)],
           ).createShader(bounds);
         },
-        child: Icon(
-          icon,
-          size: 27,
-        ),
+        child: Icon(icon, size: 28),
       ),
     );
   }

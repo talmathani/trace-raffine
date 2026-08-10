@@ -1,4 +1,4 @@
-import 'package:firebase_auth/firebase_auth.dart';
+﻿import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -179,25 +179,10 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final user = await _authRepository.signInWithEmailAndPassword(
+      await _authRepository.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
-
-      if (!user.emailVerified) {
-        if (!mounted) {
-          return;
-        }
-
-        await Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            builder: (_) => const EmailVerificationScreen(),
-          ),
-        );
-
-        return;
-      }
-
       await _saveRememberedAccount();
 
       await _showAgreementIfRequired();
@@ -815,3 +800,5 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
+
+

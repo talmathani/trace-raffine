@@ -1,16 +1,12 @@
 ﻿import 'package:flutter/material.dart';
 
-import '../home/shared_home_screen.dart';
+import '../customer/customer_navigation.dart';
 
 class CustomerShell extends StatelessWidget {
   const CustomerShell({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: SafeArea(
-        child: SharedHomeScreen(),
-      ),
-    );
+    return const CustomerNavigation();
   }
 }

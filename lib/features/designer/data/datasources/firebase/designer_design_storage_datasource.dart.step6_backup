@@ -1,0 +1,146 @@
+﻿import 'dart:async';
+import 'dart:typed_data';
+
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+
+class DesignerDesignStorageDataSource {
+  DesignerDesignStorageDataSource({
+    FirebaseStorage? storage,
+    FirebaseAuth? auth,
+  })  : _storage = storage ?? FirebaseStorage.instance,
+        _auth = auth ?? FirebaseAuth.instance;
+
+  final FirebaseStorage _storage;
+  final FirebaseAuth _auth;
+
+  static const Duration _uploadTimeout = Duration(minutes: 2);
+
+  Future<String> uploadFile({
+    required Uint8List bytes,
+    required String storagePath,
+    required String contentType,
+  }) async {
+    print('');
+    print('===== FIREBASE STORAGE UPLOAD TRACE =====');
+
+    final firebaseUser = _auth.currentUser;
+
+    print('[AUTH] Firebase user exists: ${firebaseUser != null}');
+
+    if (firebaseUser != null) {
+      print('[AUTH] Firebase UID: ${firebaseUser.uid}');
+      print('[AUTH] Firebase email: ${firebaseUser.email}');
+      print('[AUTH] Firebase email verified: ${firebaseUser.emailVerified}');
+    }
+
+    print('[STORAGE] Starting upload');
+    print('[STORAGE] Path: $storagePath');
+    print('[STORAGE] Content type: $contentType');
+    print('[STORAGE] Bytes: ${bytes.length}');
+    print('[STORAGE] Bucket: ${_storage.bucket}');
+    print('[STORAGE] App name: ${_storage.app.name}');
+
+    final reference = _storage.ref().child(storagePath);
+
+    print('[STORAGE] Full reference: ${reference.fullPath}');
+
+    final metadata = SettableMetadata(
+      contentType: contentType,
+    );
+
+    final uploadTask = reference.putData(
+      bytes,
+      metadata,
+    );
+
+    try {
+      print('[STORAGE] Upload task created');
+      print('[STORAGE] Waiting for Firebase Storage...');
+
+      final snapshot = await uploadTask.timeout(
+        _uploadTimeout,
+        onTimeout: () async {
+          print('[STORAGE] ERROR: Upload timeout');
+
+          try {
+            await uploadTask.cancel();
+          } catch (cancelError) {
+            print('[STORAGE] Cancel error: $cancelError');
+          }
+
+          throw TimeoutException(
+            'انتهت مهلة رفع الملف إلى Firebase Storage.',
+            _uploadTimeout,
+          );
+        },
+      );
+
+      print('[STORAGE] Upload completed');
+      print('[STORAGE] Snapshot state: ${snapshot.state}');
+      print(
+        '[STORAGE] Snapshot bytes transferred: '
+        '${snapshot.bytesTransferred}',
+      );
+      print(
+        '[STORAGE] Snapshot total bytes: '
+        '${snapshot.totalBytes}',
+      );
+
+      final downloadUrl = await snapshot.ref.getDownloadURL().timeout(
+        _uploadTimeout,
+      );
+
+      print('[STORAGE] Download URL received');
+      print('===== FIREBASE STORAGE UPLOAD SUCCESS =====');
+      print('');
+
+      return downloadUrl;
+    } on TimeoutException catch (error) {
+      print('');
+      print('===== FIREBASE STORAGE TIMEOUT =====');
+      print('[STORAGE] $error');
+      print('====================================');
+      print('');
+
+      rethrow;
+    } on FirebaseException catch (error, stackTrace) {
+      print('');
+      print('===== FIREBASE STORAGE ERROR =====');
+      print('[STORAGE] code: ${error.code}');
+      print('[STORAGE] message: ${error.message}');
+      print('[STORAGE] plugin: ${error.plugin}');
+      print('[STORAGE] full error: $error');
+      print('[STORAGE] stack trace: $stackTrace');
+      print('==================================');
+      print('');
+
+      rethrow;
+    } catch (error, stackTrace) {
+      print('');
+      print('===== FIREBASE STORAGE UNKNOWN ERROR =====');
+      print('[STORAGE] error: $error');
+      print('[STORAGE] stack trace: $stackTrace');
+      print('==========================================');
+      print('');
+
+      rethrow;
+    }
+  }
+
+  Future<void> deleteFile({
+    required String storagePath,
+  }) async {
+    final reference = _storage.ref().child(storagePath);
+
+    try {
+      await reference.delete().timeout(_uploadTimeout);
+    } on FirebaseException catch (error) {
+      if (error.code == 'object-not-found') {
+        return;
+      }
+
+      rethrow;
+    }
+  }
+}

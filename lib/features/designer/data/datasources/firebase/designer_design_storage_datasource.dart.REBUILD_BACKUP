@@ -1,0 +1,118 @@
+﻿import 'dart:typed_data';
+
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+class DesignerDesignStorageDataSource {
+  DesignerDesignStorageDataSource({
+    SupabaseClient? supabaseClient,
+  }) : _supabase =
+            supabaseClient ?? Supabase.instance.client;
+
+  final SupabaseClient _supabase;
+
+  static const String _bucketName = 'designer_designs';
+
+  Future<String> uploadFile({
+    required Uint8List bytes,
+    required String storagePath,
+    required String contentType,
+  }) async {
+    print('');
+    print('===== SUPABASE STORAGE UPLOAD TRACE =====');
+
+    print('[STORAGE] Starting upload');
+    print('[STORAGE] Bucket: $_bucketName');
+    print('[STORAGE] Path: $storagePath');
+    print('[STORAGE] Content type: $contentType');
+    print('[STORAGE] Bytes: ${bytes.length}');
+    print(
+      '[AUTH] Supabase user exists: '
+      '${_supabase.auth.currentUser != null}',
+    );
+
+    final user = _supabase.auth.currentUser;
+
+    if (user != null) {
+      print('[AUTH] Supabase UID: ${user.id}');
+      print('[AUTH] Supabase email: ${user.email}');
+    }
+
+    try {
+      final uploadedPath = await _supabase.storage
+          .from(_bucketName)
+          .uploadBinary(
+            storagePath,
+            bytes,
+            fileOptions: FileOptions(
+              contentType: contentType,
+              upsert: false,
+            ),
+          );
+
+      print('[STORAGE] Upload completed');
+      print('[STORAGE] Uploaded path: $uploadedPath');
+
+      final signedUrl = await _supabase.storage
+          .from(_bucketName)
+          .createSignedUrl(
+            uploadedPath,
+            60 * 60 * 24 * 365,
+          );
+
+      print('[STORAGE] Signed URL created');
+      print('===== SUPABASE STORAGE UPLOAD SUCCESS =====');
+      print('');
+
+      return signedUrl;
+    } on StorageException catch (error, stackTrace) {
+      print('');
+      print('===== SUPABASE STORAGE ERROR =====');
+      print('[STORAGE] statusCode: ${error.statusCode}');
+      print('[STORAGE] message: ${error.message}');
+      print('[STORAGE] error: $error');
+      print('[STORAGE] stack trace: $stackTrace');
+      print('==================================');
+      print('');
+
+      rethrow;
+    } catch (error, stackTrace) {
+      print('');
+      print('===== SUPABASE STORAGE UNKNOWN ERROR =====');
+      print('[STORAGE] error: $error');
+      print('[STORAGE] stack trace: $stackTrace');
+      print('==========================================');
+      print('');
+
+      rethrow;
+    }
+  }
+
+  Future<void> deleteFile({
+    required String storagePath,
+  }) async {
+    print('');
+    print('===== SUPABASE STORAGE DELETE TRACE =====');
+    print('[STORAGE] Bucket: $_bucketName');
+    print('[STORAGE] Path: $storagePath');
+
+    try {
+      await _supabase.storage
+          .from(_bucketName)
+          .remove([storagePath]);
+
+      print('[STORAGE] Delete completed');
+      print('');
+    } on StorageException catch (error, stackTrace) {
+      print('');
+      print('===== SUPABASE STORAGE DELETE ERROR =====');
+      print('[STORAGE] statusCode: ${error.statusCode}');
+      print('[STORAGE] message: ${error.message}');
+      print('[STORAGE] error: $error');
+      print('[STORAGE] stack trace: $stackTrace');
+      print('=========================================');
+      print('');
+
+      rethrow;
+    }
+  }
+}

@@ -1,0 +1,19 @@
+project_id = "trace_raffine"
+
+[api]
+enabled = true
+
+[db]
+port = 54322
+
+[studio]
+enabled = true
+
+[inbucket]
+enabled = true
+
+[storage]
+enabled = true
+
+[auth]
+enabled = true

@@ -1,5 +1,6 @@
-﻿import 'dart:typed_data';
+﻿import 'package:flutter/foundation.dart';
 
+import '../../domain/models/designer_design_model.dart';
 import '../../domain/repositories/designer_design_repository.dart';
 import '../datasources/firebase/designer_design_firestore_datasource.dart';
 import '../datasources/firebase/designer_design_storage_datasource.dart';
@@ -38,8 +39,7 @@ class DesignerDesignRepositoryImpl
         DateTime.now().microsecondsSinceEpoch.toString();
 
     final imageExtension = _extensionOf(designImageName);
-    final embroideryExtension =
-        _extensionOf(embroideryFileName);
+    final embroideryExtension = _extensionOf(embroideryFileName);
 
     final imagePath =
         'designer_designs/$designerId/$temporaryId/design.$imageExtension';
@@ -47,48 +47,42 @@ class DesignerDesignRepositoryImpl
     final embroideryPath =
         'designer_designs/$designerId/$temporaryId/embroidery.$embroideryExtension';
 
-    final imageContentType =
-        _imageContentType(imageExtension);
+    final imageContentType = _imageContentType(imageExtension);
 
-    final imageUrl =
-        await _storageDataSource.uploadFile(
+    debugPrint('=== DESIGN REPOSITORY: START IMAGE UPLOAD ===');
+
+    final imageUrl = await _storageDataSource.uploadFile(
       bytes: designImageBytes,
       storagePath: imagePath,
       contentType: imageContentType,
     );
 
     try {
-      final embroideryUrl =
-          await _storageDataSource.uploadFile(
+      final embroideryUrl = await _storageDataSource.uploadFile(
         bytes: embroideryFileBytes,
         storagePath: embroideryPath,
         contentType: 'application/octet-stream',
       );
 
       try {
-        final designId =
-            await _firestoreDataSource.createDesign(
+        final designId = await _firestoreDataSource.createDesign(
+          designId: temporaryId,
           data: {
             'designerId': designerId,
             'title': title.trim(),
             'category': category.trim(),
-            'description': description.trim(),
+            'description': _nullableValue(description),
             'price': price,
-            'fileExtension':
-                embroideryExtension.toLowerCase(),
+            'fileExtension': embroideryExtension,
             'status': 'pending',
             'designImagePath': imagePath,
             'designImageUrl': imageUrl,
             'embroideryFilePath': embroideryPath,
             'embroideryFileUrl': embroideryUrl,
-            'stitchDetails':
-                _nullableValue(stitchDetails),
-            'beadDetails':
-                _nullableValue(beadDetails),
-            'sequinDetails':
-                _nullableValue(sequinDetails),
-            'additionalDetails':
-                _nullableValue(additionalDetails),
+            'stitchDetails': _nullableValue(stitchDetails),
+            'beadDetails': _nullableValue(beadDetails),
+            'sequinDetails': _nullableValue(sequinDetails),
+            'additionalDetails': _nullableValue(additionalDetails),
             'rejectionReason': null,
           },
         );
@@ -125,8 +119,7 @@ class DesignerDesignRepositoryImpl
     required String? imagePath,
     required String? embroideryPath,
   }) async {
-    if (imagePath != null &&
-        imagePath.trim().isNotEmpty) {
+    if (imagePath != null && imagePath.trim().isNotEmpty) {
       await _storageDataSource.deleteFile(
         storagePath: imagePath,
       );
@@ -145,28 +138,53 @@ class DesignerDesignRepositoryImpl
   }
 
   @override
-  Stream watchDesignerDesigns({
+  Stream<List<DesignerDesignModel>> watchDesignerDesigns({
     required String designerId,
   }) {
-    return _firestoreDataSource.watchDesignerDesigns(
-      designerId: designerId,
-    );
+    return _firestoreDataSource
+        .watchDesignerDesigns(
+          designerId: designerId,
+        )
+        .map(
+          (snapshot) => snapshot.docs
+              .map(
+                (document) => DesignerDesignModel.fromFirestore(
+                  document.id,
+                  document.data(),
+                ),
+              )
+              .toList(growable: false),
+        );
   }
 
   @override
-  Future getDesign({
+  Future<DesignerDesignModel?> getDesign({
     required String designId,
-  }) {
-    return _firestoreDataSource.getDesign(
+  }) async {
+    final document = await _firestoreDataSource.getDesign(
       designId: designId,
+    );
+
+    if (!document.exists) {
+      return null;
+    }
+
+    final data = document.data();
+
+    if (data == null) {
+      return null;
+    }
+
+    return DesignerDesignModel.fromFirestore(
+      document.id,
+      data,
     );
   }
 
   String _extensionOf(String fileName) {
     final normalized = fileName.trim();
 
-    if (normalized.isEmpty ||
-        !normalized.contains('.')) {
+    if (normalized.isEmpty || !normalized.contains('.')) {
       return 'bin';
     }
 
@@ -199,11 +217,12 @@ class DesignerDesignRepositoryImpl
   String? _nullableValue(String? value) {
     final normalized = value?.trim();
 
-    if (normalized == null ||
-        normalized.isEmpty) {
+    if (normalized == null || normalized.isEmpty) {
       return null;
     }
 
     return normalized;
   }
 }
+
+

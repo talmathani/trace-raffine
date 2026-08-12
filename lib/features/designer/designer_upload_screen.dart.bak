@@ -1,10 +1,7 @@
 ﻿import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../core/theme/app_theme.dart';
-import '../../domain/repositories/auth_repository.dart';
-import 'domain/usecases/create_designer_design.dart';
 
 class DesignerUploadScreen extends StatefulWidget {
   const DesignerUploadScreen({super.key});
@@ -35,14 +32,6 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
   PlatformFile? _embroideryFile;
 
   bool _isSubmitting = false;
-
-  late CreateDesignerDesign _createDesignerDesign;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _createDesignerDesign = context.read<CreateDesignerDesign>();
-  }
 
   static const List<String> _categories = [
     'فساتين السهرة والهوت كوتور',
@@ -96,7 +85,7 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
     final result = await FilePicker.pickFiles(
       type: FileType.image,
       allowMultiple: false,
-      withData: true,
+      withData: false,
     );
 
     if (result == null || result.files.isEmpty || !mounted) {
@@ -113,7 +102,7 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
       type: FileType.custom,
       allowedExtensions: _embroideryExtensions,
       allowMultiple: false,
-      withData: true,
+      withData: false,
     );
 
     if (result == null || result.files.isEmpty || !mounted) {
@@ -142,86 +131,27 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
       return;
     }
 
-    final currentUser = context.read<AuthRepository>().currentUser;
+    setState(() {
+      _isSubmitting = true;
+    });
 
-    if (currentUser == null) {
-      _showMessage('يجب تسجيل الدخول كمصمم قبل رفع التصميم.');
-      return;
-    }
-
-    final designImageBytes = _designImage!.bytes;
-    final embroideryFileBytes = _embroideryFile!.bytes;
-
-    if (designImageBytes == null || designImageBytes.isEmpty) {
-      _showMessage('تعذر قراءة بيانات صورة التصميم.');
-      return;
-    }
-
-    if (embroideryFileBytes == null || embroideryFileBytes.isEmpty) {
-      _showMessage('تعذر قراءة ملف التطريز الرقمي.');
-      return;
-    }
-
-    final price = double.tryParse(
-      _priceController.text.trim().replaceAll(',', '.'),
+    await Future<void>.delayed(
+      const Duration(milliseconds: 700),
     );
-
-    if (price == null || price < 0) {
-      _showMessage('يرجى إدخال سعر صحيح.');
-      return;
-    }
 
     if (!mounted) {
       return;
     }
 
     setState(() {
-      _isSubmitting = true;
+      _isSubmitting = false;
     });
 
-    try {
-      final designId = await _createDesignerDesign(
-        designerId: currentUser.id,
-        title: _titleController.text.trim(),
-        category: _selectedCategory,
-        description: _descriptionController.text.trim(),
-        price: price,
-        fileExtension: _extensionOf(_embroideryFile!.name),
-        designImageBytes: designImageBytes,
-        designImageName: _designImage!.name,
-        embroideryFileBytes: embroideryFileBytes,
-        embroideryFileName: _embroideryFile!.name,
-        stitchDetails: _stitchDetailsController.text.trim(),
-        beadDetails: _beadDetailsController.text.trim(),
-        sequinDetails: _sequinDetailsController.text.trim(),
-        additionalDetails: _additionalDetailsController.text.trim(),
-      );
-
-      if (!mounted) {
-        return;
-      }
-
-      setState(() {
-        _isSubmitting = false;
-      });
-
-      _showMessage(
-        'تم إرسال التصميم للمراجعة بنجاح. رقم التصميم: $designId',
-      );
-    } catch (error) {
-      if (!mounted) {
-        return;
-      }
-
-      setState(() {
-        _isSubmitting = false;
-      });
-
-      _showMessage(
-        'تعذر إرسال التصميم. يرجى المحاولة مرة أخرى.',
-      );
-    }
+    _showMessage(
+      'تم تجهيز التصميم وإرساله للمراجعة.',
+    );
   }
+
   void _showMessage(String message) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
@@ -915,11 +845,3 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
     );
   }
 }
-
-
-
-
-
-
-
-

@@ -1,4 +1,4 @@
-import 'package:firebase_auth/firebase_auth.dart';
+﻿import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
 class FirebaseAuthDataSource {
@@ -21,7 +21,14 @@ class FirebaseAuthDataSource {
         .signInWithEmailAndPassword(email: email.trim(), password: password)
         .timeout(const Duration(seconds: 15));
 
-    debugPrint('Firebase login success: ${result.user?.email}');
+    final user = result.user;
+
+    debugPrint('========== TR AUTH IDENTITY ==========');
+    debugPrint('Firebase Project: trace-raffine');
+    debugPrint('Firebase UID: ${user?.uid}');
+    debugPrint('Firebase Email: ${user?.email}');
+    debugPrint('Firebase Email Verified: ${user?.emailVerified}');
+    debugPrint('======================================');
 
     return result;
   }
@@ -73,3 +80,4 @@ class FirebaseAuthDataSource {
     return _firebaseAuth.signOut();
   }
 }
+

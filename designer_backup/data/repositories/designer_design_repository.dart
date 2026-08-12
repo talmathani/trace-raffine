@@ -1,6 +1,4 @@
-﻿import 'dart:typed_data';
-
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:flutter/foundation.dart';
 
 import '../../domain/models/designer_design_model.dart';
 import '../../domain/repositories/designer_design_repository.dart';
@@ -49,55 +47,33 @@ class DesignerDesignRepositoryImpl
     final embroideryPath =
         'designer_designs/$designerId/$temporaryId/embroidery.$embroideryExtension';
 
-    print('');
-    print('===== DESIGN UPLOAD TRACE =====');
-    print('[1] createDesign started');
-    print('[1] designerId: $designerId');
-    print('[1] image bytes: ${designImageBytes.length}');
-    print('[1] embroidery bytes: ${embroideryFileBytes.length}');
-    print('[1] image path: $imagePath');
-    print('[1] embroidery path: $embroideryPath');
+    final imageContentType = _imageContentType(imageExtension);
 
-    print('');
-    print('[2] START design image upload');
+    debugPrint('=== DESIGN REPOSITORY: START IMAGE UPLOAD ===');
 
     final imageUrl = await _storageDataSource.uploadFile(
       bytes: designImageBytes,
       storagePath: imagePath,
-      contentType: _imageContentType(imageExtension),
+      contentType: imageContentType,
     );
 
-    print('[2] COMPLETE design image upload');
-    print('[2] image URL received: ${imageUrl.isNotEmpty}');
-
     try {
-      print('');
-      print('[3] START embroidery file upload');
-
       final embroideryUrl = await _storageDataSource.uploadFile(
         bytes: embroideryFileBytes,
         storagePath: embroideryPath,
         contentType: 'application/octet-stream',
       );
 
-      print('[3] COMPLETE embroidery file upload');
-      print(
-        '[3] embroidery URL received: ${embroideryUrl.isNotEmpty}',
-      );
-
       try {
-        print('');
-        print('[4] START Firestore document creation');
-
-        final designId =
-            await _firestoreDataSource.createDesign(
+        final designId = await _firestoreDataSource.createDesign(
+          designId: temporaryId,
           data: {
             'designerId': designerId,
             'title': title.trim(),
             'category': category.trim(),
-            'description': description.trim(),
+            'description': _nullableValue(description),
             'price': price,
-            'fileExtension': embroideryExtension.toLowerCase(),
+            'fileExtension': embroideryExtension,
             'status': 'pending',
             'designImagePath': imagePath,
             'designImageUrl': imageUrl,
@@ -111,38 +87,17 @@ class DesignerDesignRepositoryImpl
           },
         );
 
-        print('[4] COMPLETE Firestore document creation');
-        print('[4] designId: $designId');
-
-        print('');
-        print('===== DESIGN UPLOAD SUCCESS =====');
-        print('');
-
         return designId;
-      } catch (error) {
-        print('');
-        print('[4] FIRESTORE ERROR: $error');
-        print('[4] Deleting uploaded embroidery file...');
-
+      } catch (_) {
         await _storageDataSource.deleteFile(
           storagePath: embroideryPath,
         );
-
-        print('[4] Embroidery cleanup complete');
-
         rethrow;
       }
-    } catch (error) {
-      print('');
-      print('[3] EMBROIDERY UPLOAD ERROR: $error');
-      print('[3] Deleting uploaded image file...');
-
+    } catch (_) {
       await _storageDataSource.deleteFile(
         storagePath: imagePath,
       );
-
-      print('[3] Image cleanup complete');
-
       rethrow;
     }
   }
@@ -187,17 +142,18 @@ class DesignerDesignRepositoryImpl
     required String designerId,
   }) {
     return _firestoreDataSource
-        .watchDesignerDesigns(designerId: designerId)
+        .watchDesignerDesigns(
+          designerId: designerId,
+        )
         .map(
-          (snapshot) {
-            return snapshot.docs
-                .map(
-                  (doc) => _modelFromFirestore(
-                    doc.data(),
-                  ),
-                )
-                .toList(growable: false);
-          },
+          (snapshot) => snapshot.docs
+              .map(
+                (document) => DesignerDesignModel.fromFirestore(
+                  document.id,
+                  document.data(),
+                ),
+              )
+              .toList(growable: false),
         );
   }
 
@@ -205,126 +161,41 @@ class DesignerDesignRepositoryImpl
   Future<DesignerDesignModel?> getDesign({
     required String designId,
   }) async {
-    final snapshot = await _firestoreDataSource.getDesign(
+    final document = await _firestoreDataSource.getDesign(
       designId: designId,
     );
 
-    if (!snapshot.exists) {
+    if (!document.exists) {
       return null;
     }
 
-    final data = snapshot.data();
+    final data = document.data();
 
     if (data == null) {
       return null;
     }
 
-    return _modelFromFirestore(data);
-  }
-
-  DesignerDesignModel _modelFromFirestore(
-    Map<String, dynamic> data,
-  ) {
-    return DesignerDesignModel(
-      title: _stringValue(data['title']),
-      category: _stringValue(data['category']),
-      fileExtension: _stringValue(data['fileExtension']),
-      price: _doubleValue(data['price']),
-      status: _statusFromValue(data['status']),
-      description: _nullableString(data['description']),
-      designImagePath:
-          _nullableString(data['designImagePath']),
-      embroideryFilePath:
-          _nullableString(data['embroideryFilePath']),
-      stitchDetails:
-          _nullableString(data['stitchDetails']),
-      beadDetails:
-          _nullableString(data['beadDetails']),
-      sequinDetails:
-          _nullableString(data['sequinDetails']),
-      additionalDetails:
-          _nullableString(data['additionalDetails']),
-      submittedAt:
-          _dateTimeValue(data['submittedAt']),
-      rejectionReason:
-          _nullableString(data['rejectionReason']),
+    return DesignerDesignModel.fromFirestore(
+      document.id,
+      data,
     );
   }
 
-  DesignerDesignStatus _statusFromValue(
-    dynamic value,
-  ) {
-    switch (value?.toString().toLowerCase()) {
-      case 'approved':
-        return DesignerDesignStatus.approved;
-
-      case 'rejected':
-        return DesignerDesignStatus.rejected;
-
-      case 'pending':
-      default:
-        return DesignerDesignStatus.pending;
-    }
-  }
-
-  String _stringValue(dynamic value) {
-    return value?.toString().trim() ?? '';
-  }
-
-  String? _nullableString(dynamic value) {
-    final normalized = value?.toString().trim();
-
-    if (normalized == null || normalized.isEmpty) {
-      return null;
-    }
-
-    return normalized;
-  }
-
-  double _doubleValue(dynamic value) {
-    if (value is num) {
-      return value.toDouble();
-    }
-
-    return double.tryParse(
-          value?.toString() ?? '',
-        ) ??
-        0.0;
-  }
-
-  DateTime? _dateTimeValue(dynamic value) {
-    if (value is Timestamp) {
-      return value.toDate();
-    }
-
-    if (value is DateTime) {
-      return value;
-    }
-
-    if (value is String) {
-      return DateTime.tryParse(value);
-    }
-
-    return null;
-  }
-
   String _extensionOf(String fileName) {
-    final cleanName = fileName.trim();
+    final normalized = fileName.trim();
 
-    if (cleanName.isEmpty) {
+    if (normalized.isEmpty || !normalized.contains('.')) {
       return 'bin';
     }
 
-    final lastDot = cleanName.lastIndexOf('.');
+    final extension =
+        normalized.split('.').last.trim().toLowerCase();
 
-    if (lastDot <= 0 ||
-        lastDot >= cleanName.length - 1) {
+    if (extension.isEmpty) {
       return 'bin';
     }
 
-    return cleanName
-        .substring(lastDot + 1)
-        .toLowerCase();
+    return extension;
   }
 
   String _imageContentType(String extension) {
@@ -332,19 +203,12 @@ class DesignerDesignRepositoryImpl
       case 'jpg':
       case 'jpeg':
         return 'image/jpeg';
-
       case 'png':
         return 'image/png';
-
       case 'webp':
         return 'image/webp';
-
       case 'gif':
         return 'image/gif';
-
-      case 'bmp':
-        return 'image/bmp';
-
       default:
         return 'application/octet-stream';
     }
@@ -360,3 +224,5 @@ class DesignerDesignRepositoryImpl
     return normalized;
   }
 }
+
+

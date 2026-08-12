@@ -1,0 +1,50 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    match /designer_designs/{designerId}/{designId}/{fileName} {
+
+      function signedIn() {
+        return request.auth != null;
+      }
+
+      function isOwner() {
+        return signedIn() &&
+               request.auth.uid == designerId;
+      }
+
+      function designExists() {
+        return firestore.exists(
+          /databases/(default)/documents/designer_designs/$(designId)
+        );
+      }
+
+      function designApproved() {
+        return designExists() &&
+               firestore.get(
+                 /databases/(default)/documents/designer_designs/$(designId)
+               ).data.status == 'approved';
+      }
+
+      function isDesignPreview() {
+        return fileName.matches('design\\..*');
+      }
+
+      // The designer may manage files inside their own design directory.
+      allow read: if isOwner();
+
+      allow write: if isOwner();
+
+      // Customers may read only the approved design preview.
+      // Embroidery source files remain protected.
+      allow read: if signedIn() &&
+                  designApproved() &&
+                  isDesignPreview();
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

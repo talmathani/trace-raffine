@@ -1,0 +1,14 @@
+{
+    "organizationId": "6a7c8911000b83df8a84",
+    "projectId": "trace-raffine",
+    "projectName": "TRACÉ RAFFINÉ",
+    "endpoint": "https://fra.cloud.appwrite.io/v1",
+    "buckets": [
+        {
+            "$id": "design-files",
+            "name": "TRACÉ Designs",
+            "enabled": true,
+            "fileSecurity": true
+        }
+    ]
+}

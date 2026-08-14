@@ -1,4 +1,4 @@
-﻿class AuthUser {
+class AuthUser {
   const AuthUser({
     required this.id,
     required this.email,

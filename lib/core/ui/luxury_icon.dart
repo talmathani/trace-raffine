@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 
@@ -27,11 +27,7 @@ class LuxuryIcon extends StatelessWidget {
         borderRadius: BorderRadius.circular(borderRadius),
         border: Border.all(color: AppTheme.divider),
       ),
-      child: Icon(
-        icon,
-        size: size,
-        color: color ?? AppTheme.softRose,
-      ),
+      child: Icon(icon, size: size, color: color ?? AppTheme.softRose),
     );
   }
 }

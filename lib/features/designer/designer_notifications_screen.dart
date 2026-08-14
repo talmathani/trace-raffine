@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
 
@@ -38,9 +38,7 @@ class DesignerNotificationsScreen extends StatelessWidget {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('الإشعارات'),
-        ),
+        appBar: AppBar(title: const Text('الإشعارات')),
         body: ListView(
           padding: const EdgeInsets.all(20),
           children: [
@@ -65,10 +63,7 @@ class DesignerNotificationsScreen extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topRight,
           end: Alignment.bottomLeft,
-          colors: [
-            AppTheme.deepBurgundy,
-            AppTheme.burgundyBlack,
-          ],
+          colors: [AppTheme.deepBurgundy, AppTheme.burgundyBlack],
         ),
         borderRadius: BorderRadius.circular(22),
         border: Border.all(color: AppTheme.divider),
@@ -114,10 +109,7 @@ class DesignerNotificationsScreen extends StatelessWidget {
 
   Widget _buildNotificationSummary() {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 18,
-        vertical: 16,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
       decoration: BoxDecoration(
         color: AppTheme.burgundyBlack,
         borderRadius: BorderRadius.circular(18),
@@ -159,10 +151,7 @@ class DesignerNotificationsScreen extends StatelessWidget {
 
   Widget _buildEmptyState() {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 24,
-        vertical: 48,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
       decoration: BoxDecoration(
         color: AppTheme.burgundyBlack,
         borderRadius: BorderRadius.circular(22),
@@ -230,11 +219,7 @@ class DesignerNotificationsScreen extends StatelessWidget {
               color: AppTheme.burgundyBlack,
               borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(
-              icon,
-              color: AppTheme.softRose,
-              size: 24,
-            ),
+            child: Icon(icon, color: AppTheme.softRose, size: 24),
           ),
           const SizedBox(width: 14),
           Expanded(

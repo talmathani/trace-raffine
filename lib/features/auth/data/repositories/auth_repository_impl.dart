@@ -1,13 +1,12 @@
-﻿import '../../../../domain/entities/auth_user.dart';
+import '../../../../domain/entities/auth_user.dart';
 import '../../../../domain/repositories/auth_repository.dart';
-import '../datasources/firebase_auth_datasource.dart';
+import '../datasources/appwrite_auth_datasource.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
-  AuthRepositoryImpl({
-    FirebaseAuthDataSource? dataSource,
-  }) : _dataSource = dataSource ?? FirebaseAuthDataSource();
+  AuthRepositoryImpl({AppwriteAuthDataSource? dataSource})
+    : _dataSource = dataSource ?? AppwriteAuthDataSource();
 
-  final FirebaseAuthDataSource _dataSource;
+  final AppwriteAuthDataSource _dataSource;
 
   @override
   Stream<AuthUser?> get authStateChanges =>
@@ -29,17 +28,15 @@ class AuthRepositoryImpl implements AuthRepository {
     required String email,
     required String password,
   }) async {
-    final credential = await _dataSource.signInWithEmailAndPassword(
+    await _dataSource.signInWithEmailAndPassword(
       email: email,
       password: password,
     );
 
-    final user = credential.user;
+    final user = _dataSource.currentUser;
 
     if (user == null) {
-      throw StateError(
-        'Firebase returned an empty user after sign-in.',
-      );
+      throw StateError('Appwrite returned an empty user after sign-in.');
     }
 
     return _mapUser(user);
@@ -50,29 +47,19 @@ class AuthRepositoryImpl implements AuthRepository {
     required String email,
     required String password,
   }) async {
-    final credential = await _dataSource.createUserWithEmailAndPassword(
+    final user = await _dataSource.createUserWithEmailAndPassword(
       email: email,
       password: password,
     );
-
-    final user = credential.user;
-
-    if (user == null) {
-      throw StateError(
-        'Firebase returned an empty user after registration.',
-      );
-    }
-
-    if (!user.emailVerified) {
-      await user.sendEmailVerification();
-    }
 
     return _mapUser(user);
   }
 
   @override
-  Future<void> sendEmailVerification() {
-    return _dataSource.sendEmailVerification();
+  Future<void> sendEmailVerification() async {
+    await _dataSource.sendEmailVerification(
+      verificationUrl: 'https://trace-raffine.com/verify-email',
+    );
   }
 
   @override
@@ -81,11 +68,10 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<void> sendPasswordResetEmail({
-    required String email,
-  }) {
+  Future<void> sendPasswordResetEmail({required String email}) {
     return _dataSource.sendPasswordResetEmail(
       email: email,
+      recoveryUrl: 'https://trace-raffine.com/reset-password',
     );
   }
 
@@ -96,9 +82,9 @@ class AuthRepositoryImpl implements AuthRepository {
 
   AuthUser _mapUser(dynamic user) {
     return AuthUser(
-      id: user.uid as String,
+      id: user.$id as String,
       email: user.email as String?,
-      emailVerified: user.emailVerified as bool,
+      emailVerified: user.emailVerification == true,
     );
   }
 }

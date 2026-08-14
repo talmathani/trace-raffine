@@ -1,4 +1,4 @@
-﻿import 'dart:typed_data';
+import 'dart:typed_data';
 
 import '../models/designer_design_model.dart';
 
@@ -35,7 +35,5 @@ abstract class DesignerDesignRepository {
     required String designerId,
   });
 
-  Future<DesignerDesignModel?> getDesign({
-    required String designId,
-  });
+  Future<DesignerDesignModel?> getDesign({required String designId});
 }

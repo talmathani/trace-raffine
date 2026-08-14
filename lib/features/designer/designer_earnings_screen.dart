@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
 
@@ -10,9 +10,7 @@ class DesignerEarningsScreen extends StatelessWidget {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('الأرباح'),
-        ),
+        appBar: AppBar(title: const Text('الأرباح')),
         body: ListView(
           padding: const EdgeInsets.all(20),
           children: [
@@ -120,10 +118,7 @@ class DesignerEarningsScreen extends StatelessWidget {
 
   Widget _buildEmptyTransactions() {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 24,
-        vertical: 44,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 44),
       decoration: BoxDecoration(
         color: AppTheme.burgundyBlack,
         borderRadius: BorderRadius.circular(20),
@@ -131,11 +126,7 @@ class DesignerEarningsScreen extends StatelessWidget {
       ),
       child: const Column(
         children: [
-          Icon(
-            Icons.receipt_long_outlined,
-            color: AppTheme.softRose,
-            size: 48,
-          ),
+          Icon(Icons.receipt_long_outlined, color: AppTheme.softRose, size: 48),
           SizedBox(height: 16),
           Text(
             'لا توجد عمليات مالية بعد',
@@ -187,11 +178,7 @@ class _SummaryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            icon,
-            color: AppTheme.softRose,
-            size: 24,
-          ),
+          Icon(icon, color: AppTheme.softRose, size: 24),
           const SizedBox(height: 12),
           Text(
             title,

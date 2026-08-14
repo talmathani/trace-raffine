@@ -1,11 +1,9 @@
-﻿import 'dart:typed_data';
+import 'dart:typed_data';
 
 import '../repositories/designer_design_repository.dart';
 
 class CreateDesignerDesign {
-  CreateDesignerDesign({
-    required this._repository,
-  });
+  CreateDesignerDesign({required this._repository});
 
   final DesignerDesignRepository _repository;
 
@@ -43,7 +41,3 @@ class CreateDesignerDesign {
     );
   }
 }
-
-
-
-

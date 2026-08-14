@@ -161,11 +161,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
 
     if (message.contains('operation-not-allowed')) {
-      return 'تسجيل الدخول بالبريد الإلكتروني غير مفعّل في Firebase.';
+      return 'تسجيل الدخول بالبريد الإلكتروني غير مفعّل حالياً.';
     }
 
     if (message.contains('network-request-failed')) {
-      return 'تعذر الاتصال بخدمة Firebase. تحقق من الإنترنت.';
+      return 'تعذر الاتصال بالخدمة. تحقق من الإنترنت.';
     }
 
     if (message.contains('too-many-requests')) {

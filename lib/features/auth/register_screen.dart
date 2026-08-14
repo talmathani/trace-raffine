@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -53,7 +52,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
-    if (password.length < 6) {
+    if (password.length < 8) {
       _showMessage('كلمة المرور يجب أن تكون 6 أحرف على الأقل.');
       return;
     }
@@ -78,17 +77,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
 
       Navigator.of(context).pop();
-    } on FirebaseAuthException catch (error) {
-      debugPrint(
-        'Firebase registration exception: '
-        'code=${error.code}, message=${error.message}',
-      );
-
+    } on StateError catch (error) {
       if (!mounted) {
         return;
       }
 
-      _showMessage(_mapFirebaseError(error.code));
+      _showMessage(error.toString().replaceFirst('StateError: ', ''));
     } catch (error, stackTrace) {
       debugPrint('Unexpected registration error: $error');
       debugPrintStack(stackTrace: stackTrace);
@@ -104,31 +98,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
           _isLoading = false;
         });
       }
-    }
-  }
-
-  String _mapFirebaseError(String code) {
-    switch (code) {
-      case 'email-already-in-use':
-        return 'هذا البريد الإلكتروني مستخدم بالفعل.';
-
-      case 'invalid-email':
-        return 'صيغة البريد الإلكتروني غير صحيحة.';
-
-      case 'weak-password':
-        return 'كلمة المرور ضعيفة. استخدم كلمة مرور أقوى.';
-
-      case 'operation-not-allowed':
-        return 'تسجيل الدخول بالبريد الإلكتروني غير مفعّل في Firebase.';
-
-      case 'network-request-failed':
-        return 'تعذر الاتصال بخدمة Firebase. تحقق من الإنترنت.';
-
-      case 'too-many-requests':
-        return 'تم تنفيذ محاولات كثيرة. انتظر قليلًا ثم حاول مرة أخرى.';
-
-      default:
-        return 'تعذر إنشاء الحساب حاليًا.';
     }
   }
 

@@ -1,15 +1,13 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../domain/repositories/auth_repository.dart';
-import 'data/repositories/designer_design_repository.dart';
+import 'domain/repositories/designer_design_repository.dart';
 import 'domain/models/designer_design_model.dart';
 
 class DesignerMyDesignsScreen extends StatelessWidget {
-  const DesignerMyDesignsScreen({
-    super.key,
-  });
+  const DesignerMyDesignsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -20,53 +18,39 @@ class DesignerMyDesignsScreen extends StatelessWidget {
       return const _DesignerMyDesignsUnavailable();
     }
 
-    return _DesignerMyDesignsContent(
-      designerId: currentUser.id,
-    );
+    return _DesignerMyDesignsContent(designerId: currentUser.id);
   }
 }
 
 class _DesignerMyDesignsContent extends StatelessWidget {
-  const _DesignerMyDesignsContent({
-    required this.designerId,
-  });
+  const _DesignerMyDesignsContent({required this.designerId});
 
   final String designerId;
 
   @override
   Widget build(BuildContext context) {
-    final repository = DesignerDesignRepositoryImpl();
+    final repository = context.read<DesignerDesignRepository>();
 
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('تصاميمي'),
-        ),
+        appBar: AppBar(title: const Text('تصاميمي')),
         body: StreamBuilder<List<DesignerDesignModel>>(
-          stream: repository.watchDesignerDesigns(
-            designerId: designerId,
-          ),
+          stream: repository.watchDesignerDesigns(designerId: designerId),
           builder: (context, snapshot) {
             if (snapshot.hasError) {
-              return _ErrorState(
-                message: snapshot.error.toString(),
-              );
+              return _ErrorState(message: snapshot.error.toString());
             }
 
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(
-                child: CircularProgressIndicator(
-                  color: AppTheme.softRose,
-                ),
+                child: CircularProgressIndicator(color: AppTheme.softRose),
               );
             }
 
             final designs = snapshot.data ?? const <DesignerDesignModel>[];
 
-            return _DesignsBody(
-              designs: designs,
-            );
+            return _DesignsBody(designs: designs);
           },
         ),
       ),
@@ -75,9 +59,7 @@ class _DesignerMyDesignsContent extends StatelessWidget {
 }
 
 class _DesignsBody extends StatelessWidget {
-  const _DesignsBody({
-    required this.designs,
-  });
+  const _DesignsBody({required this.designs});
 
   final List<DesignerDesignModel> designs;
 
@@ -95,24 +77,20 @@ class _DesignsBody extends StatelessWidget {
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
             sliver: SliverList(
-              delegate: SliverChildListDelegate(
-                [
-                  _buildOverviewHeader(),
-                  const SizedBox(height: 18),
-                  _buildStatusSummary(),
-                  const SizedBox(height: 24),
-                  _buildSectionTitle(),
-                  const SizedBox(height: 14),
-                ],
-              ),
+              delegate: SliverChildListDelegate([
+                _buildOverviewHeader(),
+                const SizedBox(height: 18),
+                _buildStatusSummary(),
+                const SizedBox(height: 24),
+                _buildSectionTitle(),
+                const SizedBox(height: 14),
+              ]),
             ),
           ),
           if (designs.isEmpty)
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
-              sliver: SliverToBoxAdapter(
-                child: _buildEmptyState(),
-              ),
+              sliver: SliverToBoxAdapter(child: _buildEmptyState()),
             )
           else
             SliverPadding(
@@ -120,9 +98,7 @@ class _DesignsBody extends StatelessWidget {
               sliver: SliverList.separated(
                 itemCount: designs.length,
                 itemBuilder: (context, index) {
-                  return _DesignCard(
-                    design: designs[index],
-                  );
+                  return _DesignCard(design: designs[index]);
                 },
                 separatorBuilder: (_, _) {
                   return const SizedBox(height: 14);
@@ -141,15 +117,10 @@ class _DesignsBody extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topRight,
           end: Alignment.bottomLeft,
-          colors: [
-            AppTheme.deepBurgundy,
-            AppTheme.burgundyBlack,
-          ],
+          colors: [AppTheme.deepBurgundy, AppTheme.burgundyBlack],
         ),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: AppTheme.divider,
-        ),
+        border: Border.all(color: AppTheme.divider),
         boxShadow: [
           BoxShadow(
             color: AppTheme.obsidian.withValues(alpha: 0.24),
@@ -195,21 +166,15 @@ class _DesignsBody extends StatelessWidget {
 
   Widget _buildStatusSummary() {
     final pendingCount = designs
-        .where(
-          (design) => design.status == DesignerDesignStatus.pending,
-        )
+        .where((design) => design.status == DesignerDesignStatus.pending)
         .length;
 
     final approvedCount = designs
-        .where(
-          (design) => design.status == DesignerDesignStatus.approved,
-        )
+        .where((design) => design.status == DesignerDesignStatus.approved)
         .length;
 
     final rejectedCount = designs
-        .where(
-          (design) => design.status == DesignerDesignStatus.rejected,
-        )
+        .where((design) => design.status == DesignerDesignStatus.rejected)
         .length;
 
     return Row(
@@ -258,27 +223,18 @@ class _DesignsBody extends StatelessWidget {
             ),
           ),
         ),
-        Icon(
-          Icons.tune_rounded,
-          color: AppTheme.softRose,
-          size: 20,
-        ),
+        Icon(Icons.tune_rounded, color: AppTheme.softRose, size: 20),
       ],
     );
   }
 
   Widget _buildEmptyState() {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 24,
-        vertical: 48,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
       decoration: BoxDecoration(
         color: AppTheme.burgundyBlack,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: AppTheme.divider,
-        ),
+        border: Border.all(color: AppTheme.divider),
       ),
       child: const Column(
         children: [
@@ -327,9 +283,7 @@ class _HeaderIcon extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.obsidian.withValues(alpha: 0.32),
         borderRadius: BorderRadius.circular(17),
-        border: Border.all(
-          color: AppTheme.softRose.withValues(alpha: 0.22),
-        ),
+        border: Border.all(color: AppTheme.softRose.withValues(alpha: 0.22)),
       ),
       child: const Icon(
         Icons.design_services_rounded,
@@ -356,24 +310,15 @@ class _StatusSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: 14,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
       decoration: BoxDecoration(
         color: AppTheme.burgundyBlack,
         borderRadius: BorderRadius.circular(17),
-        border: Border.all(
-          color: AppTheme.divider,
-        ),
+        border: Border.all(color: AppTheme.divider),
       ),
       child: Column(
         children: [
-          Icon(
-            icon,
-            color: color,
-            size: 21,
-          ),
+          Icon(icon, color: color, size: 21),
           const SizedBox(height: 8),
           Text(
             '$count',
@@ -403,9 +348,7 @@ class _StatusSummaryCard extends StatelessWidget {
 }
 
 class _DesignCard extends StatelessWidget {
-  const _DesignCard({
-    required this.design,
-  });
+  const _DesignCard({required this.design});
 
   final DesignerDesignModel design;
 
@@ -418,9 +361,7 @@ class _DesignCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.burgundyBlack,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppTheme.divider,
-        ),
+        border: Border.all(color: AppTheme.divider),
       ),
       child: Column(
         children: [
@@ -433,15 +374,10 @@ class _DesignCard extends StatelessWidget {
                   gradient: const LinearGradient(
                     begin: Alignment.topRight,
                     end: Alignment.bottomLeft,
-                    colors: [
-                      AppTheme.deepBurgundy,
-                      AppTheme.burgundyBlack,
-                    ],
+                    colors: [AppTheme.deepBurgundy, AppTheme.burgundyBlack],
                   ),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: AppTheme.divider,
-                  ),
+                  border: Border.all(color: AppTheme.divider),
                 ),
                 child: const Icon(
                   Icons.image_outlined,
@@ -489,10 +425,7 @@ class _DesignCard extends StatelessWidget {
           ),
           const SizedBox(height: 15),
           Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 13,
-              vertical: 11,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
             decoration: BoxDecoration(
               color: AppTheme.obsidian.withValues(alpha: 0.28),
               borderRadius: BorderRadius.circular(13),
@@ -567,9 +500,7 @@ class _DesignCard extends StatelessWidget {
     );
   }
 
-  _StatusConfiguration _statusConfiguration(
-    DesignerDesignStatus status,
-  ) {
+  _StatusConfiguration _statusConfiguration(DesignerDesignStatus status) {
     switch (status) {
       case DesignerDesignStatus.pending:
         return const _StatusConfiguration(
@@ -625,25 +556,16 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 9,
-        vertical: 7,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.09),
         borderRadius: BorderRadius.circular(11),
-        border: Border.all(
-          color: color.withValues(alpha: 0.24),
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.24)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            color: color,
-            size: 14,
-          ),
+          Icon(icon, color: color, size: 14),
           const SizedBox(width: 5),
           Text(
             label,
@@ -675,11 +597,7 @@ class _InfoItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Icon(
-          icon,
-          color: AppTheme.softRose,
-          size: 17,
-        ),
+        Icon(icon, color: AppTheme.softRose, size: 17),
         const SizedBox(height: 5),
         Text(
           label,
@@ -718,10 +636,7 @@ class _DesignerMyDesignsUnavailable extends StatelessWidget {
         body: Center(
           child: Text(
             'تعذر تحديد المصمم الحالي.',
-            style: TextStyle(
-              fontFamily: 'Cairo',
-              color: AppTheme.warmIvory,
-            ),
+            style: TextStyle(fontFamily: 'Cairo', color: AppTheme.warmIvory),
           ),
         ),
       ),
@@ -730,9 +645,7 @@ class _DesignerMyDesignsUnavailable extends StatelessWidget {
 }
 
 class _ErrorState extends StatelessWidget {
-  const _ErrorState({
-    required this.message,
-  });
+  const _ErrorState({required this.message});
 
   final String message;
 

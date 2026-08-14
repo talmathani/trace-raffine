@@ -10,9 +10,7 @@ class DesignerReviewStatusScreen extends StatelessWidget {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('حالة المراجعة'),
-        ),
+        appBar: AppBar(title: const Text('حالة المراجعة')),
         body: ListView(
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
           children: [
@@ -68,21 +66,14 @@ class DesignerReviewStatusScreen extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topRight,
           end: Alignment.bottomLeft,
-          colors: [
-            AppTheme.deepBurgundy,
-            AppTheme.burgundyBlack,
-          ],
+          colors: [AppTheme.deepBurgundy, AppTheme.burgundyBlack],
         ),
         borderRadius: BorderRadius.circular(22),
         border: Border.all(color: AppTheme.divider),
       ),
       child: const Row(
         children: [
-          Icon(
-            Icons.fact_check_rounded,
-            color: AppTheme.softRose,
-            size: 34,
-          ),
+          Icon(Icons.fact_check_rounded, color: AppTheme.softRose, size: 34),
           SizedBox(width: 16),
           Expanded(
             child: Column(
@@ -156,11 +147,7 @@ class DesignerReviewStatusScreen extends StatelessWidget {
   Widget _buildSectionTitle() {
     return const Row(
       children: [
-        Icon(
-          Icons.filter_list_rounded,
-          color: AppTheme.softRose,
-          size: 21,
-        ),
+        Icon(Icons.filter_list_rounded, color: AppTheme.softRose, size: 21),
         SizedBox(width: 9),
         Text(
           'حالات المراجعة',
@@ -198,11 +185,7 @@ class DesignerReviewStatusScreen extends StatelessWidget {
               color: AppTheme.deepBurgundy,
               borderRadius: BorderRadius.circular(15),
             ),
-            child: Icon(
-              icon,
-              color: color,
-              size: 26,
-            ),
+            child: Icon(icon, color: color, size: 26),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -238,18 +221,12 @@ class DesignerReviewStatusScreen extends StatelessWidget {
 
   Widget _buildCurrentState() {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 22,
-        vertical: 30,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 30),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topRight,
           end: Alignment.bottomLeft,
-          colors: [
-            AppTheme.deepBurgundy,
-            AppTheme.burgundyBlack,
-          ],
+          colors: [AppTheme.deepBurgundy, AppTheme.burgundyBlack],
         ),
         borderRadius: BorderRadius.circular(22),
         border: Border.all(color: AppTheme.divider),
@@ -304,11 +281,7 @@ class _OverviewItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Icon(
-          icon,
-          color: AppTheme.softRose,
-          size: 22,
-        ),
+        Icon(icon, color: AppTheme.softRose, size: 22),
         const SizedBox(height: 7),
         Text(
           value,
@@ -339,10 +312,6 @@ class _OverviewDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 1,
-      height: 55,
-      color: AppTheme.divider,
-    );
+    return Container(width: 1, height: 55, color: AppTheme.divider);
   }
 }

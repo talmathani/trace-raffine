@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../home/shared_home_screen.dart';
 
@@ -7,10 +7,6 @@ class AdministrationShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: SafeArea(
-        child: SharedHomeScreen(),
-      ),
-    );
+    return const Scaffold(body: SafeArea(child: SharedHomeScreen()));
   }
 }

@@ -1,4 +1,4 @@
-﻿export 'luxury_badge.dart';
+export 'luxury_badge.dart';
 export 'luxury_button.dart';
 export 'luxury_card.dart';
 export 'luxury_divider.dart';

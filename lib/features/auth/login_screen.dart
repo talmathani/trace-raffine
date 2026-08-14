@@ -1,4 +1,3 @@
-﻿import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -9,10 +8,10 @@ import '../shells/administration_shell.dart';
 import '../shells/customer_shell.dart';
 import '../shells/designer_shell.dart';
 import '../../domain/repositories/auth_repository.dart';
+import '../../domain/entities/user_role.dart';
+import '../../domain/exceptions/auth_exception.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'register_screen.dart';
-
-enum UserRole { customer, designer, administration }
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -179,26 +178,43 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
+      debugPrint('=== LOGIN STEP 1: APPWRITE SIGN IN START ===');
+
       await _authRepository.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
+
+      debugPrint('=== LOGIN STEP 1: APPWRITE SIGN IN SUCCESS ===');
+
+      debugPrint('=== LOGIN STEP 2: SAVE REMEMBERED ACCOUNT START ===');
+
       await _saveRememberedAccount();
 
+      debugPrint('=== LOGIN STEP 2: SAVE REMEMBERED ACCOUNT SUCCESS ===');
+
+      debugPrint('=== LOGIN STEP 3: AGREEMENT START ===');
+
       await _showAgreementIfRequired();
+
+      debugPrint('=== LOGIN STEP 3: AGREEMENT SUCCESS ===');
 
       if (!mounted) {
         return;
       }
 
+      debugPrint('=== LOGIN STEP 4: NAVIGATION START ===');
+
       _navigateToRoleShell();
-    } on FirebaseAuthException catch (error) {
+
+      debugPrint('=== LOGIN STEP 4: NAVIGATION SUCCESS ===');
+    } on AuthException catch (error) {
       if (!mounted) {
         return;
       }
 
       debugPrint(
-        'FirebaseAuthException: '
+        'AUTH EXCEPTION: '
         'code=${error.code}, '
         'message=${error.message}',
       );
@@ -206,26 +222,25 @@ class _LoginScreenState extends State<LoginScreen> {
       String message;
 
       switch (error.code) {
-        case 'invalid-credential':
-        case 'wrong-password':
-        case 'user-not-found':
+        case 'user_invalid_credentials':
+        case 'user_not_found':
           message = 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
           break;
 
-        case 'invalid-email':
+        case 'user_invalid_email':
           message = 'صيغة البريد الإلكتروني غير صحيحة.';
           break;
 
-        case 'user-disabled':
+        case 'user_blocked':
           message = 'هذا الحساب معطّل حالياً.';
           break;
 
-        case 'too-many-requests':
+        case 'rate_limit_exceeded':
           message = 'تمت محاولات كثيرة. حاول مرة أخرى لاحقاً.';
           break;
 
         case 'network-request-failed':
-          message = 'تعذر الاتصال بخدمة Firebase.';
+          message = 'تعذر الاتصال بالخدمة.';
           break;
 
         default:
@@ -233,12 +248,15 @@ class _LoginScreenState extends State<LoginScreen> {
       }
 
       _showMessage(message);
-    } catch (error) {
+    } catch (error, stackTrace) {
+      debugPrint('=== LOGIN UNEXPECTED ERROR ===');
+      debugPrint('ERROR TYPE: ${error.runtimeType}');
+      debugPrint('ERROR: $error');
+      debugPrint('STACK TRACE: $stackTrace');
+
       if (!mounted) {
         return;
       }
-
-      debugPrint('Unexpected login error: $error');
 
       _showMessage('حدث خطأ غير متوقع أثناء تسجيل الدخول.');
     } finally {
@@ -339,7 +357,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               _showMessage(
                                 'تم إرسال رابط استرداد كلمة المرور إلى بريدك الإلكتروني.',
                               );
-                            } on FirebaseAuthException catch (error) {
+                            } on AuthException catch (error) {
                               if (!mounted) {
                                 return;
                               }
@@ -357,21 +375,21 @@ class _LoginScreenState extends State<LoginScreen> {
                               String message = 'تعذر إرسال رسالة الاسترداد.';
 
                               switch (error.code) {
-                                case 'invalid-email':
+                                case 'user_invalid_email':
                                   message = 'صيغة البريد الإلكتروني غير صحيحة.';
                                   break;
 
-                                case 'user-not-found':
+                                case 'user_not_found':
                                   message = 'لا يوجد حساب مرتبط بهذا البريد.';
                                   break;
 
-                                case 'too-many-requests':
+                                case 'rate_limit_exceeded':
                                   message =
                                       'تم تجاوز عدد المحاولات. حاول لاحقاً.';
                                   break;
 
                                 case 'network-request-failed':
-                                  message = 'تعذر الاتصال بخدمة Firebase.';
+                                  message = 'تعذر الاتصال بالخدمة.';
                                   break;
                               }
 
@@ -800,5 +818,3 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
-
-

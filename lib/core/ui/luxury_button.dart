@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 
@@ -38,15 +38,15 @@ class _LuxuryButtonState extends State<LuxuryButton> {
       decoration: BoxDecoration(
         color: enabled
             ? (_hovered
-                ? AppTheme.softRose.withValues(alpha: 0.14)
-                : AppTheme.deepBurgundy)
+                  ? AppTheme.softRose.withValues(alpha: 0.14)
+                  : AppTheme.deepBurgundy)
             : AppTheme.deepBurgundy.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: enabled
               ? (_hovered
-                  ? AppTheme.softRose.withValues(alpha: 0.65)
-                  : AppTheme.divider)
+                    ? AppTheme.softRose.withValues(alpha: 0.65)
+                    : AppTheme.divider)
               : AppTheme.divider.withValues(alpha: 0.45),
         ),
       ),
@@ -75,9 +75,7 @@ class _LuxuryButtonState extends State<LuxuryButton> {
     );
 
     final button = MouseRegion(
-      cursor: enabled
-          ? SystemMouseCursors.click
-          : SystemMouseCursors.basic,
+      cursor: enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
       child: GestureDetector(

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../domain/entities/user_role.dart';
 
-import '../../auth/login_screen.dart';
 import '../../../core/theme/app_theme.dart';
 
 class RoleAgreementDialog extends StatelessWidget {

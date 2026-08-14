@@ -1,4 +1,4 @@
-﻿import 'package:file_picker/file_picker.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -10,8 +10,7 @@ class DesignerUploadScreen extends StatefulWidget {
   const DesignerUploadScreen({super.key});
 
   @override
-  State<DesignerUploadScreen> createState() =>
-      _DesignerUploadScreenState();
+  State<DesignerUploadScreen> createState() => _DesignerUploadScreenState();
 }
 
 class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
@@ -205,9 +204,7 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
         _isSubmitting = false;
       });
 
-      _showMessage(
-        'تم إرسال التصميم للمراجعة بنجاح. رقم التصميم: $designId',
-      );
+      _showMessage('تم إرسال التصميم للمراجعة بنجاح. رقم التصميم: $designId');
     } catch (error) {
       if (!mounted) {
         return;
@@ -217,22 +214,16 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
         _isSubmitting = false;
       });
 
-      _showMessage(
-        'تعذر إرسال التصميم. يرجى المحاولة مرة أخرى.',
-      );
+      _showMessage('تعذر إرسال التصميم. يرجى المحاولة مرة أخرى.');
     }
   }
+
   void _showMessage(String message) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: Text(
-            message,
-            style: const TextStyle(
-              fontFamily: 'Cairo',
-            ),
-          ),
+          content: Text(message, style: const TextStyle(fontFamily: 'Cairo')),
         ),
       );
   }
@@ -280,9 +271,7 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('رفع تصميم جديد'),
-        ),
+        appBar: AppBar(title: const Text('رفع تصميم جديد')),
         body: Form(
           key: _formKey,
           child: ListView(
@@ -340,18 +329,13 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
                 initialValue: _selectedCategory,
                 decoration: const InputDecoration(
                   labelText: 'القسم',
-                  prefixIcon: Icon(
-                    Icons.category_outlined,
-                  ),
+                  prefixIcon: Icon(Icons.category_outlined),
                 ),
                 items: _categories
                     .map(
                       (category) => DropdownMenuItem<String>(
                         value: category,
-                        child: Text(
-                          category,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                        child: Text(category, overflow: TextOverflow.ellipsis),
                       ),
                     )
                     .toList(),
@@ -373,8 +357,7 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
                 label: 'السعر',
                 hint: 'أدخل سعر التصميم',
                 icon: Icons.payments_outlined,
-                keyboardType:
-                    const TextInputType.numberWithOptions(
+                keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
                 validator: (value) {
@@ -382,9 +365,7 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
                     return 'يرجى إدخال السعر';
                   }
 
-                  final price = double.tryParse(
-                    value.trim(),
-                  );
+                  final price = double.tryParse(value.trim());
 
                   if (price == null || price < 0) {
                     return 'أدخل سعرًا صحيحًا';
@@ -399,8 +380,7 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
               _buildSectionTitle(
                 icon: Icons.attach_file_rounded,
                 title: 'ملفات التصميم',
-                subtitle:
-                    'ارفع صورة العرض وملف التطريز الأصلي.',
+                subtitle: 'ارفع صورة العرض وملف التطريز الأصلي.',
               ),
 
               const SizedBox(height: 14),
@@ -452,20 +432,14 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
               SizedBox(
                 height: 56,
                 child: ElevatedButton.icon(
-                  onPressed:
-                      _isSubmitting ? null : _submit,
+                  onPressed: _isSubmitting ? null : _submit,
                   icon: _isSubmitting
                       ? const SizedBox(
                           width: 19,
                           height: 19,
-                          child:
-                              CircularProgressIndicator(
-                            strokeWidth: 2,
-                          ),
+                          child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Icon(
-                          Icons.send_rounded,
-                        ),
+                      : const Icon(Icons.send_rounded),
                   label: Text(
                     _isSubmitting
                         ? 'جاري تجهيز التصميم...'
@@ -493,28 +467,18 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
         gradient: const LinearGradient(
           begin: Alignment.topRight,
           end: Alignment.bottomLeft,
-          colors: [
-            AppTheme.deepBurgundy,
-            AppTheme.burgundyBlack,
-          ],
+          colors: [AppTheme.deepBurgundy, AppTheme.burgundyBlack],
         ),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: AppTheme.divider,
-        ),
+        border: Border.all(color: AppTheme.divider),
       ),
       child: const Row(
         children: [
-          Icon(
-            Icons.cloud_upload_rounded,
-            color: AppTheme.softRose,
-            size: 34,
-          ),
+          Icon(Icons.cloud_upload_rounded, color: AppTheme.softRose, size: 34),
           SizedBox(width: 16),
           Expanded(
             child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'إضافة تصميم جديد',
@@ -556,21 +520,14 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
           decoration: BoxDecoration(
             color: AppTheme.deepBurgundy,
             borderRadius: BorderRadius.circular(13),
-            border: Border.all(
-              color: AppTheme.divider,
-            ),
+            border: Border.all(color: AppTheme.divider),
           ),
-          child: Icon(
-            icon,
-            color: AppTheme.softRose,
-            size: 21,
-          ),
+          child: Icon(icon, color: AppTheme.softRose, size: 21),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
-            crossAxisAlignment:
-                CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 title,
@@ -640,8 +597,7 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
         ),
       ),
       child: Row(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             width: 50,
@@ -650,16 +606,12 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
               color: AppTheme.deepBurgundy,
               borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(
-              icon,
-              color: AppTheme.softRose,
-            ),
+            child: Icon(icon, color: AppTheme.softRose),
           ),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
@@ -676,21 +628,18 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
                     ),
                     if (extension != null)
                       Container(
-                        padding:
-                            const EdgeInsets.symmetric(
+                        padding: const EdgeInsets.symmetric(
                           horizontal: 8,
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
                           color: AppTheme.deepBurgundy,
-                          borderRadius:
-                              BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           extension,
                           style: const TextStyle(
-                            fontFamily:
-                                'CormorantGaramond',
+                            fontFamily: 'CormorantGaramond',
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
                             color: AppTheme.softRose,
@@ -715,16 +664,10 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
                 const SizedBox(height: 10),
                 OutlinedButton.icon(
                   onPressed: onPressed,
-                  icon: const Icon(
-                    Icons.folder_open_rounded,
-                    size: 17,
-                  ),
+                  icon: const Icon(Icons.folder_open_rounded, size: 17),
                   label: Text(
                     buttonText,
-                    style: const TextStyle(
-                      fontFamily: 'Cairo',
-                      fontSize: 11,
-                    ),
+                    style: const TextStyle(fontFamily: 'Cairo', fontSize: 11),
                   ),
                 ),
               ],
@@ -741,20 +684,14 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
       decoration: BoxDecoration(
         color: AppTheme.burgundyBlack,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppTheme.divider,
-        ),
+        border: Border.all(color: AppTheme.divider),
       ),
       child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Row(
             children: [
-              Icon(
-                Icons.tune_rounded,
-                color: AppTheme.softRose,
-              ),
+              Icon(Icons.tune_rounded, color: AppTheme.softRose),
               SizedBox(width: 10),
               Text(
                 'تفاصيل التنفيذ',
@@ -785,8 +722,7 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
           _buildTextField(
             controller: _stitchDetailsController,
             label: 'تفاصيل الغرز',
-            hint:
-                'نوع الغرز، كثافتها، عددها أو أي ملاحظات فنية',
+            hint: 'نوع الغرز، كثافتها، عددها أو أي ملاحظات فنية',
             icon: Icons.linear_scale_rounded,
             maxLines: 3,
           ),
@@ -796,8 +732,7 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
           _buildTextField(
             controller: _beadDetailsController,
             label: 'تفاصيل الخرز',
-            hint:
-                'نوع الخرز، المقاسات، الكمية أو التوزيع',
+            hint: 'نوع الخرز، المقاسات، الكمية أو التوزيع',
             icon: Icons.circle_outlined,
             maxLines: 3,
           ),
@@ -807,8 +742,7 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
           _buildTextField(
             controller: _sequinDetailsController,
             label: 'تفاصيل الترتر',
-            hint:
-                'نوع الترتر، المقاس، اللون أو طريقة التوزيع',
+            hint: 'نوع الترتر، المقاس، اللون أو طريقة التوزيع',
             icon: Icons.auto_awesome_rounded,
             maxLines: 3,
           ),
@@ -818,8 +752,7 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
           _buildTextField(
             controller: _materialDetailsController,
             label: 'الخامات',
-            hint:
-                'نوع القماش أو الخامات المناسبة للتنفيذ',
+            hint: 'نوع القماش أو الخامات المناسبة للتنفيذ',
             icon: Icons.layers_outlined,
             maxLines: 3,
           ),
@@ -829,8 +762,7 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
           _buildTextField(
             controller: _colorDetailsController,
             label: 'الألوان',
-            hint:
-                'الألوان المستخدمة أو المقترحة في التصميم',
+            hint: 'الألوان المستخدمة أو المقترحة في التصميم',
             icon: Icons.palette_outlined,
             maxLines: 3,
           ),
@@ -840,8 +772,7 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
           _buildTextField(
             controller: _productionNotesController,
             label: 'ملاحظات الإنتاج',
-            hint:
-                'ملاحظات مهمة للمصنع أو منفذ التطريز',
+            hint: 'ملاحظات مهمة للمصنع أو منفذ التطريز',
             icon: Icons.precision_manufacturing_outlined,
             maxLines: 3,
           ),
@@ -851,8 +782,7 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
           _buildTextField(
             controller: _additionalDetailsController,
             label: 'تفاصيل إضافية',
-            hint:
-                'أي معلومات أخرى تريد إظهارها للعميل',
+            hint: 'أي معلومات أخرى تريد إظهارها للعميل',
             icon: Icons.notes_rounded,
             maxLines: 4,
           ),
@@ -867,26 +797,16 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
       decoration: BoxDecoration(
         color: AppTheme.deepBurgundy,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: AppTheme.softRose.withValues(
-            alpha: 0.28,
-          ),
-        ),
+        border: Border.all(color: AppTheme.softRose.withValues(alpha: 0.28)),
       ),
       child: const Row(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            Icons.fact_check_outlined,
-            color: AppTheme.softRose,
-            size: 24,
-          ),
+          Icon(Icons.fact_check_outlined, color: AppTheme.softRose, size: 24),
           SizedBox(width: 12),
           Expanded(
             child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'مراجعة الإدارة',
@@ -915,11 +835,3 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
     );
   }
 }
-
-
-
-
-
-
-
-

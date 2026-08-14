@@ -1,11 +1,7 @@
-﻿import '../models/customer_design_model.dart';
+import '../models/customer_design_model.dart';
 
 abstract class CustomerDesignRepository {
-  Stream<List<CustomerDesignModel>> watchApprovedDesigns({
-    String? category,
-  });
+  Stream<List<CustomerDesignModel>> watchApprovedDesigns({String? category});
 
-  Future<CustomerDesignModel?> getDesign({
-    required String designId,
-  });
+  Future<CustomerDesignModel?> getDesign({required String designId});
 }

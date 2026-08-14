@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 
@@ -46,10 +46,7 @@ class LuxurySectionHeader extends StatelessWidget {
             ],
           ),
         ),
-        if (trailing != null) ...[
-          const SizedBox(width: 16),
-          trailing!,
-        ],
+        if (trailing != null) ...[const SizedBox(width: 16), trailing!],
       ],
     );
   }

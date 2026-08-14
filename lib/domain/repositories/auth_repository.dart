@@ -1,4 +1,4 @@
-﻿import '../entities/auth_user.dart';
+import '../entities/auth_user.dart';
 
 abstract class AuthRepository {
   Stream<AuthUser?> get authStateChanges;
@@ -19,9 +19,7 @@ abstract class AuthRepository {
 
   Future<bool> reloadAndCheckEmailVerification();
 
-  Future<void> sendPasswordResetEmail({
-    required String email,
-  });
+  Future<void> sendPasswordResetEmail({required String email});
 
   Future<void> signOut();
 }

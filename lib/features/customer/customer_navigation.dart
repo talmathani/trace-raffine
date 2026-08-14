@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../home/shared_home_screen.dart';
 
@@ -39,10 +39,7 @@ class _CustomerNavigationState extends State<CustomerNavigation> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _pages,
-      ),
+      body: IndexedStack(index: _currentIndex, children: _pages),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: (index) {
@@ -109,11 +106,7 @@ class _CustomerComingSoonPage extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    icon,
-                    size: 42,
-                    color: const Color(0xFFC98F9B),
-                  ),
+                  Icon(icon, size: 42, color: const Color(0xFFC98F9B)),
                   const SizedBox(height: 22),
                   Text(
                     title,

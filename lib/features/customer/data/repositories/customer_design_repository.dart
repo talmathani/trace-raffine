@@ -1,27 +1,25 @@
-﻿import '../../domain/models/customer_design_model.dart';
+import '../../domain/models/customer_design_model.dart';
 import '../../domain/repositories/customer_design_repository.dart';
-import '../datasources/firebase/customer_design_firestore_datasource.dart';
+import '../datasources/appwrite/customer_design_appwrite_datasource.dart';
 
 class CustomerDesignRepositoryImpl implements CustomerDesignRepository {
   CustomerDesignRepositoryImpl({
-    CustomerDesignFirestoreDataSource? firestoreDataSource,
-  }) : _firestoreDataSource =
-          firestoreDataSource ?? CustomerDesignFirestoreDataSource();
+    CustomerDesignAppwriteDataSource? appwriteDataSource,
+  }) : _appwriteDataSource =
+           appwriteDataSource ?? CustomerDesignAppwriteDataSource();
 
-  final CustomerDesignFirestoreDataSource _firestoreDataSource;
+  final CustomerDesignAppwriteDataSource _appwriteDataSource;
 
   @override
-  Stream<List<CustomerDesignModel>> watchApprovedDesigns({
-    String? category,
-  }) {
-    return _firestoreDataSource
+  Stream<List<CustomerDesignModel>> watchApprovedDesigns({String? category}) {
+    return _appwriteDataSource
         .watchApprovedDesigns(category: category)
         .map(
-          (snapshot) => snapshot.docs
+          (documentList) => documentList.documents
               .map(
                 (document) => CustomerDesignModel.fromFirestore(
-                  document.id,
-                  document.data(),
+                  document.$id,
+                  document.data,
                 ),
               )
               .toList(growable: false),
@@ -29,26 +27,9 @@ class CustomerDesignRepositoryImpl implements CustomerDesignRepository {
   }
 
   @override
-  Future<CustomerDesignModel?> getDesign({
-    required String designId,
-  }) async {
-    final document = await _firestoreDataSource.getDesign(
-      designId: designId,
-    );
+  Future<CustomerDesignModel?> getDesign({required String designId}) async {
+    final document = await _appwriteDataSource.getDesign(designId: designId);
 
-    if (!document.exists) {
-      return null;
-    }
-
-    final data = document.data();
-
-    if (data == null) {
-      return null;
-    }
-
-    return CustomerDesignModel.fromFirestore(
-      document.id,
-      data,
-    );
+    return CustomerDesignModel.fromFirestore(document.$id, document.data);
   }
 }

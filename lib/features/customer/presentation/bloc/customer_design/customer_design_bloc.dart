@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -10,9 +10,8 @@ part 'customer_design_state.dart';
 
 class CustomerDesignBloc
     extends Bloc<CustomerDesignEvent, CustomerDesignState> {
-  CustomerDesignBloc({
-    required this._watchApprovedCustomerDesigns,
-  }) : super(const CustomerDesignInitial()) {
+  CustomerDesignBloc({required this._watchApprovedCustomerDesigns})
+    : super(const CustomerDesignInitial()) {
     on<CustomerDesignStarted>(_onStarted);
     on<CustomerDesignCategoryChanged>(_onCategoryChanged);
     on<CustomerDesignReloadRequested>(_onReloadRequested);
@@ -72,31 +71,18 @@ class CustomerDesignBloc
     );
   }
 
-  Future<void> _startWatching(
-    Emitter<CustomerDesignState> emit,
-  ) async {
+  Future<void> _startWatching(Emitter<CustomerDesignState> emit) async {
     await _subscription?.cancel();
 
-    emit(
-      CustomerDesignLoading(
-        category: _category,
-      ),
-    );
+    emit(CustomerDesignLoading(category: _category));
 
-    _subscription = _watchApprovedCustomerDesigns(
-      category: _category,
-    ).listen(
+    _subscription = _watchApprovedCustomerDesigns(category: _category).listen(
       (designs) {
         if (isClosed) {
           return;
         }
 
-        add(
-          CustomerDesignDataReceived(
-            designs: designs,
-            category: _category,
-          ),
-        );
+        add(CustomerDesignDataReceived(designs: designs, category: _category));
       },
       onError: (Object error, StackTrace stackTrace) {
         if (isClosed) {

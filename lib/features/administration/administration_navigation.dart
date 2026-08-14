@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
 
@@ -10,8 +10,7 @@ class AdministrationNavigation extends StatefulWidget {
       _AdministrationNavigationState();
 }
 
-class _AdministrationNavigationState
-    extends State<AdministrationNavigation> {
+class _AdministrationNavigationState extends State<AdministrationNavigation> {
   int _currentIndex = 0;
 
   static const List<_AdminDestination> _destinations = [
@@ -82,10 +81,7 @@ class _AdministrationNavigationState
       textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: AppTheme.obsidian,
-        body: IndexedStack(
-          index: _currentIndex,
-          children: _pages,
-        ),
+        body: IndexedStack(index: _currentIndex, children: _pages),
         bottomNavigationBar: NavigationBar(
           selectedIndex: _currentIndex,
           onDestinationSelected: (index) {
@@ -143,27 +139,25 @@ class _AdministrationDashboard extends StatelessWidget {
                   40,
                 ),
                 sliver: SliverList(
-                  delegate: SliverChildListDelegate(
-                    [
-                      _buildHero(isDesktop),
-                      const SizedBox(height: 22),
-                      _buildStatistics(isDesktop),
-                      const SizedBox(height: 28),
-                      _buildSectionHeader(
-                        title: 'المتابعة اليومية',
-                        subtitle: 'المؤشرات الأساسية للمنصة',
-                      ),
-                      const SizedBox(height: 14),
-                      _buildMonitoringGrid(isDesktop),
-                      const SizedBox(height: 28),
-                      _buildSectionHeader(
-                        title: 'النشاط الأخير',
-                        subtitle: 'آخر العمليات التي تحتاج إلى متابعة',
-                      ),
-                      const SizedBox(height: 14),
-                      const _RecentActivityCard(),
-                    ],
-                  ),
+                  delegate: SliverChildListDelegate([
+                    _buildHero(isDesktop),
+                    const SizedBox(height: 22),
+                    _buildStatistics(isDesktop),
+                    const SizedBox(height: 28),
+                    _buildSectionHeader(
+                      title: 'المتابعة اليومية',
+                      subtitle: 'المؤشرات الأساسية للمنصة',
+                    ),
+                    const SizedBox(height: 14),
+                    _buildMonitoringGrid(isDesktop),
+                    const SizedBox(height: 28),
+                    _buildSectionHeader(
+                      title: 'النشاط الأخير',
+                      subtitle: 'آخر العمليات التي تحتاج إلى متابعة',
+                    ),
+                    const SizedBox(height: 14),
+                    const _RecentActivityCard(),
+                  ]),
                 ),
               ),
             ],
@@ -410,11 +404,7 @@ class _StatisticCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            icon,
-            size: 24,
-            color: AppTheme.softRose,
-          ),
+          Icon(icon, size: 24, color: AppTheme.softRose),
           const Spacer(),
           Text(
             value,
@@ -478,11 +468,7 @@ class _MonitoringCard extends StatelessWidget {
               color: AppTheme.deepBurgundy,
               borderRadius: BorderRadius.circular(13),
             ),
-            child: Icon(
-              icon,
-              size: 21,
-              color: AppTheme.softRose,
-            ),
+            child: Icon(icon, size: 21, color: AppTheme.softRose),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -567,11 +553,7 @@ class _ActivityRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(
-          icon,
-          size: 24,
-          color: AppTheme.softRose,
-        ),
+        Icon(icon, size: 24, color: AppTheme.softRose),
         const SizedBox(width: 14),
         Expanded(
           child: Column(
@@ -618,20 +600,14 @@ class _AdminPlaceholder extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.obsidian,
-      appBar: AppBar(
-        title: Text(title),
-      ),
+      appBar: AppBar(title: Text(title)),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(28),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                icon,
-                size: 48,
-                color: AppTheme.softRose,
-              ),
+              Icon(icon, size: 48, color: AppTheme.softRose),
               const SizedBox(height: 18),
               Text(
                 title,

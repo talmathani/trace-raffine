@@ -1,4 +1,4 @@
-﻿import 'dart:math';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 
@@ -13,12 +13,10 @@ class LuxuryCategoriesHeader extends StatefulWidget {
   final Color backgroundColor;
 
   @override
-  State<LuxuryCategoriesHeader> createState() =>
-      _LuxuryCategoriesHeaderState();
+  State<LuxuryCategoriesHeader> createState() => _LuxuryCategoriesHeaderState();
 }
 
-class _LuxuryCategoriesHeaderState
-    extends State<LuxuryCategoriesHeader> {
+class _LuxuryCategoriesHeaderState extends State<LuxuryCategoriesHeader> {
   static const List<String> _luxuryPhrases = [
     'PRECISION · CRAFTSMANSHIP · DIGITAL ART',
     'TRACÉ RAFINÉ · THE ART OF DIGITAL EMBROIDERY',
@@ -52,8 +50,7 @@ class _LuxuryCategoriesHeaderState
   void initState() {
     super.initState();
 
-    _shuffledCategories = List<String>.from(_categories)
-      ..shuffle(Random());
+    _shuffledCategories = List<String>.from(_categories)..shuffle(Random());
   }
 
   @override
@@ -64,14 +61,8 @@ class _LuxuryCategoriesHeaderState
       decoration: BoxDecoration(
         color: widget.backgroundColor,
         border: const Border(
-          top: BorderSide(
-            color: Color(0x339B5268),
-            width: 1,
-          ),
-          bottom: BorderSide(
-            color: Color(0x339B5268),
-            width: 1,
-          ),
+          top: BorderSide(color: Color(0x339B5268), width: 1),
+          bottom: BorderSide(color: Color(0x339B5268), width: 1),
         ),
       ),
       child: Column(
@@ -157,16 +148,13 @@ class _LuxuryMarqueeState extends State<_LuxuryMarquee> {
     _running = true;
 
     while (mounted) {
-      await Future<void>.delayed(
-        const Duration(milliseconds: 500),
-      );
+      await Future<void>.delayed(const Duration(milliseconds: 500));
 
       if (!mounted || !_scrollController.hasClients) {
         continue;
       }
 
-      final maxExtent =
-          _scrollController.position.maxScrollExtent;
+      final maxExtent = _scrollController.position.maxScrollExtent;
 
       if (maxExtent <= 0) {
         continue;
@@ -182,12 +170,8 @@ class _LuxuryMarqueeState extends State<_LuxuryMarquee> {
       }
 
       await _scrollController.animateTo(
-        widget.direction == AxisDirection.left
-            ? maxExtent
-            : 0.0,
-        duration: Duration(
-          milliseconds: durationMs,
-        ),
+        widget.direction == AxisDirection.left ? maxExtent : 0.0,
+        duration: Duration(milliseconds: durationMs),
         curve: Curves.linear,
       );
 
@@ -215,10 +199,7 @@ class _LuxuryMarqueeState extends State<_LuxuryMarquee> {
   Widget build(BuildContext context) {
     final repeatedContent = Row(
       mainAxisSize: MainAxisSize.min,
-      children: [
-        widget.child,
-        widget.child,
-      ],
+      children: [widget.child, widget.child],
     );
 
     return ClipRect(
@@ -236,9 +217,7 @@ class _LuxuryMarqueeState extends State<_LuxuryMarquee> {
 }
 
 class _LuxuryPhrase extends StatelessWidget {
-  const _LuxuryPhrase({
-    required this.text,
-  });
+  const _LuxuryPhrase({required this.text});
 
   final String text;
 
@@ -263,9 +242,7 @@ class _LuxuryPhrase extends StatelessWidget {
 }
 
 class _LuxuryCategory extends StatelessWidget {
-  const _LuxuryCategory({
-    required this.text,
-  });
+  const _LuxuryCategory({required this.text});
 
   final String text;
 

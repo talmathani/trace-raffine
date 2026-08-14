@@ -1,22 +1,23 @@
-﻿import 'package:flutter/foundation.dart';
+﻿
+import 'package:flutter/foundation.dart';
 
 import '../../domain/models/designer_design_model.dart';
 import '../../domain/repositories/designer_design_repository.dart';
-import '../datasources/firebase/designer_design_firestore_datasource.dart';
-import '../datasources/firebase/designer_design_storage_datasource.dart';
+import '../datasources/appwrite/designer_design_appwrite_datasource.dart';
+import '../datasources/appwrite/designer_design_storage_appwrite_datasource.dart';
 
-class DesignerDesignRepositoryImpl
+class DesignerDesignAppwriteRepositoryImpl
     implements DesignerDesignRepository {
-  DesignerDesignRepositoryImpl({
-    DesignerDesignFirestoreDataSource? firestoreDataSource,
-    DesignerDesignStorageDataSource? storageDataSource,
-  })  : _firestoreDataSource =
-            firestoreDataSource ?? DesignerDesignFirestoreDataSource(),
+  DesignerDesignAppwriteRepositoryImpl({
+    DesignerDesignAppwriteDataSource? databaseDataSource,
+    DesignerDesignStorageAppwriteDataSource? storageDataSource,
+  })  : _databaseDataSource =
+            databaseDataSource ?? DesignerDesignAppwriteDataSource(),
         _storageDataSource =
-            storageDataSource ?? DesignerDesignStorageDataSource();
+            storageDataSource ?? DesignerDesignStorageAppwriteDataSource();
 
-  final DesignerDesignFirestoreDataSource _firestoreDataSource;
-  final DesignerDesignStorageDataSource _storageDataSource;
+  final DesignerDesignAppwriteDataSource _databaseDataSource;
+  final DesignerDesignStorageAppwriteDataSource _storageDataSource;
 
   @override
   Future<String> createDesign({
@@ -47,57 +48,87 @@ class DesignerDesignRepositoryImpl
     final embroideryPath =
         'designer_designs/$designerId/$temporaryId/embroidery.$embroideryExtension';
 
-    final imageContentType = _imageContentType(imageExtension);
-
-    debugPrint('=== DESIGN REPOSITORY: START IMAGE UPLOAD ===');
-
-    final imageUrl = await _storageDataSource.uploadFile(
-      bytes: designImageBytes,
-      storagePath: imagePath,
-      contentType: imageContentType,
-    );
+    String? imageFileId;
+    String? embroideryFileId;
 
     try {
-      final embroideryUrl = await _storageDataSource.uploadFile(
+      debugPrint(
+        '=== APPWRITE DESIGN REPOSITORY: IMAGE UPLOAD START ===',
+      );
+
+      imageFileId = await _storageDataSource.uploadFile(
+        bytes: designImageBytes,
+        storagePath: imagePath,
+        contentType: _imageContentType(imageExtension),
+      );
+
+      debugPrint(
+        '=== APPWRITE DESIGN REPOSITORY: EMBROIDERY UPLOAD START ===',
+      );
+
+      embroideryFileId = await _storageDataSource.uploadFile(
         bytes: embroideryFileBytes,
         storagePath: embroideryPath,
         contentType: 'application/octet-stream',
       );
 
-      try {
-        final designId = await _firestoreDataSource.createDesign(
-          designId: temporaryId,
-          data: {
-            'designerId': designerId,
-            'title': title.trim(),
-            'category': category.trim(),
-            'description': _nullableValue(description),
-            'price': price,
-            'fileExtension': embroideryExtension,
-            'status': 'pending',
-            'designImagePath': imagePath,
-            'designImageUrl': imageUrl,
-            'embroideryFilePath': embroideryPath,
-            'embroideryFileUrl': embroideryUrl,
-            'stitchDetails': _nullableValue(stitchDetails),
-            'beadDetails': _nullableValue(beadDetails),
-            'sequinDetails': _nullableValue(sequinDetails),
-            'additionalDetails': _nullableValue(additionalDetails),
-            'rejectionReason': null,
-          },
-        );
-
-        return designId;
-      } catch (_) {
-        await _storageDataSource.deleteFile(
-          storagePath: embroideryPath,
-        );
-        rethrow;
-      }
-    } catch (_) {
-      await _storageDataSource.deleteFile(
-        storagePath: imagePath,
+      final imageUrl = _storageDataSource.getFileView(
+        fileId: imageFileId,
       );
+
+      final embroideryUrl = _storageDataSource.getFileView(
+        fileId: embroideryFileId,
+      );
+
+      final designId = await _databaseDataSource.createDesign(
+        designId: temporaryId,
+        data: {
+          'designerId': designerId,
+          'title': title.trim(),
+          'category': category.trim(),
+          'description': _nullableValue(description),
+          'price': price,
+          'fileExtension': embroideryExtension,
+          'status': 'pending',
+          'designImagePath': imageFileId,
+          'designImageUrl': imageUrl,
+          'embroideryFilePath': embroideryFileId,
+          'embroideryFileUrl': embroideryUrl,
+          'stitchDetails': _nullableValue(stitchDetails),
+          'beadDetails': _nullableValue(beadDetails),
+          'sequinDetails': _nullableValue(sequinDetails),
+          'additionalDetails': _nullableValue(additionalDetails),
+          'rejectionReason': null,
+        },
+      );
+
+      return designId;
+    } catch (error, stackTrace) {
+      debugPrint(
+        '=== APPWRITE DESIGN REPOSITORY ERROR ===',
+      );
+      debugPrint(
+        'ERROR: $error',
+      );
+      debugPrint(
+        'STACK TRACE: $stackTrace',
+      );
+      if (embroideryFileId != null) {
+        try {
+          await _storageDataSource.deleteFile(
+            fileId: embroideryFileId,
+          );
+        } catch (_) {}
+      }
+
+      if (imageFileId != null) {
+        try {
+          await _storageDataSource.deleteFile(
+            fileId: imageFileId,
+          );
+        } catch (_) {}
+      }
+
       rethrow;
     }
   }
@@ -107,7 +138,7 @@ class DesignerDesignRepositoryImpl
     required String designId,
     required Map<String, dynamic> data,
   }) {
-    return _firestoreDataSource.updateDesign(
+    return _databaseDataSource.updateDesign(
       designId: designId,
       data: data,
     );
@@ -121,18 +152,18 @@ class DesignerDesignRepositoryImpl
   }) async {
     if (imagePath != null && imagePath.trim().isNotEmpty) {
       await _storageDataSource.deleteFile(
-        storagePath: imagePath,
+        fileId: imagePath,
       );
     }
 
     if (embroideryPath != null &&
         embroideryPath.trim().isNotEmpty) {
       await _storageDataSource.deleteFile(
-        storagePath: embroideryPath,
+        fileId: embroideryPath,
       );
     }
 
-    await _firestoreDataSource.deleteDesign(
+    await _databaseDataSource.deleteDesign(
       designId: designId,
     );
   }
@@ -141,16 +172,16 @@ class DesignerDesignRepositoryImpl
   Stream<List<DesignerDesignModel>> watchDesignerDesigns({
     required String designerId,
   }) {
-    return _firestoreDataSource
+    return _databaseDataSource
         .watchDesignerDesigns(
           designerId: designerId,
         )
         .map(
-          (snapshot) => snapshot.docs
+          (documentList) => documentList.documents
               .map(
                 (document) => DesignerDesignModel.fromFirestore(
-                  document.id,
-                  document.data(),
+                  document.$id,
+                  document.data,
                 ),
               )
               .toList(growable: false),
@@ -161,22 +192,18 @@ class DesignerDesignRepositoryImpl
   Future<DesignerDesignModel?> getDesign({
     required String designId,
   }) async {
-    final document = await _firestoreDataSource.getDesign(
+    final document = await _databaseDataSource.getDesign(
       designId: designId,
     );
 
-    if (!document.exists) {
-      return null;
-    }
+    final data = document.data;
 
-    final data = document.data();
-
-    if (data == null) {
+    if (data.isEmpty) {
       return null;
     }
 
     return DesignerDesignModel.fromFirestore(
-      document.id,
+      document.$id,
       data,
     );
   }

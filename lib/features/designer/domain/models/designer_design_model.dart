@@ -1,10 +1,4 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
-
-enum DesignerDesignStatus {
-  pending,
-  approved,
-  rejected,
-}
+enum DesignerDesignStatus { pending, approved, rejected }
 
 class DesignerDesignModel {
   const DesignerDesignModel({
@@ -78,8 +72,8 @@ class DesignerDesignModel {
       beadDetails: _nullableString(data['beadDetails']),
       sequinDetails: _nullableString(data['sequinDetails']),
       additionalDetails: _nullableString(data['additionalDetails']),
-      submittedAt: _dateTimeValue(data['createdAt']),
-      updatedAt: _dateTimeValue(data['updatedAt']),
+      submittedAt: _dateTimeValue(data[r'$createdAt'] ?? data['createdAt']),
+      updatedAt: _dateTimeValue(data[r'$updatedAt'] ?? data['updatedAt']),
       rejectionReason: _nullableString(data['rejectionReason']),
     );
   }
@@ -115,17 +109,10 @@ class DesignerDesignModel {
       return value.toDouble();
     }
 
-    return double.tryParse(
-          value?.toString().trim() ?? '',
-        ) ??
-        0;
+    return double.tryParse(value?.toString().trim() ?? '') ?? 0;
   }
 
   static DateTime? _dateTimeValue(dynamic value) {
-    if (value is Timestamp) {
-      return value.toDate();
-    }
-
     if (value is DateTime) {
       return value;
     }

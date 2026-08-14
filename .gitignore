@@ -53,3 +53,11 @@ macos/Flutter/ephemeral/
 *.backup_*
 *.before_rebuild
 *.before_*
+
+# Temporary backup files
+*.bak
+*.backup.dart
+*step-backup*
+*before-*
+*firebase_backup*
+backup_*

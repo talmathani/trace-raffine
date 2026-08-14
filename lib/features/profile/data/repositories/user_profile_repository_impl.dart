@@ -9,8 +9,8 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
   final AppwriteUserProfileDatasource _datasource;
 
   @override
-  Future<UserProfile?> getCurrentProfile() async {
-    return null;
+  Future<UserProfile?> getCurrentProfile({required String userId}) async {
+    return _datasource.getCurrentProfile(userId: userId);
   }
 
   @override

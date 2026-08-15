@@ -1,10 +1,11 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../domain/repositories/auth_repository.dart';
 import 'domain/repositories/designer_design_repository.dart';
 import 'domain/models/designer_design_model.dart';
+import 'designer_design_details_screen.dart';
 
 class DesignerMyDesignsScreen extends StatelessWidget {
   const DesignerMyDesignsScreen({super.key});
@@ -38,6 +39,23 @@ class _DesignerMyDesignsContent extends StatelessWidget {
         body: StreamBuilder<List<DesignerDesignModel>>(
           stream: repository.watchDesignerDesigns(designerId: designerId),
           builder: (context, snapshot) {
+            if (snapshot.hasData && snapshot.data != null) {
+              for (final design in snapshot.data!) {
+                debugPrint('=== DESIGN DATA DIAGNOSTIC ===');
+                debugPrint('ID: ${design.id}');
+                debugPrint('TITLE: ${design.title}');
+                debugPrint('IMAGE PATH: ${design.designImagePath}');
+                debugPrint('IMAGE URL: ${design.designImageUrl}');
+                debugPrint('EMBROIDERY PATH: ${design.embroideryFilePath}');
+                debugPrint('EMBROIDERY URL: ${design.embroideryFileUrl}');
+                debugPrint('STITCH DETAILS: ${design.stitchDetails}');
+                debugPrint('BEAD DETAILS: ${design.beadDetails}');
+                debugPrint('SEQUIN DETAILS: ${design.sequinDetails}');
+                debugPrint('ADDITIONAL DETAILS: ${design.additionalDetails}');
+                debugPrint('================================');
+              }
+            }
+
             if (snapshot.hasError) {
               return _ErrorState(message: snapshot.error.toString());
             }
@@ -356,8 +374,19 @@ class _DesignCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final status = _statusConfiguration(design.status);
 
-    return Container(
-      padding: const EdgeInsets.all(17),
+    return InkWell(
+      borderRadius: BorderRadius.circular(20),
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => DesignerDesignDetailsScreen(
+              design: design,
+            ),
+          ),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(17),
       decoration: BoxDecoration(
         color: AppTheme.burgundyBlack,
         borderRadius: BorderRadius.circular(20),
@@ -367,24 +396,7 @@ class _DesignCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Container(
-                width: 58,
-                height: 58,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: Alignment.topRight,
-                    end: Alignment.bottomLeft,
-                    colors: [AppTheme.deepBurgundy, AppTheme.burgundyBlack],
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppTheme.divider),
-                ),
-                child: const Icon(
-                  Icons.image_outlined,
-                  color: AppTheme.softRose,
-                  size: 27,
-                ),
-              ),
+              _DesignImage(design: design),
               const SizedBox(width: 13),
               Expanded(
                 child: Column(
@@ -457,6 +469,10 @@ class _DesignCard extends StatelessWidget {
               ],
             ),
           ),
+          if (_hasTechnicalDetails(design)) ...[
+            const SizedBox(height: 12),
+            _TechnicalDetails(design: design),
+          ],
           if (design.status == DesignerDesignStatus.rejected &&
               design.rejectionReason != null &&
               design.rejectionReason!.trim().isNotEmpty) ...[
@@ -496,6 +512,7 @@ class _DesignCard extends StatelessWidget {
             ),
           ],
         ],
+        ),
       ),
     );
   }
@@ -530,6 +547,198 @@ class _DesignCard extends StatelessWidget {
   }
 }
 
+bool _hasTechnicalDetails(DesignerDesignModel design) {
+  return [
+    design.stitchDetails,
+    design.beadDetails,
+    design.sequinDetails,
+    design.additionalDetails,
+  ].any((value) => value != null && value.trim().isNotEmpty);
+}
+
+class _TechnicalDetails extends StatelessWidget {
+  const _TechnicalDetails({required this.design});
+
+  final DesignerDesignModel design;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppTheme.obsidian.withValues(alpha: 0.28),
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: AppTheme.divider),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(
+                Icons.auto_awesome_rounded,
+                color: AppTheme.softRose,
+                size: 18,
+              ),
+              SizedBox(width: 8),
+              Text(
+                'تفاصيل التنفيذ',
+                style: TextStyle(
+                  fontFamily: 'Cairo',
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.warmIvory,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (_hasValue(design.stitchDetails))
+            _TechnicalDetailItem(
+              icon: Icons.route_rounded,
+              title: 'الغرز',
+              value: design.stitchDetails!,
+            ),
+          if (_hasValue(design.beadDetails))
+            _TechnicalDetailItem(
+              icon: Icons.circle_outlined,
+              title: 'الخرز',
+              value: design.beadDetails!,
+            ),
+          if (_hasValue(design.sequinDetails))
+            _TechnicalDetailItem(
+              icon: Icons.stars_rounded,
+              title: 'الترتر',
+              value: design.sequinDetails!,
+            ),
+          if (_hasValue(design.additionalDetails))
+            _TechnicalDetailItem(
+              icon: Icons.notes_rounded,
+              title: 'ملاحظات',
+              value: design.additionalDetails!,
+            ),
+        ],
+      ),
+    );
+  }
+
+  static bool _hasValue(String? value) {
+    return value != null && value.trim().isNotEmpty;
+  }
+}
+
+class _TechnicalDetailItem extends StatelessWidget {
+  const _TechnicalDetailItem({
+    required this.icon,
+    required this.title,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String title;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 9),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            icon,
+            color: AppTheme.softRose,
+            size: 16,
+          ),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 48,
+            child: Text(
+              title,
+              style: const TextStyle(
+                fontFamily: 'Cairo',
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.mutedIvory,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontFamily: 'Cairo',
+                fontSize: 11,
+                color: AppTheme.warmIvory,
+                height: 1.6,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+class _DesignImage extends StatelessWidget {
+  const _DesignImage({required this.design});
+
+  final DesignerDesignModel design;
+
+  @override
+  Widget build(BuildContext context) {
+    final imageUrl = design.designImageUrl?.trim();
+
+    return Container(
+      width: 58,
+      height: 58,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
+          colors: [AppTheme.deepBurgundy, AppTheme.burgundyBlack],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.divider),
+      ),
+      child: imageUrl == null || imageUrl.isEmpty
+          ? const Icon(
+              Icons.image_outlined,
+              color: AppTheme.softRose,
+              size: 27,
+            )
+          : Image.network(
+              imageUrl,
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) {
+                return const Icon(
+                  Icons.broken_image_outlined,
+                  color: AppTheme.softRose,
+                  size: 27,
+                );
+              },
+              loadingBuilder: (context, child, progress) {
+                if (progress == null) {
+                  return child;
+                }
+
+                return const Center(
+                  child: SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppTheme.softRose,
+                    ),
+                  ),
+                );
+              },
+            ),
+    );
+  }
+}
 class _StatusConfiguration {
   const _StatusConfiguration({
     required this.label,
@@ -688,3 +897,7 @@ class _ErrorState extends StatelessWidget {
     );
   }
 }
+
+
+
+

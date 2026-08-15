@@ -1,4 +1,3 @@
-﻿import 'package:appwrite/appwrite.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../domain/models/designer_design_model.dart';
@@ -56,10 +55,6 @@ class DesignerDesignAppwriteRepositoryImpl implements DesignerDesignRepository {
         bytes: designImageBytes,
         storagePath: imagePath,
         contentType: _imageContentType(imageExtension),
-        permissions: <String>[
-          Permission.read(Role.users()),
-          Permission.write(Role.user(designerId)),
-        ],
       );
 
       debugPrint('=== APPWRITE DESIGN REPOSITORY: EMBROIDERY UPLOAD START ===');
@@ -68,10 +63,6 @@ class DesignerDesignAppwriteRepositoryImpl implements DesignerDesignRepository {
         bytes: embroideryFileBytes,
         storagePath: embroideryPath,
         contentType: 'application/octet-stream',
-        permissions: <String>[
-          Permission.read(Role.user(designerId)),
-          Permission.write(Role.user(designerId)),
-        ],
       );
 
       final imageUrl = _storageDataSource.getFileView(fileId: imageFileId);
@@ -220,6 +211,3 @@ class DesignerDesignAppwriteRepositoryImpl implements DesignerDesignRepository {
     return normalized;
   }
 }
-
-
-

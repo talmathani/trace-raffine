@@ -1,4 +1,4 @@
-import 'package:file_picker/file_picker.dart';
+﻿import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -127,6 +127,12 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
   Future<void> _submit() async {
     FocusScope.of(context).unfocus();
 
+    debugPrint('=== DESIGN FORM INPUT DIAGNOSTIC ===');
+    debugPrint('TITLE CONTROLLER: ""');
+    debugPrint('DESCRIPTION CONTROLLER: ""');
+    debugPrint('PRICE CONTROLLER: ""');
+    debugPrint('CATEGORY: ""');
+    debugPrint('====================================');
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -421,7 +427,7 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
 
               const SizedBox(height: 28),
 
-              _buildDetailsSection(),
+              _buildNotesSection(),
 
               const SizedBox(height: 28),
 
@@ -678,7 +684,7 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
     );
   }
 
-  Widget _buildDetailsSection() {
+  Widget _buildNotesSection() {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -691,10 +697,10 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
         children: [
           const Row(
             children: [
-              Icon(Icons.tune_rounded, color: AppTheme.softRose),
+              Icon(Icons.notes_rounded, color: AppTheme.softRose),
               SizedBox(width: 10),
               Text(
-                'تفاصيل التنفيذ',
+                'ملاحظات وتعليمات',
                 style: TextStyle(
                   fontFamily: 'Cairo',
                   fontSize: 17,
@@ -704,11 +710,9 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
               ),
             ],
           ),
-
           const SizedBox(height: 6),
-
           const Text(
-            'أضف المعلومات الفنية التي تساعد العميل على فهم التصميم قبل الشراء.',
+            'أضف أي ملاحظات أو تعليمات تريد إرفاقها مع التصميم.',
             style: TextStyle(
               fontFamily: 'Cairo',
               fontSize: 11,
@@ -716,75 +720,13 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
               height: 1.5,
             ),
           ),
-
           const SizedBox(height: 18),
-
-          _buildTextField(
-            controller: _stitchDetailsController,
-            label: 'تفاصيل الغرز',
-            hint: 'نوع الغرز، كثافتها، عددها أو أي ملاحظات فنية',
-            icon: Icons.linear_scale_rounded,
-            maxLines: 3,
-          ),
-
-          const SizedBox(height: 14),
-
-          _buildTextField(
-            controller: _beadDetailsController,
-            label: 'تفاصيل الخرز',
-            hint: 'نوع الخرز، المقاسات، الكمية أو التوزيع',
-            icon: Icons.circle_outlined,
-            maxLines: 3,
-          ),
-
-          const SizedBox(height: 14),
-
-          _buildTextField(
-            controller: _sequinDetailsController,
-            label: 'تفاصيل الترتر',
-            hint: 'نوع الترتر، المقاس، اللون أو طريقة التوزيع',
-            icon: Icons.auto_awesome_rounded,
-            maxLines: 3,
-          ),
-
-          const SizedBox(height: 14),
-
-          _buildTextField(
-            controller: _materialDetailsController,
-            label: 'الخامات',
-            hint: 'نوع القماش أو الخامات المناسبة للتنفيذ',
-            icon: Icons.layers_outlined,
-            maxLines: 3,
-          ),
-
-          const SizedBox(height: 14),
-
-          _buildTextField(
-            controller: _colorDetailsController,
-            label: 'الألوان',
-            hint: 'الألوان المستخدمة أو المقترحة في التصميم',
-            icon: Icons.palette_outlined,
-            maxLines: 3,
-          ),
-
-          const SizedBox(height: 14),
-
-          _buildTextField(
-            controller: _productionNotesController,
-            label: 'ملاحظات الإنتاج',
-            hint: 'ملاحظات مهمة للمصنع أو منفذ التطريز',
-            icon: Icons.precision_manufacturing_outlined,
-            maxLines: 3,
-          ),
-
-          const SizedBox(height: 14),
-
           _buildTextField(
             controller: _additionalDetailsController,
-            label: 'تفاصيل إضافية',
-            hint: 'أي معلومات أخرى تريد إظهارها للعميل',
-            icon: Icons.notes_rounded,
-            maxLines: 4,
+            label: 'الملاحظات والتعليمات',
+            hint: 'اكتب الملاحظات أو تعليمات التنفيذ هنا',
+            icon: Icons.edit_note_rounded,
+            maxLines: 6,
           ),
         ],
       ),
@@ -835,3 +777,5 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
     );
   }
 }
+
+

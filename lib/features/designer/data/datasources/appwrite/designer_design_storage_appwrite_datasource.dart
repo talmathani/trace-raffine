@@ -1,4 +1,4 @@
-import 'package:appwrite/appwrite.dart';
+﻿import 'package:appwrite/appwrite.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../../../../core/appwrite/appwrite_service.dart';
@@ -14,19 +14,26 @@ class DesignerDesignStorageAppwriteDataSource {
     required Uint8List bytes,
     required String storagePath,
     required String contentType,
+    List<String>? permissions,
   }) async {
     debugPrint('=== APPWRITE STORAGE UPLOAD REQUEST ===');
-    debugPrint('BUCKET: ');
-    debugPrint('FILE NAME: ');
-    debugPrint('STORAGE PATH: ');
-    debugPrint('CONTENT TYPE: ');
-    debugPrint('FILE SIZE BYTES: ');
+    debugPrint('BUCKET: ${AppwriteStorageConstants.designsBucketId}');
+    debugPrint('FILE NAME: ${storagePath.split('/').last}');
+    debugPrint('STORAGE PATH: $storagePath');
+    debugPrint('CONTENT TYPE: $contentType');
+    debugPrint('FILE SIZE BYTES: ${bytes.length}');
+    debugPrint('PERMISSIONS: $permissions');
+
     try {
       final appwriteUser = await AppwriteService.account.get();
+
       debugPrint('=== APPWRITE LIVE SESSION CHECK ===');
       debugPrint('APPWRITE USER ID: ${appwriteUser.$id}');
       debugPrint('APPWRITE USER EMAIL: ${appwriteUser.email}');
-      debugPrint('APPWRITE EMAIL VERIFIED: ${appwriteUser.emailVerification}');
+      debugPrint(
+        'APPWRITE EMAIL VERIFIED: ${appwriteUser.emailVerification}',
+      );
+
       final file = await _storage.createFile(
         bucketId: AppwriteStorageConstants.designsBucketId,
         fileId: ID.unique(),
@@ -35,7 +42,12 @@ class DesignerDesignStorageAppwriteDataSource {
           filename: storagePath.split('/').last,
           contentType: contentType,
         ),
+        permissions: permissions,
       );
+
+      debugPrint('=== APPWRITE STORAGE CREATEFILE SUCCESS ===');
+      debugPrint('FILE ID: ${file.$id}');
+      debugPrint('FILE PERMISSIONS: ${file.$permissions}');
 
       return file.$id;
     } on AppwriteException catch (error, stackTrace) {

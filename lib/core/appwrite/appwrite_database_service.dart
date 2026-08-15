@@ -1,4 +1,4 @@
-import 'package:appwrite/appwrite.dart';
+﻿import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart';
 
 import 'appwrite_service.dart';
@@ -14,13 +14,25 @@ class AppwriteDatabaseService {
     required String collectionId,
     required Map<String, dynamic> data,
     String? documentId,
-  }) {
-    return _databases.createDocument(
+  }) async {
+    print('=== DATABASE SERVICE CREATE REQUEST ===');
+    print('DATABASE ID: ${AppwriteDatabaseConstants.databaseId}');
+    print('COLLECTION ID: $collectionId');
+    print('DOCUMENT ID: ${documentId ?? ID.unique()}');
+    print('DATA: $data');
+
+    final document = await _databases.createDocument(
       databaseId: AppwriteDatabaseConstants.databaseId,
       collectionId: collectionId,
       documentId: documentId ?? ID.unique(),
       data: data,
     );
+
+    print('=== DATABASE SERVICE CREATE SUCCESS ===');
+    print('RETURNED DOCUMENT ID: ${document.$id}');
+    print('RETURNED DOCUMENT DATA: ${document.data}');
+
+    return document;
   }
 
   Future<Document> getDocument({

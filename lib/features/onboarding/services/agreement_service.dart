@@ -1,4 +1,4 @@
-﻿import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AgreementService {
   static const String _customerPrefix = 'customer_agreement_accepted_';
@@ -25,4 +25,3 @@ class AgreementService {
     return '$prefix$uid';
   }
 }
-

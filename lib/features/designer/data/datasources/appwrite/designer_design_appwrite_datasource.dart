@@ -1,14 +1,12 @@
-﻿import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart';
 
 import '../../../../../core/appwrite/appwrite_database_constants.dart';
 import '../../../../../core/appwrite/appwrite_database_service.dart';
 
 class DesignerDesignAppwriteDataSource {
-  DesignerDesignAppwriteDataSource({
-    AppwriteDatabaseService? databaseService,
-  }) : _databaseService =
-           databaseService ?? AppwriteDatabaseService();
+  DesignerDesignAppwriteDataSource({AppwriteDatabaseService? databaseService})
+    : _databaseService = databaseService ?? AppwriteDatabaseService();
 
   final AppwriteDatabaseService _databaseService;
 
@@ -45,9 +43,7 @@ class DesignerDesignAppwriteDataSource {
     );
   }
 
-  Stream<DocumentList> watchDesignerDesigns({
-    required String designerId,
-  }) {
+  Stream<DocumentList> watchDesignerDesigns({required String designerId}) {
     return Stream.fromFuture(
       _databaseService.listDocuments(
         collectionId: AppwriteDatabaseConstants.designsCollectionId,
@@ -63,6 +59,3 @@ class DesignerDesignAppwriteDataSource {
     );
   }
 }
-
-
-

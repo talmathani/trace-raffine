@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 import '../home/shared_home_screen.dart';
 
@@ -12,34 +12,30 @@ class CustomerNavigation extends StatefulWidget {
 class _CustomerNavigationState extends State<CustomerNavigation> {
   int _currentIndex = 0;
 
-  static const List<Widget> _pages = [
-    SharedHomeScreen(),
-    _CustomerComingSoonPage(
-      icon: Icons.grid_view_rounded,
-      title: 'التصنيفات',
-      subtitle: 'استكشف مجموعات التطريز والتصاميم بعناية.',
-    ),
-    _CustomerComingSoonPage(
-      icon: Icons.shopping_bag_outlined,
-      title: 'السلة',
-      subtitle: 'ستظهر هنا التصاميم التي اخترتها للشراء.',
-    ),
-    _CustomerComingSoonPage(
-      icon: Icons.auto_stories_outlined,
-      title: 'مكتبتي',
-      subtitle: 'ستجد هنا تصاميمك وملفاتك الرقمية بعد الشراء.',
-    ),
-    _CustomerComingSoonPage(
-      icon: Icons.person_outline_rounded,
-      title: 'حسابي',
-      subtitle: 'إدارة حسابك وتفضيلاتك وبياناتك الشخصية.',
-    ),
-  ];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: _currentIndex, children: _pages),
+      body: IndexedStack(
+        index: _currentIndex,
+        children: [
+          const SharedHomeScreen(),
+          const _CustomerComingSoonPage(
+            icon: Icons.shopping_bag_outlined,
+            title: 'السلة',
+            subtitle: 'ستظهر هنا التصاميم التي اخترتها للشراء.',
+          ),
+          const _CustomerComingSoonPage(
+            icon: Icons.auto_stories_outlined,
+            title: 'مكتبتي',
+            subtitle: 'ستجد هنا تصاميمك وملفاتك الرقمية بعد الشراء.',
+          ),
+          const _CustomerComingSoonPage(
+            icon: Icons.person_outline_rounded,
+            title: 'حسابي',
+            subtitle: 'إدارة حسابك وتفضيلاتك وبياناتك الشخصية.',
+          ),
+        ],
+      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: (index) {
@@ -53,14 +49,9 @@ class _CustomerNavigationState extends State<CustomerNavigation> {
         },
         destinations: const [
           NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home_rounded),
-            label: 'الرئيسية',
-          ),
-          NavigationDestination(
             icon: Icon(Icons.grid_view_outlined),
             selectedIcon: Icon(Icons.grid_view_rounded),
-            label: 'التصنيفات',
+            label: 'التصاميم',
           ),
           NavigationDestination(
             icon: Icon(Icons.shopping_bag_outlined),

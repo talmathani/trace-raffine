@@ -1,13 +1,10 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
 import 'domain/models/designer_design_model.dart';
 
 class DesignerDesignDetailsScreen extends StatelessWidget {
-  const DesignerDesignDetailsScreen({
-    super.key,
-    required this.design,
-  });
+  const DesignerDesignDetailsScreen({super.key, required this.design});
 
   final DesignerDesignModel design;
 
@@ -19,9 +16,7 @@ class DesignerDesignDetailsScreen extends StatelessWidget {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('تفاصيل التصميم'),
-        ),
+        appBar: AppBar(title: const Text('تفاصيل التصميم')),
         body: LayoutBuilder(
           builder: (context, constraints) {
             final isWide = constraints.maxWidth >= 900;
@@ -32,10 +27,7 @@ class DesignerDesignDetailsScreen extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      flex: 6,
-                      child: _buildImage(),
-                    ),
+                    Expanded(flex: 6, child: _buildImage()),
                     const SizedBox(width: 24),
                     Expanded(
                       flex: 5,
@@ -85,10 +77,7 @@ class DesignerDesignDetailsScreen extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      constraints: const BoxConstraints(
-        minHeight: 420,
-        maxHeight: 720,
-      ),
+      constraints: const BoxConstraints(minHeight: 420, maxHeight: 720),
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: AppTheme.burgundyBlack,
@@ -126,9 +115,7 @@ class DesignerDesignDetailsScreen extends StatelessWidget {
                   if (progress == null) return child;
 
                   return const Center(
-                    child: CircularProgressIndicator(
-                      color: AppTheme.softRose,
-                    ),
+                    child: CircularProgressIndicator(color: AppTheme.softRose),
                   );
                 },
               ),
@@ -175,7 +162,7 @@ class DesignerDesignDetailsScreen extends StatelessWidget {
               ),
               const Spacer(),
               Text(
-                 design.price.toStringAsFixed(2),
+                design.price.toStringAsFixed(2),
                 style: const TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 18,
@@ -294,9 +281,7 @@ class DesignerDesignDetailsScreen extends StatelessWidget {
     return value != null && value.trim().isNotEmpty;
   }
 
-  _StatusConfiguration _statusConfiguration(
-    DesignerDesignStatus status,
-  ) {
+  _StatusConfiguration _statusConfiguration(DesignerDesignStatus status) {
     switch (status) {
       case DesignerDesignStatus.pending:
         return const _StatusConfiguration(
@@ -338,11 +323,7 @@ class _DetailRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            icon,
-            color: AppTheme.softRose,
-            size: 18,
-          ),
+          Icon(icon, color: AppTheme.softRose, size: 18),
           const SizedBox(width: 10),
           SizedBox(
             width: 58,
@@ -375,11 +356,7 @@ class _DetailRow extends StatelessWidget {
 }
 
 class _Badge extends StatelessWidget {
-  const _Badge({
-    required this.icon,
-    required this.label,
-    required this.color,
-  });
+  const _Badge({required this.icon, required this.label, required this.color});
 
   final IconData icon;
   final String label;
@@ -388,16 +365,11 @@ class _Badge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 11,
-        vertical: 8,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.09),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: color.withValues(alpha: 0.25),
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -430,4 +402,3 @@ class _StatusConfiguration {
   final Color color;
   final IconData icon;
 }
-

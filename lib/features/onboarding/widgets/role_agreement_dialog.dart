@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../../domain/entities/user_role.dart';
 
 import '../../../core/theme/app_theme.dart';
@@ -310,7 +310,3 @@ class _AgreementSection extends StatelessWidget {
     );
   }
 }
-
-
-
-

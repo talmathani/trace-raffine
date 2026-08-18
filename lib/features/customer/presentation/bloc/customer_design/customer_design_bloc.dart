@@ -103,12 +103,14 @@ class CustomerDesignBloc
   String _mapErrorMessage(Object error) {
     final message = error.toString().toLowerCase();
 
-    if (message.contains('permission-denied')) {
+    if (message.contains('permission-denied') ||
+        message.contains('unauthorized') ||
+        message.contains('forbidden')) {
       return 'لا تملك صلاحية الوصول إلى التصاميم.';
     }
 
     if (message.contains('failed-precondition')) {
-      return 'يحتاج هذا الاستعلام إلى إعداد فهرس في Firebase.';
+      return 'إعداد قاعدة البيانات لا يسمح بهذا الاستعلام حاليًا.';
     }
 
     if (message.contains('unavailable')) {

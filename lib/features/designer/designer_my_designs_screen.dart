@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../core/theme/app_theme.dart';
@@ -379,139 +379,137 @@ class _DesignCard extends StatelessWidget {
       onTap: () {
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (_) => DesignerDesignDetailsScreen(
-              design: design,
-            ),
+            builder: (_) => DesignerDesignDetailsScreen(design: design),
           ),
         );
       },
       child: Container(
         padding: const EdgeInsets.all(17),
-      decoration: BoxDecoration(
-        color: AppTheme.burgundyBlack,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppTheme.divider),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              _DesignImage(design: design),
-              const SizedBox(width: 13),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      design.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontFamily: 'Cairo',
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.warmIvory,
+        decoration: BoxDecoration(
+          color: AppTheme.burgundyBlack,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppTheme.divider),
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                _DesignImage(design: design),
+                const SizedBox(width: 13),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        design.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontFamily: 'Cairo',
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.warmIvory,
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        design.category,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontFamily: 'Cairo',
+                          fontSize: 11,
+                          color: AppTheme.mutedIvory,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                _StatusBadge(
+                  label: status.label,
+                  color: status.color,
+                  icon: status.icon,
+                ),
+              ],
+            ),
+            const SizedBox(height: 15),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
+              decoration: BoxDecoration(
+                color: AppTheme.obsidian.withValues(alpha: 0.28),
+                borderRadius: BorderRadius.circular(13),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _InfoItem(
+                      icon: Icons.insert_drive_file_outlined,
+                      label: 'الصيغة',
+                      value: design.fileExtension.toUpperCase(),
+                    ),
+                  ),
+                  Expanded(
+                    child: _InfoItem(
+                      icon: Icons.payments_outlined,
+                      label: 'السعر',
+                      value: design.price.toStringAsFixed(2),
+                    ),
+                  ),
+                  if (design.submittedAt != null)
+                    Expanded(
+                      child: _InfoItem(
+                        icon: Icons.calendar_today_outlined,
+                        label: 'الإرسال',
+                        value: _formatDate(design.submittedAt!),
                       ),
                     ),
-                    const SizedBox(height: 5),
-                    Text(
-                      design.category,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontFamily: 'Cairo',
-                        fontSize: 11,
-                        color: AppTheme.mutedIvory,
+                ],
+              ),
+            ),
+            if (_hasTechnicalDetails(design)) ...[
+              const SizedBox(height: 12),
+              _TechnicalDetails(design: design),
+            ],
+            if (design.status == DesignerDesignStatus.rejected &&
+                design.rejectionReason != null &&
+                design.rejectionReason!.trim().isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(13),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFD47A7A).withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(13),
+                  border: Border.all(
+                    color: const Color(0xFFD47A7A).withValues(alpha: 0.22),
+                  ),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(
+                      Icons.info_outline_rounded,
+                      color: Color(0xFFD47A7A),
+                      size: 19,
+                    ),
+                    const SizedBox(width: 9),
+                    Expanded(
+                      child: Text(
+                        design.rejectionReason!,
+                        style: const TextStyle(
+                          fontFamily: 'Cairo',
+                          fontSize: 11,
+                          color: AppTheme.mutedIvory,
+                          height: 1.7,
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 10),
-              _StatusBadge(
-                label: status.label,
-                color: status.color,
-                icon: status.icon,
-              ),
             ],
-          ),
-          const SizedBox(height: 15),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
-            decoration: BoxDecoration(
-              color: AppTheme.obsidian.withValues(alpha: 0.28),
-              borderRadius: BorderRadius.circular(13),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _InfoItem(
-                    icon: Icons.insert_drive_file_outlined,
-                    label: 'الصيغة',
-                    value: design.fileExtension.toUpperCase(),
-                  ),
-                ),
-                Expanded(
-                  child: _InfoItem(
-                    icon: Icons.payments_outlined,
-                    label: 'السعر',
-                    value: design.price.toStringAsFixed(2),
-                  ),
-                ),
-                if (design.submittedAt != null)
-                  Expanded(
-                    child: _InfoItem(
-                      icon: Icons.calendar_today_outlined,
-                      label: 'الإرسال',
-                      value: _formatDate(design.submittedAt!),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          if (_hasTechnicalDetails(design)) ...[
-            const SizedBox(height: 12),
-            _TechnicalDetails(design: design),
           ],
-          if (design.status == DesignerDesignStatus.rejected &&
-              design.rejectionReason != null &&
-              design.rejectionReason!.trim().isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(13),
-              decoration: BoxDecoration(
-                color: const Color(0xFFD47A7A).withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(13),
-                border: Border.all(
-                  color: const Color(0xFFD47A7A).withValues(alpha: 0.22),
-                ),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(
-                    Icons.info_outline_rounded,
-                    color: Color(0xFFD47A7A),
-                    size: 19,
-                  ),
-                  const SizedBox(width: 9),
-                  Expanded(
-                    child: Text(
-                      design.rejectionReason!,
-                      style: const TextStyle(
-                        fontFamily: 'Cairo',
-                        fontSize: 11,
-                        color: AppTheme.mutedIvory,
-                        height: 1.7,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ],
         ),
       ),
     );
@@ -646,11 +644,7 @@ class _TechnicalDetailItem extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            icon,
-            color: AppTheme.softRose,
-            size: 16,
-          ),
+          Icon(icon, color: AppTheme.softRose, size: 16),
           const SizedBox(width: 8),
           SizedBox(
             width: 48,
@@ -681,6 +675,7 @@ class _TechnicalDetailItem extends StatelessWidget {
     );
   }
 }
+
 class _DesignImage extends StatelessWidget {
   const _DesignImage({required this.design});
 
@@ -704,11 +699,7 @@ class _DesignImage extends StatelessWidget {
         border: Border.all(color: AppTheme.divider),
       ),
       child: imageUrl == null || imageUrl.isEmpty
-          ? const Icon(
-              Icons.image_outlined,
-              color: AppTheme.softRose,
-              size: 27,
-            )
+          ? const Icon(Icons.image_outlined, color: AppTheme.softRose, size: 27)
           : Image.network(
               imageUrl,
               fit: BoxFit.cover,
@@ -739,6 +730,7 @@ class _DesignImage extends StatelessWidget {
     );
   }
 }
+
 class _StatusConfiguration {
   const _StatusConfiguration({
     required this.label,
@@ -897,7 +889,3 @@ class _ErrorState extends StatelessWidget {
     );
   }
 }
-
-
-
-

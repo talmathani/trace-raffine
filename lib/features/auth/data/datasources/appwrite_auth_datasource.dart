@@ -1,4 +1,4 @@
-﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
 import 'dart:async';
 
 import 'package:appwrite/appwrite.dart';
@@ -51,12 +51,9 @@ class AppwriteAuthDataSource {
       debugPrint('AUTH DEBUG: checking current session...');
 
       try {
-        final currentSession =
-            await _account.getSession(sessionId: 'current');
+        final currentSession = await _account.getSession(sessionId: 'current');
 
-        debugPrint(
-          'AUTH DEBUG: existing session found: ${currentSession.$id}',
-        );
+        debugPrint('AUTH DEBUG: existing session found: ${currentSession.$id}');
 
         await _account.deleteSession(sessionId: 'current');
 
@@ -76,21 +73,14 @@ class AppwriteAuthDataSource {
       debugPrint('AUTH DEBUG: creating email/password session...');
 
       final session = await _account
-          .createEmailPasswordSession(
-            email: email.trim(),
-            password: password,
-          )
+          .createEmailPasswordSession(email: email.trim(), password: password)
           .timeout(const Duration(seconds: 15));
 
-      debugPrint(
-        'AUTH DEBUG: session created successfully: ${session.$id}',
-      );
+      debugPrint('AUTH DEBUG: session created successfully: ${session.$id}');
 
       final user = await _account.get();
 
-      debugPrint(
-        'AUTH DEBUG: Account.get() succeeded for user ${user.$id}',
-      );
+      debugPrint('AUTH DEBUG: Account.get() succeeded for user ${user.$id}');
 
       _currentUser = user;
       _authStateController.add(user);

@@ -1,4 +1,4 @@
-﻿import '../../../domain/entities/user_profile.dart';
+import '../../../domain/entities/user_profile.dart';
 import '../../../domain/entities/user_role.dart';
 import '../../../domain/repositories/user_profile_repository.dart';
 import '../../auth/data/datasources/appwrite_auth_datasource.dart';
@@ -45,12 +45,3 @@ class ProfileSessionService {
     return _currentProfile;
   }
 }
-
-
-
-
-
-
-
-
-

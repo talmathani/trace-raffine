@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/entities/user_role.dart';
@@ -6,11 +6,7 @@ import '../../features/profile/services/profile_session_service.dart';
 import '../../features/auth/login_screen.dart';
 
 class RoleGuard extends StatelessWidget {
-  const RoleGuard({
-    super.key,
-    required this.requiredRole,
-    required this.child,
-  });
+  const RoleGuard({super.key, required this.requiredRole, required this.child});
 
   final UserRole requiredRole;
   final Widget child;
@@ -21,8 +17,6 @@ class RoleGuard extends StatelessWidget {
 
     final currentRole = session.currentProfile?.role;
 
-    debugPrint('ROLE GUARD REQUIRED:  CURRENT: ');
-
     if (currentRole == requiredRole) {
       return child;
     }
@@ -30,4 +24,3 @@ class RoleGuard extends StatelessWidget {
     return const LoginScreen();
   }
 }
-

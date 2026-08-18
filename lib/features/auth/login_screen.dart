@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/theme/app_theme.dart';
@@ -27,7 +27,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   AuthRepository get _authRepository => context.read<AuthRepository>();
 
-  ProfileSessionService get _profileSession => context.read<ProfileSessionService>();
+  ProfileSessionService get _profileSession =>
+      context.read<ProfileSessionService>();
   final AgreementService _agreementService = AgreementService();
 
   final TextEditingController _emailController = TextEditingController();
@@ -152,7 +153,7 @@ class _LoginScreenState extends State<LoginScreen> {
       case UserRole.designer:
         destination = const DesignerShell();
         break;
-}
+    }
 
     Navigator.of(
       context,
@@ -770,7 +771,7 @@ class _LoginScreenState extends State<LoginScreen> {
               icon: Icons.draw_outlined,
             ),
           ),
-],
+        ],
       ),
     );
   }
@@ -820,12 +821,3 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
-
-
-
-
-
-
-
-
-

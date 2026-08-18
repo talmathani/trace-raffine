@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import 'app.dart';
 import 'core/appwrite/appwrite_service.dart';

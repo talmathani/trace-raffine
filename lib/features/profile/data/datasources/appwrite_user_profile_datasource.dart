@@ -1,4 +1,4 @@
-﻿import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/appwrite.dart';
 
 import '../../../../core/appwrite/appwrite_database_service.dart';
 import '../../../../core/appwrite/appwrite_profile_constants.dart';
@@ -9,25 +9,21 @@ class AppwriteUserProfileDatasource {
 
   final AppwriteDatabaseService _databaseService;
 
-  Future<UserProfileModel?> getCurrentProfile({
-    required String userId,
-  }) async {
+  Future<UserProfileModel?> getCurrentProfile({required String userId}) async {
     try {
       final document = await _databaseService.getDocument(
         collectionId: AppwriteProfileConstants.collectionId,
         documentId: userId,
       );
 
-      return UserProfileModel.fromMap({
-        'id': document.$id,
-        ...document.data,
-      });
+      return UserProfileModel.fromMap({'id': document.$id, ...document.data});
     } catch (error, stackTrace) {
       print('PROFILE LOAD ERROR: $error');
       print(stackTrace);
       return null;
     }
   }
+
   Future<UserProfileModel> createProfile({
     required UserProfileModel profile,
   }) async {
@@ -44,10 +40,7 @@ class AppwriteUserProfileDatasource {
       ],
     );
 
-    return UserProfileModel.fromMap({
-      'id': document.$id,
-      ...document.data,
-    });
+    return UserProfileModel.fromMap({'id': document.$id, ...document.data});
   }
 
   Future<UserProfileModel> updateProfile({
@@ -62,9 +55,3 @@ class AppwriteUserProfileDatasource {
     return profile;
   }
 }
-
-
-
-
-
-

@@ -1,44 +1,469 @@
 {
-    "organizationId":  "6a7c8911000b83df8a84",
-    "projectId":  "trace-raffine",
-    "projectName":  "TRACÉ RAFFINÉ",
-    "endpoint":  "https://fra.cloud.appwrite.io/v1",
-    "functions":  [
-                      {
-                          "$id":  "embroidery-analyzer",
-                          "name":  "embroidery-analyzer",
-                          "runtime":  "python-3.12",
-                          "buildSpecification":  "s-2vcpu-2gb",
-                          "runtimeSpecification":  "s-0.5vcpu-512mb",
-                          "execute":  [
-                                          "any"
-                                      ],
-                          "events":  [
-
-                                     ],
-                          "scopes":  [
-                                         "users.read",
-                                         "files.read"
-                                     ],
-                          "schedule":  "",
-                          "timeout":  15,
-                          "enabled":  true,
-                          "logging":  true,
-                          "entrypoint":  "src/main.py",
-                          "commands":  "pip install -r requirements.txt",
-                          "ignore":  [
-                                         "__pypackages__"
-                                     ],
-                          "deploymentRetention":  0,
-                          "path":  "functions/embroidery-analyzer"
-                      }
-                  ],
-    "buckets":  [
-                    {
-                        "$id":  "design-files",
-                        "name":  "TRACÉ Designs",
-                        "enabled":  true,
-                        "fileSecurity":  true
-                    }
-                ]
+    "organizationId": "6a7c8911000b83df8a84",
+    "projectId": "trace-raffine",
+    "projectName": "TRACÉ RAFFINÉ",
+    "endpoint": "https://fra.cloud.appwrite.io/v1",
+    "settings": {
+        "services": {
+            "account": true,
+            "avatars": true,
+            "databases": true,
+            "locale": true,
+            "health": true,
+            "storage": true,
+            "teams": true,
+            "users": true,
+            "sites": true,
+            "functions": true,
+            "graphql": true,
+            "messaging": true
+        },
+        "protocols": {
+            "rest": true,
+            "graphql": true,
+            "websocket": true
+        },
+        "auth": {
+            "methods": {
+                "jwt": true,
+                "phone": true,
+                "invites": true,
+                "anonymous": true,
+                "email-otp": true,
+                "magic-url": true,
+                "email-password": true
+            },
+            "security": {
+                "duration": 31536000,
+                "limit": null,
+                "sessionsLimit": 10,
+                "passwordHistory": null,
+                "passwordDictionary": false,
+                "personalDataCheck": false,
+                "sessionAlerts": false,
+                "mockNumbers": []
+            }
+        }
+    },
+    "functions": [
+        {
+            "$id": "embroidery-analyzer",
+            "name": "embroidery-analyzer",
+            "runtime": "python-3.12",
+            "path": "functions/embroidery-analyzer",
+            "entrypoint": "src/main.py",
+            "execute": [
+                "any"
+            ],
+            "enabled": true,
+            "logging": true,
+            "events": [],
+            "schedule": "",
+            "timeout": 15,
+            "commands": "pip install -r requirements.txt",
+            "scopes": [
+                "users.read",
+                "files.read"
+            ],
+            "buildSpecification": "s-2vcpu-2gb",
+            "runtimeSpecification": "s-0.5vcpu-512mb",
+            "deploymentRetention": 0
+        },
+        {
+            "$id": "tr-r2-presign-upload",
+            "name": "TR R2 Presign Upload",
+            "runtime": "node-22",
+            "path": "functions/tr-r2-presign-upload",
+            "entrypoint": "index.js",
+            "execute": [
+                "any"
+            ],
+            "enabled": true,
+            "logging": true,
+            "events": [],
+            "schedule": "",
+            "timeout": 15,
+            "commands": "",
+            "scopes": [],
+            "buildSpecification": "s-2vcpu-2gb",
+            "runtimeSpecification": "s-0.5vcpu-512mb",
+            "deploymentRetention": 0
+        }
+    ],
+    "sites": [
+        {
+            "$id": "tr-admin",
+            "name": "TR Admin",
+            "path": "sites/tr-admin",
+            "framework": "flutter",
+            "logging": true,
+            "timeout": 30,
+            "buildRuntime": "flutter-3.35",
+            "adapter": "static",
+            "installCommand": "flutter pub get",
+            "buildCommand": "flutter build web --release -t lib/main.dart",
+            "outputDirectory": "build/web",
+            "fallbackFile": "index.html",
+            "installationId": "",
+            "providerRepositoryId": "",
+            "providerBranch": "",
+            "providerSilentMode": false,
+            "providerRootDirectory": "",
+            "startCommand": "",
+            "buildSpecification": "s-2vcpu-2gb",
+            "runtimeSpecification": "s-0.5vcpu-512mb",
+            "deploymentRetention": 0
+        }
+    ],
+    "tablesDB": [
+        {
+            "$id": "tr_database",
+            "name": "TRACÉ RAFFINÉ Database",
+            "enabled": true
+        }
+    ],
+    "tables": [
+        {
+            "$id": "designer_designs",
+            "$permissions": [
+                "create(\"team:tr-admins/admin\")"
+            ],
+            "databaseId": "tr_database",
+            "name": "Designer Designs",
+            "enabled": true,
+            "rowSecurity": true,
+            "columns": [
+                {
+                    "key": "designerId",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 128,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "title",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 255,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "category",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 128,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "fileExtension",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 32,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "price",
+                    "type": "double",
+                    "required": true,
+                    "array": false,
+                    "default": null,
+                    "min": 0,
+                    "max": 1.7976931348623157e+308
+                },
+                {
+                    "key": "status",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 32,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "description",
+                    "type": "longtext",
+                    "required": true,
+                    "array": false,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "designImagePath",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 1024,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "designImageUrl",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 2048,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "embroideryFilePath",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 1024,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "embroideryFileUrl",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 2048,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "stitchDetails",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 2048,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "beadDetails",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 2048,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "sequinDetails",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 2048,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "additionalDetails",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "size": 2048,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "analysisStitchCount",
+                    "type": "integer",
+                    "required": false,
+                    "array": false,
+                    "default": null,
+                    "min": 0,
+                    "max": 9223372036854775807
+                },
+                {
+                    "key": "analysisColors",
+                    "type": "string",
+                    "required": false,
+                    "array": true,
+                    "size": 128,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "analysisThreadChanges",
+                    "type": "integer",
+                    "required": false,
+                    "array": false,
+                    "default": null,
+                    "min": 0,
+                    "max": 9223372036854775807
+                },
+                {
+                    "key": "analysisWidth",
+                    "type": "double",
+                    "required": false,
+                    "array": false,
+                    "default": null,
+                    "min": 0,
+                    "max": 1.7976931348623157e+308
+                },
+                {
+                    "key": "analysisHeight",
+                    "type": "double",
+                    "required": false,
+                    "array": false,
+                    "default": null,
+                    "min": 0,
+                    "max": 1.7976931348623157e+308
+                }
+            ],
+            "indexes": []
+        },
+        {
+            "$id": "users",
+            "$permissions": [
+                "create(\"users\")"
+            ],
+            "databaseId": "tr_database",
+            "name": "Users",
+            "enabled": true,
+            "rowSecurity": true,
+            "columns": [
+                {
+                    "key": "email",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "default": null,
+                    "format": "email"
+                },
+                {
+                    "key": "role",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "default": null,
+                    "format": "enum",
+                    "elements": [
+                        "customer",
+                        "designer",
+                        "admin"
+                    ]
+                },
+                {
+                    "key": "createdAt",
+                    "type": "datetime",
+                    "required": true,
+                    "array": false,
+                    "default": null,
+                    "format": ""
+                },
+                {
+                    "key": "displayName",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "size": 255,
+                    "default": null,
+                    "encrypt": false
+                }
+            ],
+            "indexes": []
+        },
+        {
+            "$id": "orders",
+            "$permissions": [],
+            "databaseId": "tr_database",
+            "name": "Orders",
+            "enabled": true,
+            "rowSecurity": true,
+            "columns": [
+                {
+                    "key": "customerId",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 128,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "designId",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 128,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "designerId",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 128,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "status",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 32,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "amount",
+                    "type": "double",
+                    "required": true,
+                    "array": false,
+                    "default": null,
+                    "min": -1.7976931348623157e+308,
+                    "max": 1.7976931348623157e+308
+                }
+            ],
+            "indexes": []
+        }
+    ],
+    "buckets": [
+        {
+            "$id": "design-files",
+            "$permissions": [
+                "create(\"users\")",
+                "create(\"team:tr-admins/admin\")",
+                "read(\"team:tr-admins/admin\")",
+                "update(\"team:tr-admins/admin\")",
+                "delete(\"team:tr-admins/admin\")"
+            ],
+            "fileSecurity": true,
+            "name": "TRACÉ Designs",
+            "enabled": true,
+            "maximumFileSize": 50000000,
+            "allowedFileExtensions": [
+                "dst",
+                "pes",
+                "pec",
+                "jef",
+                "vp3",
+                "exp",
+                "xxx",
+                "u01",
+                "tbf",
+                "emb",
+                "dhp",
+                "dhe"
+            ],
+            "compression": "none",
+            "encryption": true,
+            "antivirus": true
+        }
+    ],
+    "teams": [
+        {
+            "$id": "tr-admins",
+            "$createdAt": "2026-08-15T21:11:52.059+00:00",
+            "$updatedAt": "2026-08-15T22:07:43.287+00:00",
+            "name": "TRACÉ RAFFINÉ - المشرفون",
+            "total": 2,
+            "prefs": {}
+        }
+    ]
 }

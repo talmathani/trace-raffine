@@ -1,1 +1,2 @@
 appwrite==23.0.0
+pyembroidery==1.5.1

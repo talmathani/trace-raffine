@@ -1,4 +1,4 @@
-﻿import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/appwrite.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../domain/models/designer_design_model.dart';
@@ -86,9 +86,6 @@ class DesignerDesignAppwriteRepositoryImpl implements DesignerDesignRepository {
           Permission.read(Role.users()),
           Permission.update(Role.user(designerId)),
           Permission.delete(Role.user(designerId)),
-          Permission.read(Role.team('tr-admins', 'admin')),
-          Permission.update(Role.team('tr-admins', 'admin')),
-          Permission.delete(Role.team('tr-admins', 'admin')),
         ],
         data: {
           'designerId': designerId,
@@ -228,4 +225,3 @@ class DesignerDesignAppwriteRepositoryImpl implements DesignerDesignRepository {
     return normalized;
   }
 }
-

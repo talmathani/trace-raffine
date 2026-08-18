@@ -1,4 +1,4 @@
-﻿class AppwriteProfileConstants {
+class AppwriteProfileConstants {
   static const String databaseId = 'tr_database';
 
   static const String collectionId = 'users';
@@ -9,4 +9,3 @@
   static const String role = 'role';
   static const String createdAt = 'createdAt';
 }
-

@@ -1,0 +1,73 @@
+﻿{
+    "organizationId":  "6a7c8911000b83df8a84",
+    "projectId":  "trace-raffine",
+    "projectName":  "TRACÉ RAFFINÉ",
+    "endpoint":  "https://fra.cloud.appwrite.io/v1",
+    "functions":  [
+                      {
+                          "$id":  "embroidery-analyzer",
+                          "name":  "embroidery-analyzer",
+                          "runtime":  "python-3.12",
+                          "buildSpecification":  "s-2vcpu-2gb",
+                          "runtimeSpecification":  "s-0.5vcpu-512mb",
+                          "execute":  [
+                                          "any"
+                                      ],
+                          "events":  [
+
+                                     ],
+                          "scopes":  [
+                                         "users.read",
+                                         "files.read"
+                                     ],
+                          "schedule":  "",
+                          "timeout":  15,
+                          "enabled":  true,
+                          "logging":  true,
+                          "entrypoint":  "src/main.py",
+                          "commands":  "pip install -r requirements.txt",
+                          "ignore":  [
+                                         "__pypackages__"
+                                     ],
+                          "deploymentRetention":  0,
+                          "path":  "functions/embroidery-analyzer"
+                      },
+                      {
+                          "$id":  "design-approval",
+                          "name":  "design-approval",
+                          "runtime":  "python-3.12",
+                          "buildSpecification":  "s-2vcpu-2gb",
+                          "runtimeSpecification":  "s-0.5vcpu-512mb",
+                          "execute":  [
+                                          "users"
+                                      ],
+                          "events":  [
+
+                                     ],
+                          "scopes":  [
+                                         "databases.read",
+                                         "databases.write",
+                                         "teams.read"
+                                     ],
+                          "schedule":  "",
+                          "timeout":  15,
+                          "enabled":  true,
+                          "logging":  true,
+                          "entrypoint":  "src/main.py",
+                          "commands":  "pip install -r requirements.txt",
+                          "ignore":  [
+                                         "__pypackages__"
+                                     ],
+                          "deploymentRetention":  0,
+                          "path":  "functions/design-approval"
+                      }
+                  ],
+    "buckets":  [
+                    {
+                        "$id":  "design-files",
+                        "name":  "TRACÉ Designs",
+                        "enabled":  true,
+                        "fileSecurity":  true
+                    }
+                ]
+}

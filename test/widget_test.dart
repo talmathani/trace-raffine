@@ -1,4 +1,4 @@
-﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 import 'package:trace_raffine/app.dart';
 import 'package:trace_raffine/features/splash/splash_screen.dart';

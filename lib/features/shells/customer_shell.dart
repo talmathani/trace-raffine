@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../../core/guards/role_guard.dart';
 import '../../domain/entities/user_role.dart';

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../shells/customer_shell.dart';
 import '../shells/designer_shell.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -95,8 +95,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         return;
       }
 
-      final profile =
-          context.read<ProfileSessionService>().currentProfile;
+      final profile = context.read<ProfileSessionService>().currentProfile;
 
       final Widget destination;
 
@@ -110,11 +109,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
           break;
       }
 
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute<void>(
-          builder: (_) => destination,
-        ),
-      );
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute<void>(builder: (_) => destination));
     } on StateError catch (error) {
       if (!mounted) {
         return;
@@ -308,14 +305,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       style: TextStyle(fontFamily: 'Cairo'),
                     ),
                   ),
-                 ],
-               ),
-             ),
+                ],
+              ),
+            ),
           ),
         ),
       ),
     );
   }
 }
-
-

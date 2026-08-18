@@ -1,12 +1,12 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../onboarding/services/agreement_service.dart';
 import '../onboarding/widgets/role_agreement_dialog.dart';
-import '../shells/administration_shell.dart';
 import '../shells/customer_shell.dart';
 import '../shells/designer_shell.dart';
+import '../profile/services/profile_session_service.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/entities/user_role.dart';
 import '../../domain/exceptions/auth_exception.dart';
@@ -26,6 +26,8 @@ class _LoginScreenState extends State<LoginScreen> {
   static const String _savedRoleKey = 'saved_login_role';
 
   AuthRepository get _authRepository => context.read<AuthRepository>();
+
+  ProfileSessionService get _profileSession => context.read<ProfileSessionService>();
   final AgreementService _agreementService = AgreementService();
 
   final TextEditingController _emailController = TextEditingController();
@@ -36,6 +38,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePassword = true;
   bool _rememberAccount = true;
   bool _isLoading = false;
+  bool _loginCompleted = false;
 
   @override
   void initState() {
@@ -137,9 +140,11 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
+    final role = _profileSession.currentProfile?.role ?? _selectedRole;
+
     final Widget destination;
 
-    switch (_selectedRole) {
+    switch (role) {
       case UserRole.customer:
         destination = const CustomerShell();
         break;
@@ -147,11 +152,7 @@ class _LoginScreenState extends State<LoginScreen> {
       case UserRole.designer:
         destination = const DesignerShell();
         break;
-
-      case UserRole.administration:
-        destination = const AdministrationShell();
-        break;
-    }
+}
 
     Navigator.of(
       context,
@@ -169,7 +170,7 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    if (_isLoading) {
+    if (_isLoading || _loginCompleted) {
       return;
     }
 
@@ -187,11 +188,19 @@ class _LoginScreenState extends State<LoginScreen> {
 
       debugPrint('=== LOGIN STEP 1: APPWRITE SIGN IN SUCCESS ===');
 
+      _loginCompleted = true;
+
       debugPrint('=== LOGIN STEP 2: SAVE REMEMBERED ACCOUNT START ===');
 
       await _saveRememberedAccount();
 
       debugPrint('=== LOGIN STEP 2: SAVE REMEMBERED ACCOUNT SUCCESS ===');
+
+      debugPrint('=== LOGIN STEP 2.5: LOAD PROFILE SESSION START ===');
+
+      await _profileSession.loadCurrentProfile(role: _selectedRole);
+
+      debugPrint('=== LOGIN STEP 2.5: LOAD PROFILE SESSION SUCCESS ===');
 
       debugPrint('=== LOGIN STEP 3: AGREEMENT START ===');
 
@@ -724,7 +733,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     : () {
                         Navigator.of(context).push(
                           MaterialPageRoute<void>(
-                            builder: (_) => const RegisterScreen(),
+                            builder: (_) => RegisterScreen(role: _selectedRole),
                           ),
                         );
                       },
@@ -761,14 +770,7 @@ class _LoginScreenState extends State<LoginScreen> {
               icon: Icons.draw_outlined,
             ),
           ),
-          Expanded(
-            child: _buildRoleItem(
-              role: UserRole.administration,
-              label: 'الإدارة',
-              icon: Icons.admin_panel_settings_outlined,
-            ),
-          ),
-        ],
+],
       ),
     );
   }
@@ -818,3 +820,12 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
+
+
+
+
+
+
+
+
+

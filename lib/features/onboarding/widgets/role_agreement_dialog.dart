@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../../../domain/entities/user_role.dart';
 
 import '../../../core/theme/app_theme.dart';
@@ -19,8 +19,6 @@ class RoleAgreementDialog extends StatelessWidget {
         return 'أهلاً بك في عالم TRACÉ RAFINÉ';
       case UserRole.designer:
         return 'اتفاقية انضمام المصممين | TRACÉ RAFINÉ';
-      case UserRole.administration:
-        return 'اتفاقية الاستخدام الإداري | TRACÉ RAFINÉ';
     }
   }
 
@@ -36,10 +34,6 @@ class RoleAgreementDialog extends StatelessWidget {
             'لنضمن الحفاظ على اسم المنصة وتقديم أعلى معايير الجودة '
             'لعملائنا، يُرجى الاطلاع والموافقة على الشروط والأحكام '
             'التالية قبل البدء بنشر تصاميمك.';
-      case UserRole.administration:
-        return 'مرحباً بك في مساحة الإدارة الخاصة بمنصة TRACÉ RAFINÉ. '
-            'هذه المساحة مخصصة لإدارة المنصة ومراجعة العمليات '
-            'وفق أعلى معايير الدقة والأمان والسرية.';
     }
   }
 
@@ -97,34 +91,6 @@ class RoleAgreementDialog extends StatelessWidget {
                 'أو حقوق الغير ناتج عن المحتوى الذي يقوم برفعه.',
           ),
         ];
-
-      case UserRole.administration:
-        return const [
-          _AgreementSection(
-            number: '1',
-            title: 'صلاحيات الإدارة',
-            body:
-                'تستخدم صلاحيات الإدارة حصراً لأغراض تشغيل المنصة '
-                'ومراجعة المحتوى والطلبات والحسابات وفق الصلاحيات '
-                'الممنوحة لكل مسؤول.',
-          ),
-          _AgreementSection(
-            number: '2',
-            title: 'السرية والأمان',
-            body:
-                'يلتزم المسؤول بالحفاظ على سرية بيانات المنصة '
-                'والمستخدمين وعدم مشاركة معلومات الدخول أو البيانات '
-                'الإدارية مع أي طرف غير مخول.',
-          ),
-          _AgreementSection(
-            number: '3',
-            title: 'المساءلة',
-            body:
-                'تسجل العمليات الإدارية المهمة لأغراض الأمان والتدقيق، '
-                'ويتحمل كل مستخدم مسؤولية استخدام الصلاحيات الممنوحة '
-                'له ضمن نطاق عمله.',
-          ),
-        ];
     }
   }
 
@@ -134,8 +100,6 @@ class RoleAgreementDialog extends StatelessWidget {
         return 'أوافق وأبدأ التصفح';
       case UserRole.designer:
         return 'أوافق وألتزم بالشروط والمعايير';
-      case UserRole.administration:
-        return 'أوافق وأدخل إلى مساحة الإدارة';
     }
   }
 
@@ -346,3 +310,7 @@ class _AgreementSection extends StatelessWidget {
     );
   }
 }
+
+
+
+

@@ -1,1 +1,4 @@
-enum UserRole { customer, designer, administration }
+﻿enum UserRole {
+  customer,
+  designer,
+}

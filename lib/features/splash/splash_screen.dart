@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+
 
 import '../../core/theme/app_theme.dart';
 import '../auth/login_screen.dart';
@@ -216,3 +217,4 @@ class SplashScreen extends StatelessWidget {
     );
   }
 }
+

@@ -1,11 +1,17 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import '../shells/customer_shell.dart';
+import '../shells/designer_shell.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../domain/repositories/auth_repository.dart';
+import '../../domain/entities/user_role.dart';
+import '../profile/services/profile_session_service.dart';
 
 class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({super.key});
+  const RegisterScreen({super.key, required this.role});
+
+  final UserRole role;
 
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
@@ -72,11 +78,43 @@ class _RegisterScreenState extends State<RegisterScreen> {
         password: password,
       );
 
+      await _authRepository.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
       if (!mounted) {
         return;
       }
 
-      Navigator.of(context).pop();
+      await context.read<ProfileSessionService>().loadCurrentProfile(
+        role: widget.role,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      final profile =
+          context.read<ProfileSessionService>().currentProfile;
+
+      final Widget destination;
+
+      switch (profile?.role ?? widget.role) {
+        case UserRole.customer:
+          destination = const CustomerShell();
+          break;
+
+        case UserRole.designer:
+          destination = const DesignerShell();
+          break;
+      }
+
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute<void>(
+          builder: (_) => destination,
+        ),
+      );
     } on StateError catch (error) {
       if (!mounted) {
         return;
@@ -270,12 +308,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       style: TextStyle(fontFamily: 'Cairo'),
                     ),
                   ),
-                ],
-              ),
-            ),
+                 ],
+               ),
+             ),
           ),
         ),
       ),
     );
   }
 }
+
+

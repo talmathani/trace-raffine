@@ -1,4 +1,4 @@
-import '../../../../domain/entities/user_profile.dart';
+﻿import '../../../../domain/entities/user_profile.dart';
 import '../../../../domain/entities/user_role.dart';
 
 class UserProfileModel extends UserProfile {
@@ -25,7 +25,6 @@ class UserProfileModel extends UserProfile {
 
   Map<String, dynamic> toMap() {
     return {
-      'id': id,
       'email': email,
       'displayName': displayName,
       'role': role.name,

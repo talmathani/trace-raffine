@@ -1,5 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 
+import '../../core/guards/role_guard.dart';
+import '../../domain/entities/user_role.dart';
 import '../customer/customer_navigation.dart';
 
 class CustomerShell extends StatelessWidget {
@@ -7,6 +9,9 @@ class CustomerShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const CustomerNavigation();
+    return const RoleGuard(
+      requiredRole: UserRole.customer,
+      child: CustomerNavigation(),
+    );
   }
 }

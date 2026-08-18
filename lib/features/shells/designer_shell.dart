@@ -1,5 +1,7 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
+import '../../core/guards/role_guard.dart';
+import '../../domain/entities/user_role.dart';
 import '../designer/designer_navigation.dart';
 
 class DesignerShell extends StatelessWidget {
@@ -7,6 +9,9 @@ class DesignerShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const DesignerNavigation();
+    return const RoleGuard(
+      requiredRole: UserRole.designer,
+      child: DesignerNavigation(),
+    );
   }
 }

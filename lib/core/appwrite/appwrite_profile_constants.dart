@@ -1,7 +1,7 @@
-class AppwriteProfileConstants {
-  static const String databaseId = 'YOUR_DATABASE_ID';
+﻿class AppwriteProfileConstants {
+  static const String databaseId = 'tr_database';
 
-  static const String collectionId = 'user_profiles';
+  static const String collectionId = 'users';
 
   static const String userId = 'userId';
   static const String email = 'email';
@@ -9,3 +9,4 @@ class AppwriteProfileConstants {
   static const String role = 'role';
   static const String createdAt = 'createdAt';
 }
+

@@ -82,14 +82,6 @@ class DesignerDesignAppwriteRepositoryImpl implements DesignerDesignRepository {
 
       final designId = await _databaseDataSource.createDesign(
         designId: temporaryId,
-        permissions: <String>[
-          Permission.read(Role.users()),
-          Permission.update(Role.user(designerId)),
-          Permission.delete(Role.user(designerId)),
-          Permission.read(Role.team('tr-admins', 'admin')),
-          Permission.update(Role.team('tr-admins', 'admin')),
-          Permission.delete(Role.team('tr-admins', 'admin')),
-        ],
         data: {
           'designerId': designerId,
           'title': title.trim(),
@@ -228,4 +220,6 @@ class DesignerDesignAppwriteRepositoryImpl implements DesignerDesignRepository {
     return normalized;
   }
 }
+
+
 

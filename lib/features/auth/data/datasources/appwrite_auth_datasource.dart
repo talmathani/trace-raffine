@@ -48,17 +48,49 @@ class AppwriteAuthDataSource {
     required String password,
   }) async {
     try {
+      debugPrint('AUTH DEBUG: checking current session...');
+
+      try {
+        final currentSession =
+            await _account.getSession(sessionId: 'current');
+
+        debugPrint(
+          'AUTH DEBUG: existing session found: ${currentSession.$id}',
+        );
+
+        await _account.deleteSession(sessionId: 'current');
+
+        _currentUser = null;
+        _authStateController.add(null);
+
+        debugPrint('AUTH DEBUG: previous session deleted successfully.');
+      } on AppwriteException catch (e) {
+        if (e.type != 'user_session_not_found') {
+          debugPrint(
+            'AUTH DEBUG: current session check returned '
+            'code=${e.code}, type=${e.type}, message=${e.message}',
+          );
+        }
+      }
+
       debugPrint('AUTH DEBUG: creating email/password session...');
 
       final session = await _account
-          .createEmailPasswordSession(email: email.trim(), password: password)
+          .createEmailPasswordSession(
+            email: email.trim(),
+            password: password,
+          )
           .timeout(const Duration(seconds: 15));
 
-      debugPrint('AUTH DEBUG: session created successfully: ${session.$id}');
+      debugPrint(
+        'AUTH DEBUG: session created successfully: ${session.$id}',
+      );
 
       final user = await _account.get();
 
-      debugPrint('AUTH DEBUG: Account.get() succeeded for user ${user.$id}');
+      debugPrint(
+        'AUTH DEBUG: Account.get() succeeded for user ${user.$id}',
+      );
 
       _currentUser = user;
       _authStateController.add(user);
@@ -71,27 +103,6 @@ class AppwriteAuthDataSource {
         'type=${e.type}, '
         'message=${e.message}',
       );
-
-      if (e.code == 401 && e.type == 'user_session_already_exists') {
-        debugPrint(
-          'AUTH DEBUG: existing session detected. '
-          'Loading current session...',
-        );
-
-        final session = await _account.getSession(sessionId: 'current');
-
-        final user = await _account.get();
-
-        _currentUser = user;
-        _authStateController.add(user);
-
-        debugPrint(
-          'AUTH DEBUG: current session loaded successfully: '
-          '${session.$id}',
-        );
-
-        return session;
-      }
 
       throw AuthException(
         message: e.message ?? 'تعذر تسجيل الدخول.',

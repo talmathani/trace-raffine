@@ -1,4 +1,4 @@
-import '../../../domain/entities/user_profile.dart';
+﻿import '../../../domain/entities/user_profile.dart';
 import '../../../domain/entities/user_role.dart';
 import '../../../domain/repositories/user_profile_repository.dart';
 import '../../auth/data/datasources/appwrite_auth_datasource.dart';
@@ -15,7 +15,11 @@ class ProfileSessionService {
   final GetUserProfile _getUserProfile;
   final UserProfileRepository _repository;
 
-  Future<UserProfile?> loadCurrentProfile() async {
+  UserProfile? _currentProfile;
+
+  UserProfile? get currentProfile => _currentProfile;
+
+  Future<UserProfile?> loadCurrentProfile({required UserRole role}) async {
     final user = _authDatasource.currentUser;
 
     if (user == null) {
@@ -25,6 +29,7 @@ class ProfileSessionService {
     final profile = await _getUserProfile(userId: user.$id);
 
     if (profile != null) {
+      _currentProfile = profile;
       return profile;
     }
 
@@ -32,10 +37,20 @@ class ProfileSessionService {
       id: user.$id,
       email: user.email,
       displayName: user.name,
-      role: UserRole.customer,
+      role: role,
       createdAt: DateTime.now(),
     );
 
-    return _repository.createProfile(profile: newProfile);
+    _currentProfile = await _repository.createProfile(profile: newProfile);
+    return _currentProfile;
   }
 }
+
+
+
+
+
+
+
+
+

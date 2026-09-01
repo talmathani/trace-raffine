@@ -1,21 +1,29 @@
-import '../repositories/order_repository.dart';
+﻿import '../../domain/entities/order.dart';
+import '../../domain/repositories/order_repository.dart';
 
-class CreateOrder {
-  CreateOrder({required this._repository});
+class CreateOrderUseCase {
+  final OrderRepository orderRepository;
 
-  final OrderRepository _repository;
+  CreateOrderUseCase(this.orderRepository);
 
-  Future<String> call({
-    required String customerId,
-    required String designId,
-    required String designerId,
-    required double amount,
-  }) {
-    return _repository.createOrder(
-      customerId: customerId,
-      designId: designId,
-      designerId: designerId,
-      amount: amount,
+  Future<Order> call({
+    required String userId,
+    required List<Map<String, dynamic>> items,
+    String currency = 'USD',
+  }) async {
+    double totalAmount = 0;
+    for (final item in items) {
+      totalAmount += (item['price'] ?? 0) * (item['quantity'] ?? 1);
+    }
+
+    final order = Order(
+      userId: userId,
+      totalAmount: totalAmount,
+      currency: currency,
+      paymentStatus: 'pending',
+      orderStatus: 'pending',
     );
+
+    return await orderRepository.createOrder(order);
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
+import '../../core/ui/appwrite_image.dart';
 import 'domain/models/designer_design_model.dart';
 
 class DesignerDesignDetailsScreen extends StatelessWidget {
@@ -8,7 +9,6 @@ class DesignerDesignDetailsScreen extends StatelessWidget {
 
   final DesignerDesignModel design;
 
-  @override
   @override
   Widget build(BuildContext context) {
     final status = _statusConfiguration(design.status);
@@ -34,7 +34,7 @@ class DesignerDesignDetailsScreen extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          _buildHeader(status),
+                          _buildHeader(status, compact: !isWide),
                           const SizedBox(height: 18),
                           _buildTechnicalDetails(),
                           if (_hasValue(design.description)) ...[
@@ -54,9 +54,9 @@ class DesignerDesignDetailsScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _buildImage(),
+                  _buildImage(compact: !isWide),
                   const SizedBox(height: 18),
-                  _buildHeader(status),
+                  _buildHeader(status, compact: !isWide),
                   const SizedBox(height: 18),
                   _buildTechnicalDetails(),
                   if (_hasValue(design.description)) ...[
@@ -72,12 +72,15 @@ class DesignerDesignDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildImage() {
+  Widget _buildImage({bool compact = false}) {
     final imageUrl = design.designImageUrl?.trim();
 
     return Container(
       width: double.infinity,
-      constraints: const BoxConstraints(minHeight: 420, maxHeight: 720),
+      constraints: BoxConstraints(
+        minHeight: compact ? 260 : 420,
+        maxHeight: compact ? 460 : 720,
+      ),
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: AppTheme.burgundyBlack,
@@ -96,36 +99,19 @@ class DesignerDesignDetailsScreen extends StatelessWidget {
               minScale: 1.0,
               maxScale: 4.0,
               boundaryMargin: const EdgeInsets.all(24),
-              child: Image.network(
-                imageUrl,
+              child: AppwriteImage(
+                imageSource: imageUrl,
                 width: double.infinity,
                 fit: BoxFit.contain,
-                alignment: Alignment.center,
-                filterQuality: FilterQuality.high,
-                errorBuilder: (_, _, _) {
-                  return const Center(
-                    child: Icon(
-                      Icons.broken_image_outlined,
-                      color: AppTheme.softRose,
-                      size: 64,
-                    ),
-                  );
-                },
-                loadingBuilder: (context, child, progress) {
-                  if (progress == null) return child;
-
-                  return const Center(
-                    child: CircularProgressIndicator(color: AppTheme.softRose),
-                  );
-                },
+                borderRadius: BorderRadius.circular(24),
               ),
             ),
     );
   }
 
-  Widget _buildHeader(_StatusConfiguration status) {
+  Widget _buildHeader(_StatusConfiguration status, {bool compact = false}) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(compact ? 16 : 20),
       decoration: BoxDecoration(
         color: AppTheme.burgundyBlack,
         borderRadius: BorderRadius.circular(22),
@@ -136,9 +122,9 @@ class DesignerDesignDetailsScreen extends StatelessWidget {
         children: [
           Text(
             design.title.isEmpty ? 'بدون عنوان' : design.title,
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: 'Cairo',
-              fontSize: 21,
+              fontSize: compact ? 19 : 21,
               fontWeight: FontWeight.w700,
               color: AppTheme.warmIvory,
             ),
@@ -153,19 +139,22 @@ class DesignerDesignDetailsScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          Row(
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 10,
+            runSpacing: 8,
             children: [
               _Badge(
                 icon: status.icon,
                 label: status.label,
                 color: status.color,
               ),
-              const Spacer(),
               Text(
                 design.price.toStringAsFixed(2),
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Inter',
-                  fontSize: 18,
+                  fontSize: compact ? 17 : 18,
                   fontWeight: FontWeight.w700,
                   color: AppTheme.softRose,
                 ),

@@ -1,4 +1,4 @@
-# Miscellaneous
+﻿# Miscellaneous
 *.class
 *.log
 *.pyc
@@ -44,7 +44,6 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Firebase / generated environment files
 ios/Flutter/ephemeral/
 macos/Flutter/ephemeral/
 
@@ -59,5 +58,4 @@ macos/Flutter/ephemeral/
 *.backup.dart
 *step-backup*
 *before-*
-*firebase_backup*
 backup_*

@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -175,10 +176,12 @@ class _CustomerDesignCatalogScreenState
             ),
             const SizedBox(height: 18),
             FilledButton.icon(
+              style: FilledButton.styleFrom(
+                backgroundColor: AppTheme.primaryBurgundy,
+                foregroundColor: AppTheme.warmIvory,
+              ),
               onPressed: () {
-                context.read<CustomerDesignBloc>().add(
-                  const CustomerDesignReloadRequested(),
-                );
+                context.read<CustomerDesignBloc>().add(const CustomerDesignReloadRequested());
               },
               icon: const Icon(Icons.refresh_rounded),
               label: const Text(
@@ -239,7 +242,7 @@ class _DesignCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final imageUrl = design.designImageUrl;
+    final imageBytes = design.designImageBytes;
 
     return Card(
       color: AppTheme.burgundyBlack,
@@ -255,7 +258,7 @@ class _DesignCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Expanded(
-              child: imageUrl == null
+              child: imageBytes == null || imageBytes.isEmpty
                   ? Container(
                       decoration: const BoxDecoration(
                         gradient: LinearGradient(
@@ -272,9 +275,10 @@ class _DesignCard extends StatelessWidget {
                         ),
                       ),
                     )
-                  : Image.network(
-                      imageUrl,
+                  : Image.memory(
+                      Uint8List.fromList(imageBytes),
                       fit: BoxFit.cover,
+                      gaplessPlayback: true,
                       errorBuilder: (_, _, _) {
                         return Container(
                           decoration: const BoxDecoration(
@@ -370,3 +374,5 @@ class _DesignCard extends StatelessWidget {
     );
   }
 }
+
+

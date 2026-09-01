@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app.dart';
 import 'core/appwrite/appwrite_service.dart';
@@ -8,5 +9,5 @@ Future<void> main() async {
 
   AppwriteService.initialize();
 
-  runApp(const TRApp());
+  runApp(const ProviderScope(child: TRApp()));
 }

@@ -1,5 +1,4 @@
-import 'package:appwrite/appwrite.dart';
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 
 import '../../domain/models/designer_design_model.dart';
 import '../../domain/repositories/designer_design_repository.dart';
@@ -7,16 +6,16 @@ import '../datasources/appwrite/designer_design_appwrite_datasource.dart';
 import '../datasources/appwrite/designer_design_storage_appwrite_datasource.dart';
 
 class DesignerDesignAppwriteRepositoryImpl implements DesignerDesignRepository {
+  final DesignerDesignAppwriteDataSource _databaseDataSource;
+  final DesignerDesignStorageAppwriteDataSource _storageDataSource;
+
   DesignerDesignAppwriteRepositoryImpl({
     DesignerDesignAppwriteDataSource? databaseDataSource,
     DesignerDesignStorageAppwriteDataSource? storageDataSource,
-  }) : _databaseDataSource =
-           databaseDataSource ?? DesignerDesignAppwriteDataSource(),
-       _storageDataSource =
-           storageDataSource ?? DesignerDesignStorageAppwriteDataSource();
-
-  final DesignerDesignAppwriteDataSource _databaseDataSource;
-  final DesignerDesignStorageAppwriteDataSource _storageDataSource;
+  })  : _databaseDataSource =
+            databaseDataSource ?? DesignerDesignAppwriteDataSource(),
+        _storageDataSource = storageDataSource ??
+            DesignerDesignStorageAppwriteDataSource();
 
   @override
   Future<String> createDesign({
@@ -35,172 +34,237 @@ class DesignerDesignAppwriteRepositoryImpl implements DesignerDesignRepository {
     String? sequinDetails,
     String? additionalDetails,
   }) async {
+    final totalStopwatch = Stopwatch()..start();
     final temporaryId = DateTime.now().microsecondsSinceEpoch.toString();
+    final imageExt = _extensionOf(designImageName);
+    final embroideryExt = _extensionOf(embroideryFileName);
 
-    final imageExtension = _extensionOf(designImageName);
-    final embroideryExtension = _extensionOf(embroideryFileName);
+    debugPrint(
+      'DESIGN PERFORMANCE: parallel uploads START '
+      'imageBytes=${designImageBytes.length} '
+      'embroideryBytes=${embroideryFileBytes.length}',
+    );
 
-    final imagePath =
-        'designer_designs/$designerId/$temporaryId/design.$imageExtension';
-
-    final embroideryPath =
-        'designer_designs/$designerId/$temporaryId/embroidery.$embroideryExtension';
-
-    String? imageFileId;
-    String? embroideryFileId;
-
-    try {
-      debugPrint('=== APPWRITE DESIGN REPOSITORY: IMAGE UPLOAD START ===');
-
-      imageFileId = await _storageDataSource.uploadFile(
+    // Both Storage requests start immediately and run concurrently.
+    final uploadResults = await Future.wait<_UploadOutcome>(<Future<_UploadOutcome>>[
+      _uploadImage(
         bytes: designImageBytes,
-        storagePath: imagePath,
-        contentType: _imageContentType(imageExtension),
-        permissions: <String>[
-          Permission.read(Role.users()),
-          Permission.write(Role.user(designerId)),
-        ],
-      );
-
-      debugPrint('=== APPWRITE DESIGN REPOSITORY: EMBROIDERY UPLOAD START ===');
-
-      embroideryFileId = await _storageDataSource.uploadFile(
+        extension: imageExt,
+      ),
+      _uploadEmbroidery(
         bytes: embroideryFileBytes,
-        storagePath: embroideryPath,
-        contentType: 'application/octet-stream',
-        permissions: <String>[
-          Permission.read(Role.user(designerId)),
-          Permission.write(Role.user(designerId)),
-        ],
+        extension: embroideryExt,
+      ),
+    ]);
+
+    final imageResult = uploadResults[0];
+    final embroideryResult = uploadResults[1];
+
+    if (!imageResult.isSuccess || !embroideryResult.isSuccess) {
+      debugPrint(
+        'DESIGN PERFORMANCE: parallel uploads FAILED '
+        'imageMs=${imageResult.elapsed.inMilliseconds} '
+        'embroideryMs=${embroideryResult.elapsed.inMilliseconds}',
       );
 
-      final imageUrl = _storageDataSource.getFileView(fileId: imageFileId);
+      // If one request succeeded and the other failed, remove the orphan.
+      final uploadedIds = <String>[
+        if (imageResult.fileId != null) imageResult.fileId!,
+        if (embroideryResult.fileId != null) embroideryResult.fileId!,
+      ];
+      await _rollbackUploadedFiles(uploadedIds);
 
-      final embroideryUrl = _storageDataSource.getFileView(
-        fileId: embroideryFileId,
+      final failed = !imageResult.isSuccess ? imageResult : embroideryResult;
+      Error.throwWithStackTrace(
+        failed.error ?? StateError('تعذر رفع ملفات التصميم.'),
+        failed.stackTrace ?? StackTrace.current,
       );
+    }
 
-      final designId = await _databaseDataSource.createDesign(
+    debugPrint(
+      'DESIGN PERFORMANCE: parallel uploads SUCCESS '
+      'imageMs=${imageResult.elapsed.inMilliseconds} '
+      'embroideryMs=${embroideryResult.elapsed.inMilliseconds} '
+      'parallelMs=${_maxElapsed(imageResult.elapsed, embroideryResult.elapsed)}',
+    );
+
+    final databaseStopwatch = Stopwatch()..start();
+    try {
+      final documentId = await _databaseDataSource.createDesign(
         designId: temporaryId,
-        permissions: <String>[
-          Permission.read(Role.users()),
-          Permission.update(Role.user(designerId)),
-          Permission.delete(Role.user(designerId)),
-        ],
         data: {
-          'designerId': designerId,
+          'designer_id': designerId,
           'title': title.trim(),
-          'category': category.trim(),
           'description': description.trim(),
-          'price': price,
-          'fileExtension': embroideryExtension,
+          'category_id': category.trim(),
+          'price': price.toInt(),
+          'currency': 'USD',
           'status': 'pending',
-          'designImagePath': imageFileId,
-          'designImageUrl': imageUrl,
-          'embroideryFilePath': embroideryFileId,
-          'embroideryFileUrl': embroideryUrl,
-          'stitchDetails': stitchDetails?.trim() ?? '',
-          'beadDetails': beadDetails?.trim() ?? '',
-          'sequinDetails': sequinDetails?.trim() ?? '',
-          'additionalDetails': _nullableValue(additionalDetails),
+          'cover_image_url': imageResult.fileId!,
+          'file_key': embroideryResult.fileId!,
+          'sales_count': 0,
+          'review_count': 0,
+          'rating': 0,
+          'stitch_details': stitchDetails ?? '',
+          'bead_details': beadDetails ?? '',
+          'sequin_details': sequinDetails ?? '',
+          'additional_details': additionalDetails ?? '',
         },
       );
 
-      return designId;
+      databaseStopwatch.stop();
+      totalStopwatch.stop();
+      debugPrint(
+        'DESIGN PERFORMANCE: database SUCCESS '
+        'databaseMs=${databaseStopwatch.elapsedMilliseconds} '
+        'totalMs=${totalStopwatch.elapsedMilliseconds} '
+        'documentId=$documentId',
+      );
+      return documentId;
     } catch (error, stackTrace) {
-      debugPrint('=== APPWRITE DESIGN REPOSITORY ERROR ===');
-      debugPrint('ERROR: $error');
-      debugPrint('STACK TRACE: $stackTrace');
-      if (embroideryFileId != null) {
-        try {
-          await _storageDataSource.deleteFile(fileId: embroideryFileId);
-        } catch (_) {}
-      }
+      databaseStopwatch.stop();
+      debugPrint(
+        'DESIGN PERFORMANCE: database FAILED '
+        'databaseMs=${databaseStopwatch.elapsedMilliseconds} '
+        'totalMs=${totalStopwatch.elapsedMilliseconds} '
+        'error=$error',
+      );
 
-      if (imageFileId != null) {
-        try {
-          await _storageDataSource.deleteFile(fileId: imageFileId);
-        } catch (_) {}
-      }
-
-      rethrow;
+      await _rollbackUploadedFiles(<String>[
+        imageResult.fileId!,
+        embroideryResult.fileId!,
+      ]);
+      Error.throwWithStackTrace(error, stackTrace);
     }
   }
 
-  @override
-  Future<void> updateDesign({
-    required String designId,
-    required Map<String, dynamic> data,
-  }) {
-    return _databaseDataSource.updateDesign(designId: designId, data: data);
-  }
-
-  @override
-  Future<void> deleteDesign({
-    required String designId,
-    required String? imagePath,
-    required String? embroideryPath,
+  Future<_UploadOutcome> _uploadImage({
+    required Uint8List bytes,
+    required String extension,
   }) async {
-    if (imagePath != null && imagePath.trim().isNotEmpty) {
-      await _storageDataSource.deleteFile(fileId: imagePath);
-    }
+    final stopwatch = Stopwatch()..start();
+    final fileName = 'design.$extension';
+    final contentType = _imageContentType(extension);
+    debugPrint(
+      'DESIGN PERFORMANCE: image START '
+      'bytes=${bytes.length} contentType=$contentType',
+    );
 
-    if (embroideryPath != null && embroideryPath.trim().isNotEmpty) {
-      await _storageDataSource.deleteFile(fileId: embroideryPath);
+    try {
+      final fileId = await _storageDataSource.uploadFile(
+        bytes: bytes,
+        fileName: fileName,
+        contentType: contentType,
+      );
+      stopwatch.stop();
+      debugPrint(
+        'DESIGN PERFORMANCE: image SUCCESS '
+        'elapsedMs=${stopwatch.elapsedMilliseconds} fileId=$fileId',
+      );
+      return _UploadOutcome.success(fileId, stopwatch.elapsed);
+    } catch (error, stackTrace) {
+      stopwatch.stop();
+      debugPrint(
+        'DESIGN PERFORMANCE: image FAILED '
+        'elapsedMs=${stopwatch.elapsedMilliseconds} error=$error',
+      );
+      return _UploadOutcome.failure(error, stackTrace, stopwatch.elapsed);
     }
+  }
 
-    await _databaseDataSource.deleteDesign(designId: designId);
+  Future<_UploadOutcome> _uploadEmbroidery({
+    required Uint8List bytes,
+    required String extension,
+  }) async {
+    final stopwatch = Stopwatch()..start();
+    debugPrint(
+      'DESIGN PERFORMANCE: embroidery START '
+      'bytes=${bytes.length} contentType=application/octet-stream',
+    );
+
+    try {
+      final fileId = await _storageDataSource.uploadFile(
+        bytes: bytes,
+        fileName: 'embroidery.$extension',
+        contentType: 'application/octet-stream',
+      );
+      stopwatch.stop();
+      debugPrint(
+        'DESIGN PERFORMANCE: embroidery SUCCESS '
+        'elapsedMs=${stopwatch.elapsedMilliseconds} fileId=$fileId',
+      );
+      return _UploadOutcome.success(fileId, stopwatch.elapsed);
+    } catch (error, stackTrace) {
+      stopwatch.stop();
+      debugPrint(
+        'DESIGN PERFORMANCE: embroidery FAILED '
+        'elapsedMs=${stopwatch.elapsedMilliseconds} error=$error',
+      );
+      return _UploadOutcome.failure(error, stackTrace, stopwatch.elapsed);
+    }
+  }
+
+  Future<void> _rollbackUploadedFiles(List<String> fileIds) async {
+    if (fileIds.isEmpty) {
+      return;
+    }
+    debugPrint(
+      'DESIGN PERFORMANCE: rollback START count=${fileIds.length}',
+    );
+    for (final fileId in fileIds) {
+      try {
+        await _storageDataSource.deleteFile(fileId: fileId);
+        debugPrint('DESIGN PERFORMANCE: rollback SUCCESS fileId=$fileId');
+      } catch (error) {
+        // Preserve the original upload/database error; log cleanup failure.
+        debugPrint(
+          'DESIGN PERFORMANCE: rollback FAILED '
+          'fileId=$fileId error=$error',
+        );
+      }
+    }
   }
 
   @override
   Stream<List<DesignerDesignModel>> watchDesignerDesigns({
     required String designerId,
   }) {
-    return _databaseDataSource
-        .watchDesignerDesigns(designerId: designerId)
-        .map(
-          (documentList) => documentList.documents
-              .map(
-                (document) => DesignerDesignModel.fromFirestore(
-                  document.$id,
-                  document.data,
-                ),
-              )
-              .toList(growable: false),
-        );
+    return _databaseDataSource.watchDesignerDesigns(designerId: designerId);
   }
 
   @override
-  Future<DesignerDesignModel?> getDesign({required String designId}) async {
-    final document = await _databaseDataSource.getDesign(designId: designId);
+  Future<DesignerDesignModel?> getDesign({required String designId}) async => null;
 
-    final data = document.data;
+  @override
+  Future<void> updateDesign({
+    required String designId,
+    required Map<String, dynamic> data,
+  }) async {}
 
-    if (data.isEmpty) {
-      return null;
-    }
-
-    return DesignerDesignModel.fromFirestore(document.$id, data);
-  }
+  @override
+  Future<void> deleteDesign({
+    required String designId,
+    required String? imagePath,
+    required String? embroideryPath,
+  }) async {}
 
   String _extensionOf(String fileName) {
     final normalized = fileName.trim();
-
-    if (normalized.isEmpty || !normalized.contains('.')) {
+    final lastDot = normalized.lastIndexOf('.');
+    if (lastDot < 0 || lastDot == normalized.length - 1) {
       return 'bin';
     }
+    return normalized.substring(lastDot + 1).toLowerCase();
+  }
 
-    final extension = normalized.split('.').last.trim().toLowerCase();
-
-    if (extension.isEmpty) {
-      return 'bin';
-    }
-
-    return extension;
+  int _maxElapsed(Duration first, Duration second) {
+    return first.inMilliseconds > second.inMilliseconds
+        ? first.inMilliseconds
+        : second.inMilliseconds;
   }
 
   String _imageContentType(String extension) {
-    switch (extension.toLowerCase()) {
+    switch (extension) {
       case 'jpg':
       case 'jpeg':
         return 'image/jpeg';
@@ -208,20 +272,46 @@ class DesignerDesignAppwriteRepositoryImpl implements DesignerDesignRepository {
         return 'image/png';
       case 'webp':
         return 'image/webp';
-      case 'gif':
-        return 'image/gif';
       default:
         return 'application/octet-stream';
     }
   }
+}
 
-  String? _nullableValue(String? value) {
-    final normalized = value?.trim();
+class _UploadOutcome {
+  final String? fileId;
+  final Object? error;
+  final StackTrace? stackTrace;
+  final Duration elapsed;
 
-    if (normalized == null || normalized.isEmpty) {
-      return null;
-    }
+  const _UploadOutcome({
+    required this.fileId,
+    required this.error,
+    required this.stackTrace,
+    required this.elapsed,
+  });
 
-    return normalized;
+  factory _UploadOutcome.success(String fileId, Duration elapsed) {
+    return _UploadOutcome(
+      fileId: fileId,
+      error: null,
+      stackTrace: null,
+      elapsed: elapsed,
+    );
   }
+
+  factory _UploadOutcome.failure(
+    Object error,
+    StackTrace stackTrace,
+    Duration elapsed,
+  ) {
+    return _UploadOutcome(
+      fileId: null,
+      error: error,
+      stackTrace: stackTrace,
+      elapsed: elapsed,
+    );
+  }
+
+  bool get isSuccess => fileId != null;
 }

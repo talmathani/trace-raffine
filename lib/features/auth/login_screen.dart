@@ -1,17 +1,19 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../onboarding/services/agreement_service.dart';
 import '../onboarding/widgets/role_agreement_dialog.dart';
-import '../shells/customer_shell.dart';
-import '../shells/designer_shell.dart';
 import '../profile/services/profile_session_service.dart';
-import '../../domain/repositories/auth_repository.dart';
+import 'domain/repositories/auth_repository.dart';
 import '../../domain/entities/user_role.dart';
-import '../../domain/exceptions/auth_exception.dart';
+import '../../core/security/role_policy.dart';
+import 'domain/exceptions/auth_failure.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'register_screen.dart';
+import 'presentation/bloc/auth_bloc.dart';
+import 'presentation/bloc/auth_event.dart';
+import 'presentation/widgets/login_painters.dart';
+import 'presentation/pages/register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -105,7 +107,14 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    final role = _selectedRole.name;
+    final profile = _profileSession.currentProfile;
+
+    if (profile == null) {
+      debugPrint('=== AGREEMENT: PROFILE NOT AVAILABLE ===');
+      return;
+    }
+
+    final role = (_profileSession.activeRole ?? profile.role).name;
 
     final accepted = await _agreementService.hasAccepted(
       uid: user.id,
@@ -121,9 +130,12 @@ class _LoginScreenState extends State<LoginScreen> {
       barrierDismissible: false,
       builder: (_) {
         return RoleAgreementDialog(
-          role: _selectedRole,
+          role: _profileSession.activeRole ?? profile.role,
           onAccepted: () async {
-            await _agreementService.markAccepted(uid: user.id, role: role);
+            await _agreementService.markAccepted(
+              uid: user.id,
+              role: role,
+            );
 
             if (!mounted) {
               return;
@@ -134,30 +146,6 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       },
     );
-  }
-
-  void _navigateToRoleShell() {
-    if (!mounted) {
-      return;
-    }
-
-    final role = _profileSession.currentProfile?.role ?? _selectedRole;
-
-    final Widget destination;
-
-    switch (role) {
-      case UserRole.customer:
-        destination = const CustomerShell();
-        break;
-
-      case UserRole.designer:
-        destination = const DesignerShell();
-        break;
-    }
-
-    Navigator.of(
-      context,
-    ).pushReplacement(MaterialPageRoute<void>(builder: (_) => destination));
   }
 
   Future<void> _submit() async {
@@ -182,10 +170,7 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       debugPrint('=== LOGIN STEP 1: APPWRITE SIGN IN START ===');
 
-      await _authRepository.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      await _authRepository.signIn(email: email, password: password);
 
       debugPrint('=== LOGIN STEP 1: APPWRITE SIGN IN SUCCESS ===');
 
@@ -199,9 +184,74 @@ class _LoginScreenState extends State<LoginScreen> {
 
       debugPrint('=== LOGIN STEP 2.5: LOAD PROFILE SESSION START ===');
 
-      await _profileSession.loadCurrentProfile(role: _selectedRole);
+      final profile = await _profileSession.loadCurrentProfile();
 
-      debugPrint('=== LOGIN STEP 2.5: LOAD PROFILE SESSION SUCCESS ===');
+      if (profile == null) {
+        throw AuthFailure(
+          code: 'profile_not_found',
+          message: 'تعذر تحميل ملف الحساب.',
+        );
+      }
+
+      debugPrint(
+        '=== LOGIN STEP 2.5: PROFILE LOADED '
+        'role=${profile.role.name} '
+        'id=${profile.id} ===',
+      );
+
+      final canUseSelectedRole = RolePolicy.canUseRole(
+        email: profile.email ?? email,
+        storedRole: profile.role,
+        requestedRole: _selectedRole,
+      );
+
+      if (!canUseSelectedRole) {
+        debugPrint(
+          '=== LOGIN ROLE MISMATCH === '
+          'selected=${_selectedRole.name} '
+          'actual=${profile.role.name}',
+        );
+
+        await _authRepository.signOut();
+        _profileSession.clear();
+        _loginCompleted = false;
+
+        if (!mounted) {
+          return;
+        }
+
+        setState(() {
+          _isLoading = false;
+        });
+
+        final selectedLabel = _selectedRole == UserRole.designer
+            ? 'المصممين'
+            : 'العملاء';
+
+        final actualLabel = profile.role == UserRole.designer
+            ? 'مصمم'
+            : 'عميل';
+
+        _showMessage(
+          'هذا الحساب مسجل كـ $actualLabel. '
+          'لا يمكن الدخول من قسم $selectedLabel.',
+        );
+
+        return;
+      }
+
+      _profileSession.setActiveRole(
+        RolePolicy.isAdminEmail(profile.email ?? email)
+            ? _selectedRole
+            : profile.role,
+      );
+
+      await _saveRememberedAccount();
+
+      debugPrint(
+        '=== LOGIN ROLE VERIFIED === '
+        'role=${_profileSession.activeRole?.name ?? profile.role.name}',
+      );
 
       debugPrint('=== LOGIN STEP 3: AGREEMENT START ===');
 
@@ -213,12 +263,12 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
-      debugPrint('=== LOGIN STEP 4: NAVIGATION START ===');
+      debugPrint('=== LOGIN STEP 4: AUTH COMPLETE — REFRESH AUTH BLOC ===');
 
-      _navigateToRoleShell();
+      context.read<AuthBloc>().add(const AuthStarted());
 
-      debugPrint('=== LOGIN STEP 4: NAVIGATION SUCCESS ===');
-    } on AuthException catch (error) {
+      debugPrint('=== LOGIN STEP 4: AUTH BLOC REFRESH REQUESTED ===');
+    } on AuthFailure catch (error) {
       if (!mounted) {
         return;
       }
@@ -352,8 +402,11 @@ class _LoginScreenState extends State<LoginScreen> {
                             });
 
                             try {
-                              await _authRepository.sendPasswordResetEmail(
+                              await _authRepository.sendPasswordRecovery(
                                 email: email,
+                                redirectUrl: Uri.base
+                                    .resolve('reset-password')
+                                    .toString(),
                               );
 
                               if (!mounted) {
@@ -367,7 +420,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               _showMessage(
                                 'تم إرسال رابط استرداد كلمة المرور إلى بريدك الإلكتروني.',
                               );
-                            } on AuthException catch (error) {
+                            } on AuthFailure catch (error) {
                               if (!mounted) {
                                 return;
                               }
@@ -469,305 +522,440 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.sizeOf(context);
-    final isWide = size.width >= 850;
+    final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: AppTheme.obsidian,
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(
-              horizontal: isWide ? 60 : 24,
-              vertical: 28,
-            ),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1080),
-              child: isWide
-                  ? Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Expanded(child: _buildBrandPanel()),
-                        const SizedBox(width: 70),
-                        Expanded(child: _buildLoginPanel()),
-                      ],
-                    )
-                  : Column(
-                      children: [
-                        _buildCompactBrandHeader(),
-                        const SizedBox(height: 34),
-                        _buildLoginPanel(),
-                      ],
-                    ),
+      backgroundColor: scheme.surface,
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: CustomPaint(
+              painter: LoginBackgroundPainter(
+                primary: scheme.primary,
+                secondary: scheme.secondary,
+                surface: scheme.surface,
+              ),
             ),
           ),
-        ),
+          SafeArea(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final compact = constraints.maxWidth < 600;
+
+                return SingleChildScrollView(
+                  padding: EdgeInsets.fromLTRB(
+                    compact ? 18 : 42,
+                    16,
+                    compact ? 18 : 42,
+                    40,
+                  ),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 880),
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 12),
+                          _buildBrandHeader(context),
+                          const SizedBox(height: 30),
+                          _buildRoleSelector(context),
+                          const SizedBox(height: 0),
+                          _buildLoginCard(context),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildBrandPanel() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'TRACÉ RAFINÉ',
-          style: TextStyle(
-            fontFamily: 'CormorantGaramond',
-            fontSize: 38,
-            fontWeight: FontWeight.w600,
-            color: AppTheme.warmIvory,
-            letterSpacing: 4,
-          ),
-        ),
-        const SizedBox(height: 14),
-        Container(width: 72, height: 1, color: AppTheme.softRose),
-        const SizedBox(height: 30),
-        const Text(
-          'مرحباً بك\nفي عالم الحِرفة الرقمية.',
-          style: TextStyle(
-            fontFamily: 'Cairo',
-            fontSize: 30,
-            fontWeight: FontWeight.w700,
-            color: AppTheme.warmIvory,
-            height: 1.6,
-          ),
-        ),
-        const SizedBox(height: 18),
-        const Text(
-          'مساحة راقية تجمع الإبداع، الدقّة، '
-          'والتصميم في تجربة واحدة صُممت لعشّاق التطريز الرقمي.',
-          style: TextStyle(
-            fontFamily: 'Cairo',
-            fontSize: 14,
-            color: AppTheme.mutedIvory,
-            height: 1.9,
-          ),
-        ),
-        const SizedBox(height: 30),
-        const Text(
-          'DIGITAL EMBROIDERY · DESIGN · CRAFT',
-          style: TextStyle(
-            fontFamily: 'CormorantGaramond',
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: AppTheme.softRose,
-            letterSpacing: 2.5,
-          ),
-        ),
-      ],
-    );
-  }
+  Widget _buildBrandHeader(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
 
-  Widget _buildCompactBrandHeader() {
     return Column(
       children: [
-        const Text(
-          'TRACÉ RAFINÉ',
+        SizedBox(
+          width: 120,
+          height: 118,
+          child: CustomPaint(painter: TRLogoPainter(color: scheme.tertiary)),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          'TRACÉ RAFFINÉ',
           textAlign: TextAlign.center,
           style: TextStyle(
             fontFamily: 'CormorantGaramond',
-            fontSize: 30,
+            fontSize: 48,
             fontWeight: FontWeight.w600,
-            color: AppTheme.warmIvory,
+            color: scheme.onSurface,
             letterSpacing: 3.5,
           ),
         ),
         const SizedBox(height: 12),
-        Container(width: 52, height: 1, color: AppTheme.softRose),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 190,
+              height: 1,
+              color: scheme.tertiary.withValues(alpha: 0.65),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Transform.rotate(
+                angle: 0.785398,
+                child: Container(
+                  width: 11,
+                  height: 11,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: scheme.tertiary, width: 1.3),
+                  ),
+                ),
+              ),
+            ),
+            Container(
+              width: 190,
+              height: 1,
+              color: scheme.tertiary.withValues(alpha: 0.65),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'GLOBAL DIGITAL EMBROIDERY MARKETPLACE',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontFamily: 'Cairo',
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: scheme.secondary,
+            letterSpacing: 2.1,
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildLoginPanel() {
+  Widget _buildLoginCard(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(28),
+      padding: const EdgeInsets.fromLTRB(46, 48, 46, 36),
       decoration: BoxDecoration(
-        color: AppTheme.obsidian,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppTheme.divider),
-        boxShadow: const [
+        color: scheme.surface.withValues(alpha: 0.92),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(34),
+          topRight: Radius.circular(34),
+          bottomLeft: Radius.circular(42),
+          bottomRight: Radius.circular(42),
+        ),
+        border: Border.all(
+          color: scheme.tertiary.withValues(alpha: 0.65),
+          width: 1,
+        ),
+        boxShadow: [
           BoxShadow(
-            blurRadius: 30,
-            offset: Offset(0, 12),
-            color: Colors.black26,
+            color: Colors.black.withValues(alpha: 0.42),
+            blurRadius: 45,
+            offset: const Offset(0, 20),
           ),
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text(
-            'تسجيل الدخول',
-            textAlign: TextAlign.right,
-            style: TextStyle(
-              fontFamily: 'Cairo',
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-              color: AppTheme.warmIvory,
-            ),
-          ),
-          const SizedBox(height: 6),
-          const Text(
-            'اختر نوع الحساب ثم أدخل بيانات الدخول.',
-            textAlign: TextAlign.right,
-            style: TextStyle(
-              fontFamily: 'Cairo',
-              fontSize: 12,
-              color: AppTheme.mutedText,
-            ),
-          ),
-          const SizedBox(height: 22),
-          _buildRoleSelector(),
-          const SizedBox(height: 22),
-          TextField(
+          _buildInputField(
+            context,
             controller: _emailController,
+            label: 'البريد الإلكتروني',
+            icon: Icons.mail_outline_rounded,
             keyboardType: TextInputType.emailAddress,
-            textDirection: TextDirection.ltr,
-            enabled: !_isLoading,
-            decoration: const InputDecoration(
-              labelText: 'البريد الإلكتروني',
-              prefixIcon: Icon(Icons.mail_outline_rounded),
-            ),
-          ),
-          const SizedBox(height: 14),
-          TextField(
-            controller: _passwordController,
-            obscureText: _obscurePassword,
-            textDirection: TextDirection.ltr,
-            enabled: !_isLoading,
-            onSubmitted: (_) {
-              if (!_isLoading) {
-                _submit();
-              }
-            },
-            decoration: InputDecoration(
-              labelText: 'كلمة المرور',
-              prefixIcon: const Icon(Icons.lock_outline_rounded),
-              suffixIcon: IconButton(
-                tooltip: _obscurePassword
-                    ? 'إظهار كلمة المرور'
-                    : 'إخفاء كلمة المرور',
-                onPressed: _isLoading
-                    ? null
-                    : () {
-                        setState(() {
-                          _obscurePassword = !_obscurePassword;
-                        });
-                      },
-                icon: Icon(
-                  _obscurePassword
-                      ? Icons.visibility_outlined
-                      : Icons.visibility_off_outlined,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Checkbox(
-                value: _rememberAccount,
-                onChanged: _isLoading
-                    ? null
-                    : (value) {
-                        setState(() {
-                          _rememberAccount = value ?? false;
-                        });
-                      },
-              ),
-              const Expanded(
-                child: Text(
-                  'تذكّر الحساب',
-                  style: TextStyle(
-                    fontFamily: 'Cairo',
-                    fontSize: 12,
-                    color: AppTheme.mutedIvory,
-                  ),
-                ),
-              ),
-              TextButton(
-                onPressed: _isLoading ? null : _forgotPassword,
-                child: const Text('هل نسيت كلمة المرور؟'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            height: 54,
-            child: ElevatedButton(
-              onPressed: _isLoading ? null : _submit,
-              child: _isLoading
-                  ? const SizedBox(
-                      width: 22,
-                      height: 22,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text('متابعة'),
-                        SizedBox(width: 10),
-                        Icon(Icons.arrow_forward_rounded, size: 19),
-                      ],
-                    ),
-            ),
           ),
           const SizedBox(height: 18),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Flexible(
-                child: Text(
-                  'ليس لديك حساب؟',
-                  style: TextStyle(
-                    fontFamily: 'Cairo',
-                    fontSize: 12,
-                    color: AppTheme.mutedText,
-                  ),
-                ),
-              ),
-              TextButton(
-                onPressed: _isLoading
-                    ? null
-                    : () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => RegisterScreen(role: _selectedRole),
-                          ),
-                        );
-                      },
-                child: const Text('إنشاء حساب'),
-              ),
-            ],
-          ),
+          _buildPasswordField(context),
+          const SizedBox(height: 14),
+          _buildRememberRow(context),
+          const SizedBox(height: 18),
+          _buildPrimaryLoginButton(context),
+          const SizedBox(height: 14),
+          const SizedBox(height: 28),
+          _buildTerms(context),
+          const SizedBox(height: 18),
+          _buildCreateAccountFooter(context),
         ],
       ),
     );
   }
 
-  Widget _buildRoleSelector() {
+  Widget _buildInputField(
+    BuildContext context, {
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    TextInputType? keyboardType,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return TextField(
+      controller: controller,
+      keyboardType: keyboardType,
+      textDirection: TextDirection.ltr,
+      enabled: !_isLoading,
+      style: TextStyle(
+        fontFamily: 'Cairo',
+        color: scheme.onSurface,
+        fontSize: 16,
+      ),
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, size: 28, color: scheme.onSurfaceVariant),
+      ),
+    );
+  }
+
+  Widget _buildPasswordField(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return TextField(
+      controller: _passwordController,
+      obscureText: _obscurePassword,
+      textDirection: TextDirection.ltr,
+      enabled: !_isLoading,
+      onSubmitted: (_) {
+        if (!_isLoading) {
+          _submit();
+        }
+      },
+      style: TextStyle(
+        fontFamily: 'Cairo',
+        color: scheme.onSurface,
+        fontSize: 16,
+      ),
+      decoration: InputDecoration(
+        labelText: 'كلمة المرور',
+        prefixIcon: Icon(
+          Icons.lock_outline_rounded,
+          size: 28,
+          color: scheme.onSurfaceVariant,
+        ),
+        suffixIcon: IconButton(
+          tooltip: _obscurePassword ? 'إظهار كلمة المرور' : 'إخفاء كلمة المرور',
+          onPressed: _isLoading
+              ? null
+              : () {
+                  setState(() {
+                    _obscurePassword = !_obscurePassword;
+                  });
+                },
+          icon: Icon(
+            _obscurePassword
+                ? Icons.visibility_outlined
+                : Icons.visibility_off_outlined,
+            size: 28,
+            color: scheme.onSurfaceVariant,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRememberRow(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Row(
+      children: [
+        Checkbox(
+          value: _rememberAccount,
+          onChanged: _isLoading
+              ? null
+              : (value) {
+                  setState(() {
+                    _rememberAccount = value ?? false;
+                  });
+                },
+          side: BorderSide(color: scheme.secondary, width: 1.2),
+        ),
+        Text(
+          'تذكّرني',
+          style: TextStyle(
+            fontFamily: 'Cairo',
+            fontSize: 14,
+            color: scheme.onSurface,
+          ),
+        ),
+        const Spacer(),
+        TextButton(
+          onPressed: _isLoading ? null : _forgotPassword,
+          child: Text(
+            'نسيت كلمة المرور؟',
+            style: TextStyle(
+              fontFamily: 'Cairo',
+              fontSize: 14,
+              color: scheme.secondary,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPrimaryLoginButton(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return SizedBox(
+      width: double.infinity,
+      height: 60,
+      child: ElevatedButton(
+        onPressed: _isLoading ? null : _submit,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: scheme.primary,
+          foregroundColor: scheme.onPrimary,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+            side: BorderSide(color: scheme.secondary.withValues(alpha: 0.7)),
+          ),
+        ),
+        child: _isLoading
+            ? const SizedBox(
+                width: 23,
+                height: 23,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : Text(
+                'تسجيل الدخول',
+                style: TextStyle(
+                  fontFamily: 'Cairo',
+                  fontSize: 22,
+                  fontWeight: FontWeight.w600,
+                  color: scheme.onPrimary,
+                ),
+              ),
+      ),
+    );
+  }
+
+  Widget _buildTerms(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Wrap(
+      alignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        Icon(Icons.verified_user_outlined, size: 30, color: scheme.secondary),
+        const SizedBox(width: 10),
+        Text(
+          'عند متابعة التسجيل، أنت توافق على ',
+          style: TextStyle(
+            fontFamily: 'Cairo',
+            fontSize: 12,
+            color: scheme.onSurfaceVariant,
+          ),
+        ),
+        GestureDetector(
+          onTap: () {
+            _showMessage('صفحة شروط الاستخدام قيد الإعداد.');
+          },
+          child: Text(
+            'شروط الاستخدام',
+            style: TextStyle(
+              fontFamily: 'Cairo',
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: scheme.secondary,
+            ),
+          ),
+        ),
+        Text(
+          ' و',
+          style: TextStyle(
+            fontFamily: 'Cairo',
+            fontSize: 12,
+            color: scheme.onSurfaceVariant,
+          ),
+        ),
+        GestureDetector(
+          onTap: () {
+            _showMessage('صفحة سياسة الخصوصية قيد الإعداد.');
+          },
+          child: Text(
+            'سياسة الخصوصية',
+            style: TextStyle(
+              fontFamily: 'Cairo',
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: scheme.secondary,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCreateAccountFooter(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          'ليس لديك حساب؟',
+          style: TextStyle(
+            fontFamily: 'Cairo',
+            fontSize: 12,
+            color: scheme.onSurfaceVariant,
+          ),
+        ),
+        TextButton(
+          onPressed: _isLoading
+              ? null
+              : () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => RegisterScreen(role: _selectedRole),
+                    ),
+                  );
+                },
+          child: const Text('إنشاء حساب'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRoleSelector(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Container(
-      padding: const EdgeInsets.all(5),
+      width: double.infinity,
+      padding: const EdgeInsets.all(0),
       decoration: BoxDecoration(
-        color: AppTheme.obsidian,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.divider),
+        color: scheme.surface.withValues(alpha: 0.94),
+        border: Border.all(color: scheme.tertiary.withValues(alpha: 0.72)),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(36),
+          topRight: Radius.circular(36),
+        ),
       ),
       child: Row(
         children: [
           Expanded(
             child: _buildRoleItem(
+              context,
               role: UserRole.customer,
-              label: 'العميل',
-              icon: Icons.shopping_bag_outlined,
+              label: 'عميل',
+              subtitle: 'تصفح وشراء التصاميم',
+              icon: Icons.people_outline_rounded,
             ),
           ),
           Expanded(
             child: _buildRoleItem(
+              context,
               role: UserRole.designer,
-              label: 'المصمم',
+              label: 'مصمم',
+              subtitle: 'عرض وبيع التصاميم',
               icon: Icons.draw_outlined,
             ),
           ),
@@ -776,43 +964,93 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildRoleItem({
+  Widget _buildRoleItem(
+    BuildContext context, {
     required UserRole role,
     required String label,
+    required String subtitle,
     required IconData icon,
   }) {
+    final scheme = Theme.of(context).colorScheme;
     final selected = _selectedRole == role;
 
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: () => _selectRole(role),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        curve: Curves.easeOut,
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+        height: 104,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
         decoration: BoxDecoration(
-          color: selected ? AppTheme.obsidian : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-          border: selected ? Border.all(color: AppTheme.softRose) : null,
+          gradient: selected
+              ? LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [scheme.primary, scheme.primaryContainer],
+                )
+              : null,
+          color: selected ? null : scheme.surface,
+          borderRadius: BorderRadius.only(
+            topLeft: role == UserRole.customer
+                ? const Radius.circular(35)
+                : Radius.zero,
+            topRight: role == UserRole.designer
+                ? const Radius.circular(35)
+                : Radius.zero,
+          ),
+          border: Border.all(
+            color: selected ? scheme.secondary : scheme.outlineVariant,
+            width: selected ? 2 : 1,
+          ),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: scheme.primary.withValues(alpha: 0.22),
+                    blurRadius: 14,
+                    offset: const Offset(0, 5),
+                  ),
+                ]
+              : null,
         ),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              size: 21,
-              color: selected ? AppTheme.softRose : AppTheme.mutedText,
+            AnimatedScale(
+              scale: selected ? 1.08 : 1.0,
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOutBack,
+              child: Icon(
+                icon,
+                size: 27,
+                color: selected ? scheme.onPrimary : scheme.onSurfaceVariant,
+              ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 2),
             Text(
               label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'Cairo',
-                fontSize: 11,
-                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                color: selected ? AppTheme.warmIvory : AppTheme.mutedText,
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: selected ? scheme.onPrimary : scheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 1),
+            Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontFamily: 'Cairo',
+                fontSize: 10.5,
+                color: selected
+                    ? scheme.onPrimary.withValues(alpha: 0.78)
+                    : scheme.onSurfaceVariant,
               ),
             ),
           ],
@@ -821,3 +1059,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
+
+
+
+

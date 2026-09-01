@@ -1,53 +1,74 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../domain/entities/auth_user.dart';
-import '../../../../domain/repositories/auth_repository.dart';
-
-part 'auth_event.dart';
-part 'auth_state.dart';
+import '../../domain/exceptions/auth_failure.dart';
+import '../../domain/repositories/auth_repository.dart';
+import '../../../profile/services/profile_session_service.dart';
+import 'auth_event.dart';
+import 'auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
-  AuthBloc({required this._authRepository}) : super(const AuthInitial()) {
-    on<AuthStarted>(_onAuthStarted);
+  AuthBloc({
+    required this._authRepository,
+    required this._profileSessionService,
+  }) : super(const AuthState.unknown()) {
+    on<AuthStarted>(_onStarted);
     on<AuthLoginRequested>(_onLoginRequested);
     on<AuthRegisterRequested>(_onRegisterRequested);
-    on<AuthEmailVerificationRequested>(_onEmailVerificationRequested);
     on<AuthLogoutRequested>(_onLogoutRequested);
-    on<AuthPasswordResetRequested>(_onPasswordResetRequested);
+    on<AuthPasswordRecoveryRequested>(_onPasswordRecoveryRequested);
+    on<AuthPasswordRecoveryConfirmed>(_onPasswordRecoveryConfirmed);
   }
 
   final AuthRepository _authRepository;
+  final ProfileSessionService _profileSessionService;
 
-  Future<void> _onAuthStarted(
-    AuthStarted event,
-    Emitter<AuthState> emit,
-  ) async {
-    final user = _authRepository.currentUser;
+  Future<void> _onStarted(AuthStarted event, Emitter<AuthState> emit) async {
+    emit(const AuthState.loading());
 
-    if (user == null) {
-      emit(const AuthUnauthenticated());
-      return;
+    try {
+      final user = await _authRepository.restoreSession();
+
+      if (user == null) {
+        emit(const AuthState.unauthenticated());
+      } else {
+        final profile = await _profileSessionService.loadCurrentProfile();
+        if (profile == null) {
+          emit(AuthState.authenticatedProfileMissing(user));
+        } else {
+          emit(AuthState.authenticated(user));
+        }
+      }
+    } on AuthFailure catch (failure) {
+      emit(AuthState.failure(failure));
+    } catch (error) {
+      emit(
+        AuthState.failure(
+          AuthFailure(code: 'unknown', message: error.toString()),
+        ),
+      );
     }
-
-    emit(AuthAuthenticated(user));
   }
 
   Future<void> _onLoginRequested(
     AuthLoginRequested event,
     Emitter<AuthState> emit,
   ) async {
-    emit(const AuthLoading());
+    emit(const AuthState.loading());
 
     try {
-      final user = await _authRepository.signInWithEmailAndPassword(
+      final user = await _authRepository.signIn(
         email: event.email,
         password: event.password,
       );
 
-      emit(AuthAuthenticated(user));
-    } catch (error, stackTrace) {
-      addError(error, stackTrace);
-      emit(AuthFailure(_mapErrorMessage(error)));
+      final profile = await _profileSessionService.loadCurrentProfile();
+      if (profile == null) {
+        emit(AuthState.authenticatedProfileMissing(user));
+      } else {
+        emit(AuthState.authenticated(user));
+      }
+    } on AuthFailure catch (failure) {
+      emit(AuthState.failure(failure));
     }
   }
 
@@ -55,53 +76,19 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthRegisterRequested event,
     Emitter<AuthState> emit,
   ) async {
-    emit(const AuthLoading());
+    emit(const AuthState.loading());
 
     try {
-      final user = await _authRepository.createUserWithEmailAndPassword(
+      final user = await _authRepository.register(
         email: event.email,
         password: event.password,
       );
 
-      emit(AuthAuthenticated(user));
-    } catch (error, stackTrace) {
-      addError(error, stackTrace);
-      emit(AuthFailure(_mapErrorMessage(error)));
-    }
-  }
+      await _profileSessionService.createCurrentProfile(role: event.role);
 
-  Future<void> _onEmailVerificationRequested(
-    AuthEmailVerificationRequested event,
-    Emitter<AuthState> emit,
-  ) async {
-    emit(const AuthLoading());
-
-    try {
-      final verified = await _authRepository.reloadAndCheckEmailVerification();
-
-      final user = _authRepository.currentUser;
-
-      if (user == null) {
-        emit(const AuthUnauthenticated());
-        return;
-      }
-
-      if (verified && user.emailVerified) {
-        emit(AuthAuthenticated(user));
-        return;
-      }
-
-      emit(AuthEmailVerificationRequired(user));
-    } catch (error, stackTrace) {
-      addError(error, stackTrace);
-
-      final user = _authRepository.currentUser;
-
-      if (user != null && !user.emailVerified) {
-        emit(AuthEmailVerificationRequired(user));
-      } else {
-        emit(AuthFailure(_mapErrorMessage(error)));
-      }
+      emit(AuthState.authenticated(user));
+    } on AuthFailure catch (failure) {
+      emit(AuthState.failure(failure));
     }
   }
 
@@ -109,73 +96,51 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthLogoutRequested event,
     Emitter<AuthState> emit,
   ) async {
-    emit(const AuthLoading());
+    emit(const AuthState.loading());
 
     try {
       await _authRepository.signOut();
-      emit(const AuthUnauthenticated());
-    } catch (error, stackTrace) {
-      addError(error, stackTrace);
-      emit(AuthFailure(_mapErrorMessage(error)));
+      _profileSessionService.clear();
+      emit(const AuthState.unauthenticated());
+    } on AuthFailure catch (failure) {
+      emit(AuthState.failure(failure));
     }
   }
 
-  Future<void> _onPasswordResetRequested(
-    AuthPasswordResetRequested event,
+  Future<void> _onPasswordRecoveryRequested(
+    AuthPasswordRecoveryRequested event,
     Emitter<AuthState> emit,
   ) async {
-    emit(const AuthLoading());
+    emit(const AuthState.loading());
 
     try {
-      await _authRepository.sendPasswordResetEmail(email: event.email);
+      await _authRepository.sendPasswordRecovery(
+        email: event.email,
+        redirectUrl: event.redirectUrl,
+      );
 
-      emit(const AuthUnauthenticated());
-    } catch (error, stackTrace) {
-      addError(error, stackTrace);
-      emit(AuthFailure(_mapErrorMessage(error)));
+      emit(const AuthState.recoverySent());
+    } on AuthFailure catch (failure) {
+      emit(AuthState.failure(failure));
     }
   }
 
-  String _mapErrorMessage(Object error) {
-    final message = error.toString().toLowerCase();
+  Future<void> _onPasswordRecoveryConfirmed(
+    AuthPasswordRecoveryConfirmed event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthState.loading());
 
-    if (message.contains('email-already-in-use')) {
-      return 'هذا البريد الإلكتروني مستخدم بالفعل.';
+    try {
+      await _authRepository.confirmPasswordRecovery(
+        userId: event.userId,
+        secret: event.secret,
+        password: event.password,
+      );
+
+      emit(const AuthState.recoveryConfirmed());
+    } on AuthFailure catch (failure) {
+      emit(AuthState.failure(failure));
     }
-
-    if (message.contains('invalid-email')) {
-      return 'صيغة البريد الإلكتروني غير صحيحة.';
-    }
-
-    if (message.contains('user-not-found')) {
-      return 'لا يوجد حساب مرتبط بهذا البريد الإلكتروني.';
-    }
-
-    if (message.contains('wrong-password') ||
-        message.contains('invalid-credential')) {
-      return 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
-    }
-
-    if (message.contains('weak-password')) {
-      return 'كلمة المرور ضعيفة. استخدم كلمة مرور أقوى.';
-    }
-
-    if (message.contains('operation-not-allowed')) {
-      return 'تسجيل الدخول بالبريد الإلكتروني غير مفعّل حالياً.';
-    }
-
-    if (message.contains('network-request-failed')) {
-      return 'تعذر الاتصال بالخدمة. تحقق من الإنترنت.';
-    }
-
-    if (message.contains('too-many-requests')) {
-      return 'تم تنفيذ محاولات كثيرة. انتظر قليلًا ثم حاول مرة أخرى.';
-    }
-
-    if (message.contains('user-disabled')) {
-      return 'هذا الحساب معطل.';
-    }
-
-    return 'حدث خطأ غير متوقع. حاول مرة أخرى.';
   }
 }

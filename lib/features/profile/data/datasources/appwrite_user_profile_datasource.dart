@@ -9,18 +9,33 @@ class AppwriteUserProfileDatasource {
 
   final AppwriteDatabaseService _databaseService;
 
-  Future<UserProfileModel?> getCurrentProfile({required String userId}) async {
+  Future<UserProfileModel?> getCurrentProfile({
+    required String userId,
+  }) async {
     try {
       final document = await _databaseService.getDocument(
         collectionId: AppwriteProfileConstants.collectionId,
         documentId: userId,
       );
 
-      return UserProfileModel.fromMap({'id': document.$id, ...document.data});
+      return UserProfileModel.fromMap({
+        'id': document.$id,
+        ...document.data,
+      });
+    } on AppwriteException catch (error, stackTrace) {
+      if (error.code == 404) {
+        print('PROFILE NOT FOUND: userId=$userId');
+        return null;
+      }
+
+      print('PROFILE LOAD APPWRITE ERROR: ${error.code}');
+      print('PROFILE LOAD MESSAGE: ${error.message}');
+      print(stackTrace);
+      rethrow;
     } catch (error, stackTrace) {
       print('PROFILE LOAD ERROR: $error');
       print(stackTrace);
-      return null;
+      rethrow;
     }
   }
 
@@ -40,18 +55,24 @@ class AppwriteUserProfileDatasource {
       ],
     );
 
-    return UserProfileModel.fromMap({'id': document.$id, ...document.data});
+    return UserProfileModel.fromMap({
+      'id': document.$id,
+      ...document.data,
+    });
   }
 
   Future<UserProfileModel> updateProfile({
     required UserProfileModel profile,
   }) async {
-    await _databaseService.updateDocument(
+    final document = await _databaseService.updateDocument(
       collectionId: AppwriteProfileConstants.collectionId,
       documentId: profile.id,
       data: profile.toMap(),
     );
 
-    return profile;
+    return UserProfileModel.fromMap({
+      'id': document.$id,
+      ...document.data,
+    });
   }
 }

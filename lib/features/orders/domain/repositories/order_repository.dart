@@ -1,8 +1,8 @@
+﻿import '../entities/order.dart';
+
 abstract class OrderRepository {
-  Future<String> createOrder({
-    required String customerId,
-    required String designId,
-    required String designerId,
-    required double amount,
-  });
+  Future<List<Order>> getOrders(String userId);
+  Future<Order?> getOrderById(String orderId);
+  Future<Order> createOrder(Order order);
+  Future<void> updateOrderStatus(String orderId, String status);
 }

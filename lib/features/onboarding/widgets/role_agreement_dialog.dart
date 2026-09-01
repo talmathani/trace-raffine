@@ -16,9 +16,9 @@ class RoleAgreementDialog extends StatelessWidget {
   String get _title {
     switch (role) {
       case UserRole.customer:
-        return 'أهلاً بك في عالم TRACÉ RAFINÉ';
+        return 'أهلاً بك في عالم TRACÉ RAFFINÉ';
       case UserRole.designer:
-        return 'اتفاقية انضمام المصممين | TRACÉ RAFINÉ';
+        return 'اتفاقية انضمام المصممين | TRACÉ RAFFINÉ';
     }
   }
 
@@ -205,7 +205,7 @@ class RoleAgreementDialog extends StatelessWidget {
     return Column(
       children: [
         const Text(
-          'TRACÉ RAFINÉ',
+          'TRACÉ RAFFINÉ',
           textAlign: TextAlign.center,
           style: TextStyle(
             fontFamily: 'CormorantGaramond',

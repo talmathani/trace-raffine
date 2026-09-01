@@ -1,0 +1,67 @@
+﻿import 'package:equatable/equatable.dart';
+
+import '../../../../domain/entities/user_role.dart';
+
+abstract class AuthEvent extends Equatable {
+  const AuthEvent();
+
+  @override
+  List<Object?> get props => const [];
+}
+
+class AuthStarted extends AuthEvent {
+  const AuthStarted();
+}
+
+class AuthLoginRequested extends AuthEvent {
+  const AuthLoginRequested({required this.email, required this.password});
+
+  final String email;
+  final String password;
+
+  @override
+  List<Object?> get props => [email, password];
+}
+
+class AuthRegisterRequested extends AuthEvent {
+  const AuthRegisterRequested({required this.email, required this.password});
+
+  final String email;
+  final String password;
+
+  @override
+  List<Object?> get props => [email, password];
+}
+
+class AuthLogoutRequested extends AuthEvent {
+  const AuthLogoutRequested();
+}
+
+class AuthPasswordRecoveryRequested extends AuthEvent {
+  const AuthPasswordRecoveryRequested({
+    required this.email,
+    required this.redirectUrl,
+  });
+
+  final String email;
+  final String redirectUrl;
+
+  @override
+  List<Object?> get props => [email, redirectUrl];
+}
+
+class AuthPasswordRecoveryConfirmed extends AuthEvent {
+  const AuthPasswordRecoveryConfirmed({
+    required this.userId,
+    required this.secret,
+    required this.password,
+  });
+
+  final String userId;
+  final String secret;
+  final String password;
+
+  @override
+  List<Object?> get props => [userId, secret, password];
+}
+

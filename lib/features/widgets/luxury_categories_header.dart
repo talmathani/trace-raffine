@@ -19,7 +19,7 @@ class LuxuryCategoriesHeader extends StatefulWidget {
 class _LuxuryCategoriesHeaderState extends State<LuxuryCategoriesHeader> {
   static const List<String> _luxuryPhrases = [
     'PRECISION · CRAFTSMANSHIP · DIGITAL ART',
-    'TRACÉ RAFINÉ · THE ART OF DIGITAL EMBROIDERY',
+    'TRACÉ RAFFINÉ · THE ART OF DIGITAL EMBROIDERY',
     'WHERE CRAFT BECOMES DIGITAL ART',
     'HAUTE COUTURE · EMBROIDERY · DESIGN',
     'ENGINEERED FOR CRAFT · CREATED FOR ART',

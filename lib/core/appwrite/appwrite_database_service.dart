@@ -50,7 +50,7 @@ class AppwriteDatabaseService {
     );
   }
 
-  Future<void> updateDocument({
+  Future<Document> updateDocument({
     required String collectionId,
     required String documentId,
     required Map<String, dynamic> data,

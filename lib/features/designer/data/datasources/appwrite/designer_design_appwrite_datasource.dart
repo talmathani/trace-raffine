@@ -1,61 +1,38 @@
-import 'package:appwrite/appwrite.dart';
-import 'package:appwrite/models.dart';
-
+﻿import 'package:appwrite/appwrite.dart';
 import '../../../../../core/appwrite/appwrite_database_constants.dart';
 import '../../../../../core/appwrite/appwrite_database_service.dart';
+import '../../../domain/models/designer_design_model.dart';
 
 class DesignerDesignAppwriteDataSource {
+  final AppwriteDatabaseService _databaseService;
+
   DesignerDesignAppwriteDataSource({AppwriteDatabaseService? databaseService})
     : _databaseService = databaseService ?? AppwriteDatabaseService();
-
-  final AppwriteDatabaseService _databaseService;
 
   Future<String> createDesign({
     required String designId,
     required Map<String, dynamic> data,
-    required List<String> permissions,
   }) async {
     final document = await _databaseService.createDocument(
       collectionId: AppwriteDatabaseConstants.designsCollectionId,
       documentId: designId,
       data: data,
-      permissions: permissions,
     );
-
     return document.$id;
   }
 
-  Future<void> updateDesign({
-    required String designId,
-    required Map<String, dynamic> data,
-  }) async {
-    await _databaseService.updateDocument(
-      collectionId: AppwriteDatabaseConstants.designsCollectionId,
-      documentId: designId,
-      data: data,
-    );
-  }
-
-  Future<void> deleteDesign({required String designId}) async {
-    await _databaseService.deleteDocument(
-      collectionId: AppwriteDatabaseConstants.designsCollectionId,
-      documentId: designId,
-    );
-  }
-
-  Stream<DocumentList> watchDesignerDesigns({required String designerId}) {
-    return Stream.fromFuture(
-      _databaseService.listDocuments(
+  Stream<List<DesignerDesignModel>> watchDesignerDesigns({required String designerId}) async* {
+    while (true) {
+      final documentList = await _databaseService.listDocuments(
         collectionId: AppwriteDatabaseConstants.designsCollectionId,
-        queries: [Query.equal('designerId', designerId)],
-      ),
-    );
-  }
+        queries: [Query.equal('designer_id', designerId)],
+      );
 
-  Future<Document> getDesign({required String designId}) {
-    return _databaseService.getDocument(
-      collectionId: AppwriteDatabaseConstants.designsCollectionId,
-      documentId: designId,
-    );
+      yield documentList.documents
+          .map((doc) => DesignerDesignModel.fromAppwrite(doc.$id, doc.data))
+          .toList(growable: false);
+
+      await Future.delayed(const Duration(seconds: 5));
+    }
   }
 }

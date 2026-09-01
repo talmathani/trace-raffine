@@ -1,131 +1,67 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import '../products/presentation/screens/products_screen.dart';
+import '../products/presentation/screens/product_details_screen.dart';
+import '../categories/presentation/screens/categories_screen.dart';
+import '../favorites/presentation/screens/favorites_screen.dart';
+import '../cart/presentation/screens/cart_screen.dart';
+import '../orders/presentation/screens/orders_screen.dart';
+import '../purchases/presentation/screens/purchases_screen.dart';
+import '../notifications/presentation/screens/notifications_screen.dart';
 
-import '../home/shared_home_screen.dart';
-
-class CustomerNavigation extends StatefulWidget {
-  const CustomerNavigation({super.key});
-
-  @override
-  State<CustomerNavigation> createState() => _CustomerNavigationState();
-}
-
-class _CustomerNavigationState extends State<CustomerNavigation> {
-  int _currentIndex = 0;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: [
-          const SharedHomeScreen(),
-          const _CustomerComingSoonPage(
-            icon: Icons.shopping_bag_outlined,
-            title: 'السلة',
-            subtitle: 'ستظهر هنا التصاميم التي اخترتها للشراء.',
-          ),
-          const _CustomerComingSoonPage(
-            icon: Icons.auto_stories_outlined,
-            title: 'مكتبتي',
-            subtitle: 'ستجد هنا تصاميمك وملفاتك الرقمية بعد الشراء.',
-          ),
-          const _CustomerComingSoonPage(
-            icon: Icons.person_outline_rounded,
-            title: 'حسابي',
-            subtitle: 'إدارة حسابك وتفضيلاتك وبياناتك الشخصية.',
-          ),
-        ],
-      ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
-        onDestinationSelected: (index) {
-          if (index == _currentIndex) {
-            return;
-          }
-
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.grid_view_outlined),
-            selectedIcon: Icon(Icons.grid_view_rounded),
-            label: 'التصاميم',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.shopping_bag_outlined),
-            selectedIcon: Icon(Icons.shopping_bag_rounded),
-            label: 'السلة',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.auto_stories_outlined),
-            selectedIcon: Icon(Icons.auto_stories_rounded),
-            label: 'مكتبتي',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline_rounded),
-            selectedIcon: Icon(Icons.person_rounded),
-            label: 'حسابي',
-          ),
-        ],
-      ),
+class CustomerNavigation {
+  static void goToProducts(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const ProductsScreen()),
     );
   }
-}
 
-class _CustomerComingSoonPage extends StatelessWidget {
-  const _CustomerComingSoonPage({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-  });
+  static void goToProductDetails(BuildContext context, dynamic product) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => ProductDetailsScreen(product: product)),
+    );
+  }
 
-  final IconData icon;
-  final String title;
-  final String subtitle;
+  static void goToCategories(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const CategoriesScreen()),
+    );
+  }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 28),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 520),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(icon, size: 42, color: const Color(0xFFC98F9B)),
-                  const SizedBox(height: 22),
-                  Text(
-                    title,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontFamily: 'Cairo',
-                      fontSize: 24,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFFF2E8E2),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    subtitle,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontFamily: 'Cairo',
-                      fontSize: 13,
-                      color: Color(0xFFB9A8A4),
-                      height: 1.8,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
+  static void goToFavorites(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const FavoritesScreen()),
+    );
+  }
+
+  static void goToCart(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const CartScreen()),
+    );
+  }
+
+  static void goToOrders(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const OrdersScreen()),
+    );
+  }
+
+  static void goToPurchases(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const PurchasesScreen()),
+    );
+  }
+
+  static void goToNotifications(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const NotificationsScreen()),
     );
   }
 }

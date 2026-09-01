@@ -1,10 +1,14 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
-import '../auth/login_screen.dart';
 
 class SplashScreen extends StatelessWidget {
-  const SplashScreen({super.key});
+  const SplashScreen({
+    super.key,
+    required this.onEnter,
+  });
+
+  final VoidCallback onEnter;
 
   @override
   Widget build(BuildContext context) {
@@ -21,11 +25,10 @@ class SplashScreen extends StatelessWidget {
             'assets/images/IMG_4123.PNG',
             fit: BoxFit.cover,
             alignment: Alignment.center,
-            errorBuilder: (context, error, stackTrace) {
+            errorBuilder: (_, _, _) {
               return const ColoredBox(color: AppTheme.obsidian);
             },
           ),
-
           DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -41,7 +44,6 @@ class SplashScreen extends StatelessWidget {
               ),
             ),
           ),
-
           DecoratedBox(
             decoration: BoxDecoration(
               gradient: RadialGradient(
@@ -56,22 +58,18 @@ class SplashScreen extends StatelessWidget {
               ),
             ),
           ),
-
           SafeArea(
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
               child: Column(
                 children: [
                   const Spacer(flex: 5),
-
                   Image.asset(
                     'assets/images/logo_burgundy.PNG',
                     width: isCompact ? 190 : 230,
                     fit: BoxFit.contain,
                   ),
-
                   SizedBox(height: isCompact ? 22 : 30),
-
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -97,9 +95,7 @@ class SplashScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-
                   SizedBox(height: isCompact ? 18 : 24),
-
                   const Text(
                     'حيث تتحوّل الحِرفة إلى فنّ رقمي',
                     textAlign: TextAlign.center,
@@ -111,9 +107,7 @@ class SplashScreen extends StatelessWidget {
                       height: 1.55,
                     ),
                   ),
-
                   const SizedBox(height: 10),
-
                   ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 560),
                     child: const Text(
@@ -128,22 +122,14 @@ class SplashScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-
                   SizedBox(height: isCompact ? 30 : 42),
-
                   SizedBox(
                     width: double.infinity,
                     height: 56,
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 250),
                       child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (_) => const LoginScreen(),
-                            ),
-                          );
-                        },
+                        onPressed: onEnter,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.richBurgundy,
                           foregroundColor: AppTheme.warmIvory,
@@ -177,9 +163,7 @@ class SplashScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-
                   SizedBox(height: isCompact ? 28 : 38),
-
                   const Text(
                     'DIGITAL EMBROIDERY · DESIGN · CRAFT',
                     textAlign: TextAlign.center,
@@ -191,9 +175,7 @@ class SplashScreen extends StatelessWidget {
                       letterSpacing: 2.4,
                     ),
                   ),
-
                   const Spacer(flex: 3),
-
                   const Text(
                     'TRACÉ RAFFINÉ',
                     textAlign: TextAlign.center,
@@ -205,7 +187,6 @@ class SplashScreen extends StatelessWidget {
                       letterSpacing: 2.8,
                     ),
                   ),
-
                   const SizedBox(height: 12),
                 ],
               ),
@@ -216,3 +197,5 @@ class SplashScreen extends StatelessWidget {
     );
   }
 }
+
+

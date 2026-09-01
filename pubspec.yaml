@@ -14,9 +14,14 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   shared_preferences: ^2.5.5
-  file_picker: ^11.0.3
+  file_picker: 11.0.2
   flutter_bloc: ^9.1.1
   appwrite: 17.0.0
+  flutter_riverpod: ^2.6.1
+  http: ^1.6.0
+  image_picker: ^1.2.3
+  equatable: ^2.1.0
+  image: ^4.9.2
 dev_dependencies:
   flutter_test:
     sdk: flutter

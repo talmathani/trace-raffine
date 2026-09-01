@@ -1,4 +1,4 @@
-class CustomerDesignModel {
+﻿class CustomerDesignModel {
   const CustomerDesignModel({
     required this.id,
     required this.designerId,
@@ -9,7 +9,7 @@ class CustomerDesignModel {
     required this.status,
     this.description,
     this.designImagePath,
-    this.designImageUrl,
+    this.designImageBytes,
     this.embroideryFilePath,
     this.embroideryFileUrl,
     this.stitchDetails,
@@ -29,7 +29,7 @@ class CustomerDesignModel {
   final String? description;
 
   final String? designImagePath;
-  final String? designImageUrl;
+  final List<int>? designImageBytes;
 
   final String? embroideryFilePath;
   final String? embroideryFileUrl;
@@ -45,21 +45,37 @@ class CustomerDesignModel {
   ) {
     return CustomerDesignModel(
       id: id,
-      designerId: _stringValue(data['designerId']),
+      designerId: _stringValue(data['designer_id']),
       title: _stringValue(data['title']),
-      category: _stringValue(data['category']),
+      category: _stringValue(data['category_id']),
       price: _doubleValue(data['price']),
       fileExtension: _stringValue(data['fileExtension']),
       status: _stringValue(data['status']),
       description: _nullableString(data['description']),
-      designImagePath: _nullableString(data['designImagePath']),
-      designImageUrl: _nullableString(data['designImageUrl']),
-      embroideryFilePath: _nullableString(data['embroideryFilePath']),
-      embroideryFileUrl: _nullableString(data['embroideryFileUrl']),
-      stitchDetails: _nullableString(data['stitchDetails']),
-      beadDetails: _nullableString(data['beadDetails']),
-      sequinDetails: _nullableString(data['sequinDetails']),
-      additionalDetails: _nullableString(data['additionalDetails']),
+      designImagePath: _nullableString(
+        data['designImagePath'] ?? data['cover_image_url'],
+      ),
+      designImageBytes: _imageBytesValue(
+        data['designImageBytes'],
+      ),
+      embroideryFilePath: _nullableString(
+        data['embroideryFilePath'],
+      ),
+      embroideryFileUrl: _nullableString(
+        data['embroideryFileUrl'],
+      ),
+      stitchDetails: _nullableString(
+        data['stitchDetails'],
+      ),
+      beadDetails: _nullableString(
+        data['beadDetails'],
+      ),
+      sequinDetails: _nullableString(
+        data['sequinDetails'],
+      ),
+      additionalDetails: _nullableString(
+        data['additionalDetails'],
+      ),
     );
   }
 
@@ -77,11 +93,22 @@ class CustomerDesignModel {
     return normalized;
   }
 
+  static List<int>? _imageBytesValue(dynamic value) {
+    if (value is List<int>) {
+      return value.isEmpty ? null : List<int>.unmodifiable(value);
+    }
+
+    return null;
+  }
+
   static double _doubleValue(dynamic value) {
     if (value is num) {
       return value.toDouble();
     }
 
-    return double.tryParse(value?.toString() ?? '') ?? 0;
+    return double.tryParse(
+          value?.toString() ?? '',
+        ) ??
+        0;
   }
 }

@@ -1,59 +1,84 @@
-import 'package:flutter/material.dart';
-
-import '../../../core/theme/app_theme.dart';
-import '../../../core/ui/luxury_ui.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/theme/app_theme.dart';
+import '../../core/ui/luxury_ui.dart';
+import '../products/presentation/controllers/product_list_controller.dart';
+import '../products/presentation/screens/products_screen.dart';
+import '../products/presentation/widgets/product_card.dart';
 import '../widgets/luxury_categories_header.dart';
 
-class SharedHomeScreen extends StatelessWidget {
+class SharedHomeScreen extends ConsumerStatefulWidget {
   const SharedHomeScreen({super.key});
+
+  @override
+  ConsumerState<SharedHomeScreen> createState() => _SharedHomeScreenState();
+}
+
+class _SharedHomeScreenState extends ConsumerState<SharedHomeScreen> {
 
   static const List<HomeCategory> categories = [
     HomeCategory(
       title: 'فساتين السهرة والهوت كوتور',
       subtitle: 'Evening Couture Designs',
       icon: Icons.checkroom_rounded,
+      categoryId: 'evening_couture',
     ),
     HomeCategory(
       title: 'تصاميم الساري الهندي',
       subtitle: 'Indian Saree Designs',
       icon: Icons.auto_awesome_rounded,
+      categoryId: 'saree',
     ),
     HomeCategory(
       title: 'العبايات والبالطوهات',
       subtitle: 'Abayas & Coats',
       icon: Icons.layers_rounded,
+      categoryId: 'abayas',
     ),
     HomeCategory(
       title: 'الجلابيات والمخاور',
       subtitle: 'Jalabiyas & Makhawer',
       icon: Icons.pattern_rounded,
+      categoryId: 'jalabiyas',
     ),
     HomeCategory(
       title: 'تصاميم موزعة',
       subtitle: 'Distributed Designs',
       icon: Icons.scatter_plot_rounded,
+      categoryId: 'distributed',
     ),
     HomeCategory(
       title: 'تصاميم الحواشي',
       subtitle: 'Border Designs',
       icon: Icons.border_style_rounded,
+      categoryId: 'borders',
     ),
     HomeCategory(
       title: 'الشعارات واللوغوهات',
       subtitle: 'Logos & Symbols',
       icon: Icons.diamond_rounded,
+      categoryId: 'logos',
     ),
     HomeCategory(
       title: 'جديد الأسبوع',
       subtitle: 'New This Week',
       icon: Icons.auto_awesome_mosaic_rounded,
+      categoryId: 'new_week',
     ),
   ];
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(productListControllerProvider.notifier).loadProducts();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
-
     final columns = width >= 1200
         ? 4
         : width >= 800
@@ -71,6 +96,7 @@ class SharedHomeScreen extends StatelessWidget {
           slivers: [
             SliverToBoxAdapter(child: _buildHero()),
             SliverToBoxAdapter(child: _buildNewsTicker()),
+            const SliverToBoxAdapter(child: _PublishedDesignsSection()),
             const SliverToBoxAdapter(child: LuxuryCategoriesHeader(height: 82)),
             SliverToBoxAdapter(child: _buildSectionHeader()),
             SliverPadding(
@@ -78,11 +104,20 @@ class SharedHomeScreen extends StatelessWidget {
               sliver: SliverGrid(
                 delegate: SliverChildBuilderDelegate((context, index) {
                   final category = categories[index];
-
                   return _CategoryCard(
                     category: category,
                     index: index,
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ProductsScreen(
+                            categoryId: category.categoryId,
+                            categoryTitle: category.title,
+                          ),
+                        ),
+                      );
+                    },
                   );
                 }, childCount: categories.length),
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -152,7 +187,7 @@ class SharedHomeScreen extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           const Text(
-            'TRACÉ RAFINÉ',
+            'TRACÉ RAFFINÉ',
             textDirection: TextDirection.ltr,
             style: TextStyle(
               fontFamily: 'CormorantGaramond',
@@ -174,8 +209,7 @@ class SharedHomeScreen extends StatelessWidget {
           ),
           const SizedBox(height: 9),
           const Text(
-            'اكتشف تصاميم التطريز الرقمي المختارة بعناية، '
-            'واستكشف مجموعاتنا المتخصصة في مساحة واحدة.',
+            'اكتشف تصاميم التطريز الرقمي المختارة بعناية، واستكشف مجموعاتنا المتخصصة في مساحة واحدة.',
             style: TextStyle(
               fontFamily: 'Cairo',
               fontSize: 13,
@@ -223,7 +257,7 @@ class SharedHomeScreen extends StatelessWidget {
           SizedBox(width: 10),
           Expanded(
             child: Text(
-              'اكتشف أحدث التصاميم والمجموعات الجديدة في TRACÉ RAFINÉ',
+              'اكتشف أحدث التصاميم والمجموعات الجديدة في TRACÉ RAFFINÉ',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
@@ -262,7 +296,6 @@ class _CategoryCard extends StatelessWidget {
     required this.index,
     required this.onTap,
   });
-
   final HomeCategory category;
   final int index;
   final VoidCallback onTap;
@@ -328,14 +361,12 @@ class _CategoryCard extends StatelessWidget {
 
 class _LuxuryCategoryIcon extends StatelessWidget {
   const _LuxuryCategoryIcon({required this.icon, required this.index});
-
   final IconData icon;
   final int index;
 
   @override
   Widget build(BuildContext context) {
     final opacity = 0.10 + ((index % 4) * 0.025);
-
     return Container(
       width: 56,
       height: 56,
@@ -353,14 +384,72 @@ class _LuxuryCategoryIcon extends StatelessWidget {
       ),
       child: ShaderMask(
         blendMode: BlendMode.srcIn,
-        shaderCallback: (bounds) {
-          return const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFFE0B5BE), Color(0xFFC98F9C), Color(0xFF8F5968)],
-          ).createShader(bounds);
-        },
+        shaderCallback: (bounds) => const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFE0B5BE), Color(0xFFC98F9C), Color(0xFF8F5968)],
+        ).createShader(bounds),
         child: Icon(icon, size: 28),
+      ),
+    );
+  }
+}
+
+class _PublishedDesignsSection extends ConsumerWidget {
+  const _PublishedDesignsSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(productListControllerProvider);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const LuxurySectionHeader(
+            title: 'التصاميم المعروضة للبيع',
+            subtitle: 'تصاميم منشورة ومتاحة للاقتناء',
+            trailing: LuxuryIcon(
+              icon: Icons.shopping_bag_outlined,
+              size: 18,
+              background: AppTheme.deepBurgundy,
+              borderRadius: 10,
+            ),
+          ),
+          const SizedBox(height: 14),
+          if (state.isLoading && state.products.isEmpty)
+            const SizedBox(
+              height: 260,
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (state.error != null && state.products.isEmpty)
+            SizedBox(
+              height: 120,
+              child: Center(child: Text('تعذر تحميل التصاميم المعروضة.')),
+            )
+          else if (state.products.isEmpty)
+            const SizedBox(
+              height: 120,
+              child: Center(child: Text('لا توجد تصاميم منشورة للبيع حاليًا.')),
+            )
+          else
+            SizedBox(
+              height: 290,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: state.products.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 14),
+                itemBuilder: (context, index) {
+                  final product = state.products[index];
+                  return SizedBox(
+                    width: 220,
+                    child: ProductCard(product: product, onTap: () {}),
+                  );
+                },
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -371,9 +460,11 @@ class HomeCategory {
     required this.title,
     required this.subtitle,
     required this.icon,
+    required this.categoryId,
   });
-
   final String title;
   final String subtitle;
   final IconData icon;
+  final String categoryId;
 }
+

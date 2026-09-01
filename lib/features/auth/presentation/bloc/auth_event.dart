@@ -1,37 +1,68 @@
-part of 'auth_bloc.dart';
+import 'package:equatable/equatable.dart';
 
-sealed class AuthEvent {
+import '../../../../domain/entities/user_role.dart';
+
+abstract class AuthEvent extends Equatable {
   const AuthEvent();
+
+  @override
+  List<Object?> get props => const [];
 }
 
-final class AuthStarted extends AuthEvent {
+class AuthStarted extends AuthEvent {
   const AuthStarted();
 }
 
-final class AuthLoginRequested extends AuthEvent {
+class AuthLoginRequested extends AuthEvent {
   const AuthLoginRequested({required this.email, required this.password});
 
   final String email;
   final String password;
+
+  @override
+  List<Object?> get props => [email, password];
 }
 
-final class AuthRegisterRequested extends AuthEvent {
-  const AuthRegisterRequested({required this.email, required this.password});
+class AuthRegisterRequested extends AuthEvent {
+  const AuthRegisterRequested({
+    required this.email,
+    required this.password,
+    required this.role,
+  });
 
   final String email;
   final String password;
+  final UserRole role;
 }
 
-final class AuthEmailVerificationRequested extends AuthEvent {
-  const AuthEmailVerificationRequested();
-}
-
-final class AuthLogoutRequested extends AuthEvent {
+class AuthLogoutRequested extends AuthEvent {
   const AuthLogoutRequested();
 }
 
-final class AuthPasswordResetRequested extends AuthEvent {
-  const AuthPasswordResetRequested({required this.email});
+class AuthPasswordRecoveryRequested extends AuthEvent {
+  const AuthPasswordRecoveryRequested({
+    required this.email,
+    required this.redirectUrl,
+  });
 
   final String email;
+  final String redirectUrl;
+
+  @override
+  List<Object?> get props => [email, redirectUrl];
+}
+
+class AuthPasswordRecoveryConfirmed extends AuthEvent {
+  const AuthPasswordRecoveryConfirmed({
+    required this.userId,
+    required this.secret,
+    required this.password,
+  });
+
+  final String userId;
+  final String secret;
+  final String password;
+
+  @override
+  List<Object?> get props => [userId, secret, password];
 }

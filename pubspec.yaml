@@ -1,4 +1,4 @@
-name: trace_raffine
+﻿name: trace_raffine
 description: "TRACÉ RAFFINÉ - منصة عالمية لبيع تصاميم التطريز الرقمية."
 publish_to: 'none'
 
@@ -16,7 +16,7 @@ dependencies:
   shared_preferences: ^2.5.5
   file_picker: 11.0.2
   flutter_bloc: ^9.1.1
-  appwrite: 17.0.0
+  appwrite: 25.4.0
   flutter_riverpod: ^2.6.1
   http: ^1.6.0
   image_picker: ^1.2.3
@@ -60,5 +60,7 @@ flutter:
           weight: 500
         - asset: assets/fonts/Inter_18pt-SemiBold.ttf
           weight: 600
+
+
 
 

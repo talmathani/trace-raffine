@@ -1,6 +1,6 @@
 import '../../../../core/appwrite/appwrite_config.dart';
 
-enum DesignerDesignStatus { pending, approved, rejected }
+enum DesignerDesignStatus { pending, approved, published, rejected }
 
 class DesignerDesignModel {
   const DesignerDesignModel({
@@ -83,6 +83,8 @@ class DesignerDesignModel {
     switch (value?.toString().trim().toLowerCase()) {
       case 'approved':
         return DesignerDesignStatus.approved;
+      case 'published':
+        return DesignerDesignStatus.published;
       case 'rejected':
         return DesignerDesignStatus.rejected;
       case 'pending':

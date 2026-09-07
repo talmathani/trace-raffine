@@ -1,7 +1,9 @@
-﻿import 'package:flutter/material.dart';
+import 'package:appwrite/appwrite.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'core/appwrite/appwrite_config.dart';
+import 'core/appwrite/appwrite_service.dart';
 import 'core/appwrite/appwrite_database_service.dart';
 import 'core/localization/app_locale.dart';
 import 'core/theme/app_theme.dart';
@@ -64,7 +66,7 @@ class TRApp extends StatelessWidget {
           RepositoryProvider<UserProfileRepository>(
             create: (context) => UserProfileRepositoryImpl(
               AppwriteUserProfileDatasource(
-                context.read<AppwriteDatabaseService>(),
+                TablesDB(AppwriteService.client),
               ),
             ),
           ),
@@ -114,6 +116,7 @@ class TRApp extends StatelessWidget {
     );
   }
 }
+
 
 
 

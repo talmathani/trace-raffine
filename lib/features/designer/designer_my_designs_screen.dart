@@ -231,6 +231,12 @@ class DesignerMyDesignsScreen extends StatelessWidget {
         bgColor = const Color(0xFF4CAF50).withValues(alpha: 0.15);
         break;
 
+      case DesignerDesignStatus.published:
+        label = 'منشور';
+        color = const Color(0xFF4CAF50);
+        bgColor = const Color(0xFF4CAF50).withValues(alpha: 0.15);
+        break;
+
       case DesignerDesignStatus.rejected:
         label = 'مرفوض';
         color = const Color(0xFFE57373);

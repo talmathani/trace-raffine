@@ -1,26 +1,28 @@
-import 'package:appwrite/appwrite.dart';
+﻿import 'package:appwrite/appwrite.dart';
 
-import '../../../../core/appwrite/appwrite_database_service.dart';
+import '../../../../core/appwrite/appwrite_service.dart';
 import '../../../../core/appwrite/appwrite_profile_constants.dart';
 import '../models/user_profile_model.dart';
 
 class AppwriteUserProfileDatasource {
-  AppwriteUserProfileDatasource(this._databaseService);
+  AppwriteUserProfileDatasource([TablesDB? tablesDb])
+      : _tablesDb = tablesDb ?? TablesDB(AppwriteService.client);
 
-  final AppwriteDatabaseService _databaseService;
+  final TablesDB _tablesDb;
 
   Future<UserProfileModel?> getCurrentProfile({
     required String userId,
   }) async {
     try {
-      final document = await _databaseService.getDocument(
-        collectionId: AppwriteProfileConstants.collectionId,
-        documentId: userId,
+      final row = await _tablesDb.getRow(
+        databaseId: AppwriteProfileConstants.databaseId,
+        tableId: AppwriteProfileConstants.collectionId,
+        rowId: userId,
       );
 
       return UserProfileModel.fromMap({
-        'id': document.$id,
-        ...document.data,
+        'id': row.$id,
+        ...row.data,
       });
     } on AppwriteException catch (error, stackTrace) {
       if (error.code == 404) {
@@ -44,9 +46,10 @@ class AppwriteUserProfileDatasource {
   }) async {
     final userId = profile.id;
 
-    final document = await _databaseService.createDocument(
-      collectionId: AppwriteProfileConstants.collectionId,
-      documentId: userId,
+    final row = await _tablesDb.createRow(
+      databaseId: AppwriteProfileConstants.databaseId,
+      tableId: AppwriteProfileConstants.collectionId,
+      rowId: userId,
       data: profile.toMap(),
       permissions: [
         Permission.read(Role.user(userId)),
@@ -56,23 +59,25 @@ class AppwriteUserProfileDatasource {
     );
 
     return UserProfileModel.fromMap({
-      'id': document.$id,
-      ...document.data,
+      'id': row.$id,
+      ...row.data,
     });
   }
 
   Future<UserProfileModel> updateProfile({
     required UserProfileModel profile,
   }) async {
-    final document = await _databaseService.updateDocument(
-      collectionId: AppwriteProfileConstants.collectionId,
-      documentId: profile.id,
+    final row = await _tablesDb.updateRow(
+      databaseId: AppwriteProfileConstants.databaseId,
+      tableId: AppwriteProfileConstants.collectionId,
+      rowId: profile.id,
       data: profile.toMap(),
     );
 
     return UserProfileModel.fromMap({
-      'id': document.$id,
-      ...document.data,
+      'id': row.$id,
+      ...row.data,
     });
   }
 }
+

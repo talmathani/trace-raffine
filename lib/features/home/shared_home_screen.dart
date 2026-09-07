@@ -444,7 +444,7 @@ class _PublishedDesignsSection extends ConsumerWidget {
                   final product = state.products[index];
                   return SizedBox(
                     width: 220,
-                    child: ProductCard(product: product, onTap: () {}),
+                    child: ProductCard(product: product),
                   );
                 },
               ),
@@ -467,4 +467,5 @@ class HomeCategory {
   final IconData icon;
   final String categoryId;
 }
+
 

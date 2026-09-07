@@ -1,4 +1,4 @@
-﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../domain/models/designer_design_model.dart';
 import '../../domain/repositories/designer_design_repository.dart';
@@ -53,7 +53,9 @@ class DesignerDesignAppwriteRepositoryImpl implements DesignerDesignRepository {
       ),
       _uploadEmbroidery(
         bytes: embroideryFileBytes,
-        extension: embroideryExt,
+        fileName: embroideryFileName.trim().isNotEmpty
+            ? embroideryFileName.trim()
+            : 'embroidery.$embroideryExt',
       ),
     ]);
 
@@ -174,7 +176,7 @@ class DesignerDesignAppwriteRepositoryImpl implements DesignerDesignRepository {
 
   Future<_UploadOutcome> _uploadEmbroidery({
     required Uint8List bytes,
-    required String extension,
+    required String fileName,
   }) async {
     final stopwatch = Stopwatch()..start();
     debugPrint(
@@ -185,7 +187,7 @@ class DesignerDesignAppwriteRepositoryImpl implements DesignerDesignRepository {
     try {
       final fileId = await _storageDataSource.uploadFile(
         bytes: bytes,
-        fileName: 'embroidery.$extension',
+        fileName: fileName,
         contentType: 'application/octet-stream',
       );
       stopwatch.stop();

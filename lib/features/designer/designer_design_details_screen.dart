@@ -284,6 +284,12 @@ class DesignerDesignDetailsScreen extends StatelessWidget {
           color: Color(0xFF75B798),
           icon: Icons.verified_rounded,
         );
+      case DesignerDesignStatus.published:
+        return const _StatusConfiguration(
+          label: 'منشور',
+          color: Color(0xFF75B798),
+          icon: Icons.storefront_outlined,
+        );
       case DesignerDesignStatus.rejected:
         return const _StatusConfiguration(
           label: 'مرفوض',

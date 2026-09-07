@@ -63,7 +63,7 @@ class AppwriteAuthDataSource {
   }
 
   Future<void> createVerification({required String redirectUrl}) {
-    return _account.createVerification(url: redirectUrl);
+    return _account.createEmailVerification(url: redirectUrl);
   }
 
   Future<void> updatePassword({required String password}) {

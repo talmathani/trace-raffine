@@ -21,24 +21,25 @@
 
   Map<String, dynamic> toJson() {
     return {
-      'user_id': userId,
-      'total_amount': totalAmount,
+      'customer_id': userId,
+      'total': totalAmount,
       'currency': currency,
       'payment_status': paymentStatus,
-      'order_status': orderStatus,
+      'status': orderStatus,
     };
   }
 
   factory Order.fromJson(Map<String, dynamic> json) {
     return Order(
       id: json['\$id'],
-      userId: json['user_id'] ?? '',
-      totalAmount: (json['total_amount'] ?? 0).toDouble(),
+      userId: json['customer_id'] ?? json['user_id'] ?? '',
+      totalAmount: (json['total'] ?? json['total_amount'] ?? 0).toDouble(),
       currency: json['currency'],
       paymentStatus: json['payment_status'] ?? 'pending',
-      orderStatus: json['order_status'] ?? 'pending',
+      orderStatus: json['status'] ?? json['order_status'] ?? 'pending',
       createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at']) : null,
       completedAt: json['completed_at'] != null ? DateTime.tryParse(json['completed_at']) : null,
     );
   }
 }
+

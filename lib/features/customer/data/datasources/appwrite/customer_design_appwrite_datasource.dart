@@ -15,7 +15,7 @@ class CustomerDesignAppwriteDataSource {
     final normalizedCategory = category?.trim();
 
     final queries = <String>[
-      Query.equal('status', 'approved'),
+      Query.equal('status', 'published'),
       Query.orderDesc(r'$createdAt'),
       Query.limit(24),
     ];
@@ -61,6 +61,7 @@ class CustomerDesignAppwriteDataSource {
       $databaseId: document.$databaseId,
       $createdAt: document.$createdAt,
       $updatedAt: document.$updatedAt,
+      $sequence: document.$sequence,
       $permissions: document.$permissions,
       data: data,
     );
@@ -89,6 +90,9 @@ class CustomerDesignAppwriteDataSource {
     return valueString;
   }
 }
+
+
+
 
 
 

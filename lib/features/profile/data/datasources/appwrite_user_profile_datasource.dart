@@ -1,4 +1,6 @@
-﻿import 'package:appwrite/appwrite.dart';
+﻿import 'dart:developer' as developer;
+
+import 'package:appwrite/appwrite.dart';
 
 import '../../../../core/appwrite/appwrite_service.dart';
 import '../../../../core/appwrite/appwrite_profile_constants.dart';
@@ -26,17 +28,27 @@ class AppwriteUserProfileDatasource {
       });
     } on AppwriteException catch (error, stackTrace) {
       if (error.code == 404) {
-        print('PROFILE NOT FOUND: userId=$userId');
+        developer.log(
+          'Profile not found.',
+          name: 'TR.Profile',
+        );
         return null;
       }
 
-      print('PROFILE LOAD APPWRITE ERROR: ${error.code}');
-      print('PROFILE LOAD MESSAGE: ${error.message}');
-      print(stackTrace);
+      developer.log(
+        'Appwrite profile load failed: ${error.code}',
+        name: 'TR.Profile',
+        error: error.message,
+        stackTrace: stackTrace,
+      );
       rethrow;
     } catch (error, stackTrace) {
-      print('PROFILE LOAD ERROR: $error');
-      print(stackTrace);
+      developer.log(
+        'Profile load failed.',
+        name: 'TR.Profile',
+        error: error,
+        stackTrace: stackTrace,
+      );
       rethrow;
     }
   }
@@ -80,4 +92,3 @@ class AppwriteUserProfileDatasource {
     });
   }
 }
-

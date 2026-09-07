@@ -1,35 +1,72 @@
-﻿import '../../domain/entities/cart_item.dart';
+﻿import '../../../../core/appwrite/appwrite_database_constants.dart';
+import '../../../../core/appwrite/appwrite_database_service.dart';
+import '../../domain/entities/cart_item.dart';
 import '../../domain/repositories/cart_repository.dart';
-import '../datasources/cart_data_source.dart';
+import '../models/cart_item_model.dart';
 
 class CartRepositoryImpl implements CartRepository {
-  final CartDataSource dataSource;
+  final AppwriteDatabaseService _databaseService;
 
-  CartRepositoryImpl(this.dataSource);
+  CartRepositoryImpl(this._databaseService);
 
   @override
   Future<List<CartItem>> getCartItems(String userId) async {
-    final models = await dataSource.getCartItems(userId);
-    return models.cast<CartItem>();
+    final response = await _databaseService.listDocuments(
+      collectionId: AppwriteDatabaseConstants.cartCollectionId,
+    );
+    return response.documents
+        .map((doc) => CartItemModel.fromJson({...doc.data, 'id': doc.$id}))
+        .toList();
   }
 
   @override
   Future<CartItem> addToCart(String userId, String productId, {int quantity = 1}) async {
-    return await dataSource.addToCart(userId, productId, quantity: quantity);
+    final model = CartItemModel(
+      id: '',
+      userId: userId,
+      productId: productId,
+      quantity: quantity,
+    );
+    final doc = await _databaseService.createDocument(
+      collectionId: AppwriteDatabaseConstants.cartCollectionId,
+      data: {
+        'user_id': model.userId,
+        'product_id': model.productId,
+        'quantity': model.quantity,
+      },
+    );
+    return CartItemModel.fromJson({...doc.data, 'id': doc.$id});
   }
 
   @override
   Future<void> updateQuantity(String cartItemId, int quantity) async {
-    await dataSource.updateQuantity(cartItemId, quantity);
+    await _databaseService.updateDocument(
+      collectionId: AppwriteDatabaseConstants.cartCollectionId,
+      documentId: cartItemId,
+      data: {'quantity': quantity},
+    );
   }
 
   @override
   Future<void> removeFromCart(String cartItemId) async {
-    await dataSource.removeFromCart(cartItemId);
+    await _databaseService.deleteDocument(
+      collectionId: AppwriteDatabaseConstants.cartCollectionId,
+      documentId: cartItemId,
+    );
   }
 
   @override
   Future<void> clearCart(String userId) async {
-    await dataSource.clearCart(userId);
+    final response = await _databaseService.listDocuments(
+      collectionId: AppwriteDatabaseConstants.cartCollectionId,
+    );
+    for (var doc in response.documents) {
+      if (doc.data['user_id'] == userId) {
+        await _databaseService.deleteDocument(
+          collectionId: AppwriteDatabaseConstants.cartCollectionId,
+          documentId: doc.$id,
+        );
+      }
+    }
   }
 }

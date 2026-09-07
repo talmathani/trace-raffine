@@ -1,30 +1,53 @@
-﻿import '../../domain/entities/favorite.dart';
+﻿import '../../../../core/appwrite/appwrite_database_constants.dart';
+import '../../../../core/appwrite/appwrite_database_service.dart';
+import '../../domain/entities/favorite.dart';
 import '../../domain/repositories/favorite_repository.dart';
-import '../datasources/favorite_data_source.dart';
+import '../models/favorite_model.dart';
 
 class FavoriteRepositoryImpl implements FavoriteRepository {
-  final FavoriteDataSource dataSource;
+  final AppwriteDatabaseService _databaseService;
 
-  FavoriteRepositoryImpl(this.dataSource);
+  FavoriteRepositoryImpl(this._databaseService);
 
   @override
   Future<List<Favorite>> getFavorites(String userId) async {
-    final models = await dataSource.getFavorites(userId);
-    return models.cast<Favorite>();
+    final response = await _databaseService.listDocuments(
+      collectionId: AppwriteDatabaseConstants.favoritesCollectionId,
+    );
+    return response.documents
+        .map((doc) => FavoriteModel.fromJson({...doc.data, 'id': doc.$id}))
+        .where((fav) => fav.userId == userId)
+        .toList();
   }
 
   @override
   Future<Favorite> addFavorite(String userId, String productId) async {
-    return await dataSource.addFavorite(userId, productId);
+    final model = FavoriteModel(
+      id: '',
+      userId: userId,
+      productId: productId,
+    );
+    final doc = await _databaseService.createDocument(
+      collectionId: AppwriteDatabaseConstants.favoritesCollectionId,
+      data: {
+        'user_id': model.userId,
+        'product_id': model.productId,
+      },
+    );
+    return FavoriteModel.fromJson({...doc.data, 'id': doc.$id});
   }
 
   @override
   Future<void> removeFavorite(String favoriteId) async {
-    await dataSource.removeFavorite(favoriteId);
+    await _databaseService.deleteDocument(
+      collectionId: AppwriteDatabaseConstants.favoritesCollectionId,
+      documentId: favoriteId,
+    );
   }
 
   @override
   Future<bool> isFavorite(String userId, String productId) async {
-    return await dataSource.isFavorite(userId, productId);
+    final favorites = await getFavorites(userId);
+    return favorites.any((fav) => fav.productId == productId);
   }
 }

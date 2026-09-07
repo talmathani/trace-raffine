@@ -1,4 +1,4 @@
-import 'package:appwrite/models.dart' as models;
+﻿import 'package:appwrite/models.dart' as models;
 
 import '../../../domain/entities/user_profile.dart';
 import '../../../domain/entities/user_role.dart';
@@ -35,7 +35,6 @@ class ProfileSessionService {
       throw StateError('Requested role is not allowed for this account.');
     }
     _activeRole = role;
-    print('=== ACTIVE ROLE SET: ${role.name} ===');
   }
 
   Future<UserProfile?> loadCurrentProfile() async {
@@ -44,26 +43,15 @@ class ProfileSessionService {
     if (currentUser == null) {
       _currentProfile = null;
       _activeRole = null;
-      print('=== PROFILE SESSION: NO AUTHENTICATED USER ===');
       return null;
     }
-
-    print('=== PROFILE SESSION: LOAD START ===');
-    print('AUTH USER ID: ${currentUser.$id}');
-    print('AUTH USER EMAIL: ${currentUser.email}');
-    print('AUTH USER NAME: ${currentUser.name}');
 
     final profile = await _getUserProfile(
       userId: currentUser.$id,
     );
 
     if (profile != null) {
-      print('=== RUNTIME PROFILE ROLE: ${profile.role.name} ===');
-      print('=== RUNTIME PROFILE ID: ${profile.id} ===');
-      print('=== RUNTIME PROFILE EMAIL: ${profile.email} ===');
-      print('=== RUNTIME PROFILE DISPLAY NAME: ${profile.displayName} ===');
     } else {
-      print('=== RUNTIME PROFILE: NOT FOUND ===');
     }
 
     _currentProfile = profile;
@@ -84,25 +72,15 @@ class ProfileSessionService {
       );
     }
 
-    print('=== PROFILE ENSURE START ===');
-    print('AUTH USER ID: ${currentUser.$id}');
-    print('REQUESTED ROLE: ${role.name}');
-
     final existingProfile = await _getUserProfile(
       userId: currentUser.$id,
     );
 
     if (existingProfile != null) {
-      print('=== PROFILE ENSURE: EXISTING PROFILE FOUND ===');
-      print('PROFILE ID: ${existingProfile.id}');
-      print('PROFILE ROLE: ${existingProfile.role.name}');
 
       _currentProfile = existingProfile;
       return existingProfile;
     }
-
-    print('=== PROFILE ENSURE: PROFILE NOT FOUND ===');
-    print('=== PROFILE ENSURE: CREATING PROFILE ===');
 
     final profile = UserProfile(
       id: currentUser.$id,
@@ -117,10 +95,6 @@ class ProfileSessionService {
     );
 
     _currentProfile = createdProfile;
-
-    print('=== PROFILE ENSURE: PROFILE CREATED ===');
-    print('PROFILE ID: ${createdProfile.id}');
-    print('PROFILE ROLE: ${createdProfile.role.name}');
 
     return createdProfile;
   }

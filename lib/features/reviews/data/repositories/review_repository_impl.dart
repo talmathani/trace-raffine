@@ -1,17 +1,27 @@
-﻿import '../../domain/entities/review.dart';
+import '../../../../core/appwrite/appwrite_database_constants.dart';
+import '../../../../core/appwrite/appwrite_database_service.dart';
+import '../../domain/entities/review.dart';
 import '../../domain/repositories/review_repository.dart';
-import '../datasources/review_data_source.dart';
 import '../models/review_model.dart';
 
 class ReviewRepositoryImpl implements ReviewRepository {
-  final ReviewDataSource dataSource;
+  final AppwriteDatabaseService _databaseService;
 
-  ReviewRepositoryImpl(this.dataSource);
+  ReviewRepositoryImpl(this._databaseService);
 
   @override
   Future<List<Review>> getReviews(String productId) async {
-    final models = await dataSource.getReviews(productId);
-    return models.cast<Review>();
+    final response = await _databaseService.listDocuments(
+      collectionId: AppwriteDatabaseConstants.reviewsCollectionId,
+    );
+
+    return response.documents
+        .map((doc) => ReviewModel.fromJson({
+              ...doc.data,
+              r'$id': doc.$id,
+            }))
+        .where((review) => review.productId == productId)
+        .toList();
   }
 
   @override
@@ -24,11 +34,33 @@ class ReviewRepositoryImpl implements ReviewRepository {
       reviewText: review.reviewText,
       createdAt: review.createdAt,
     );
-    return dataSource.addReview(model);
+
+    final documentId =
+        model.id != null && model.id!.isNotEmpty ? model.id : null;
+
+    final doc = await _databaseService.createDocument(
+      collectionId: AppwriteDatabaseConstants.reviewsCollectionId,
+      data: {
+        'user_id': model.userId,
+        'product_id': model.productId,
+        'rating': model.rating,
+        'review_text': model.reviewText,
+        'created_at': model.createdAt?.toIso8601String(),
+      },
+      documentId: documentId,
+    );
+
+    return ReviewModel.fromJson({
+      ...doc.data,
+      r'$id': doc.$id,
+    });
   }
 
   @override
   Future<void> deleteReview(String reviewId) async {
-    await dataSource.deleteReview(reviewId);
+    await _databaseService.deleteDocument(
+      collectionId: AppwriteDatabaseConstants.reviewsCollectionId,
+      documentId: reviewId,
+    );
   }
 }

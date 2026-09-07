@@ -1,17 +1,27 @@
-﻿import '../../domain/entities/purchase.dart';
+import '../../../../core/appwrite/appwrite_database_constants.dart';
+import '../../../../core/appwrite/appwrite_database_service.dart';
+import '../../domain/entities/purchase.dart';
 import '../../domain/repositories/purchase_repository.dart';
-import '../datasources/purchase_data_source.dart';
 import '../models/purchase_model.dart';
 
 class PurchaseRepositoryImpl implements PurchaseRepository {
-  final PurchaseDataSource dataSource;
+  final AppwriteDatabaseService _databaseService;
 
-  PurchaseRepositoryImpl(this.dataSource);
+  PurchaseRepositoryImpl(this._databaseService);
 
   @override
   Future<List<Purchase>> getPurchases(String userId) async {
-    final models = await dataSource.getPurchases(userId);
-    return models.cast<Purchase>();
+    final response = await _databaseService.listDocuments(
+      collectionId: AppwriteDatabaseConstants.purchasesCollectionId,
+    );
+
+    return response.documents
+        .map((doc) => PurchaseModel.fromJson({
+              ...doc.data,
+              r'$id': doc.$id,
+            }))
+        .where((purchase) => purchase.userId == userId)
+        .toList();
   }
 
   @override
@@ -23,11 +33,30 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
       orderId: purchase.orderId,
       purchasedAt: purchase.purchasedAt,
     );
-    return dataSource.addPurchase(model);
+
+    final documentId =
+        model.id != null && model.id!.isNotEmpty ? model.id : null;
+
+    final doc = await _databaseService.createDocument(
+      collectionId: AppwriteDatabaseConstants.purchasesCollectionId,
+      data: {
+        'user_id': model.userId,
+        'product_id': model.productId,
+        'order_id': model.orderId,
+        'purchased_at': model.purchasedAt?.toIso8601String(),
+      },
+      documentId: documentId,
+    );
+
+    return PurchaseModel.fromJson({
+      ...doc.data,
+      r'$id': doc.$id,
+    });
   }
 
   @override
   Future<bool> hasPurchased(String userId, String productId) async {
-    return await dataSource.hasPurchased(userId, productId);
+    final purchases = await getPurchases(userId);
+    return purchases.any((purchase) => purchase.productId == productId);
   }
 }

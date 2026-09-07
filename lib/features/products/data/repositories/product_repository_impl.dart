@@ -1,85 +1,50 @@
 ﻿import '../../domain/entities/product.dart';
 import '../../domain/repositories/product_repository.dart';
 import '../datasources/product_data_source.dart';
-import '../models/product_model.dart';
 
 class ProductRepositoryImpl implements ProductRepository {
   final ProductDataSource dataSource;
 
-  ProductRepositoryImpl(this.dataSource);
+  ProductRepositoryImpl({required this.dataSource});
 
   @override
-  Future<List<Product>> getProducts({int limit = 20, int offset = 0}) async {
-    final models = await dataSource.getProducts(limit: limit, offset: offset);
-    return models.cast<Product>();
-  }
-
-  @override
-  Future<Product?> getProductById(String id) async {
-    final model = await dataSource.getProductById(id);
-    return model;
-  }
-
-  @override
-  Future<List<Product>> getProductsByDesigner(String designerId) async {
-    final models = await dataSource.getProductsByDesigner(designerId);
-    return models.cast<Product>();
-  }
-
-  @override
-  Future<Product> createProduct(Product product) async {
-    final model = ProductModel(
-      id: product.id,
-      designerId: product.designerId,
-      title: product.title,
-      description: product.description,
-      categoryId: product.categoryId,
-      price: product.price,
-      currency: product.currency,
-      status: product.status,
-      coverImageUrl: product.coverImageUrl,
-      fileKey: product.fileKey,
-      salesCount: product.salesCount,
-      rating: product.rating,
-      reviewCount: product.reviewCount,
-      createdAt: product.createdAt,
-      updatedAt: product.updatedAt,
-      publishedAt: product.publishedAt,
+  Future<List<Product>> getProducts({
+    int limit = 20,
+    int offset = 0,
+  }) {
+    return dataSource.getProducts(
+      limit: limit,
+      offset: offset,
     );
-    return dataSource.createProduct(model);
   }
 
   @override
-  Future<Product> updateProduct(Product product) async {
-    final model = ProductModel(
-      id: product.id,
-      designerId: product.designerId,
-      title: product.title,
-      description: product.description,
-      categoryId: product.categoryId,
-      price: product.price,
-      currency: product.currency,
-      status: product.status,
-      coverImageUrl: product.coverImageUrl,
-      fileKey: product.fileKey,
-      salesCount: product.salesCount,
-      rating: product.rating,
-      reviewCount: product.reviewCount,
-      createdAt: product.createdAt,
-      updatedAt: product.updatedAt,
-      publishedAt: product.publishedAt,
-    );
-    return dataSource.updateProduct(model);
+  Future<Product?> getProductById(String id) {
+    return dataSource.getProductById(id);
   }
 
   @override
-  Future<void> deleteProduct(String id) async {
-    await dataSource.deleteProduct(id);
+  Future<List<Product>> getProductsByDesigner(String designerId) {
+    return dataSource.getProductsByDesigner(designerId);
   }
 
   @override
-  Future<List<Product>> searchProducts(String query) async {
-    final models = await dataSource.searchProducts(query);
-    return models.cast<Product>();
+  Future<List<Product>> searchProducts(String query) {
+    return dataSource.searchProducts(query);
+  }
+
+  @override
+  Future<Product> createProduct(Product product) {
+    return dataSource.createProduct(product);
+  }
+
+  @override
+  Future<Product> updateProduct(Product product) {
+    return dataSource.updateProduct(product);
+  }
+
+  @override
+  Future<void> deleteProduct(String id) {
+    return dataSource.deleteProduct(id);
   }
 }

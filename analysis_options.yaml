@@ -2,9 +2,4 @@
 
 analyzer:
   exclude:
-    - backup/**
-
-linter:
-  rules:
-    avoid_print: false
-    prefer_single_quotes: true
+    - "_archive_old_backups/**"

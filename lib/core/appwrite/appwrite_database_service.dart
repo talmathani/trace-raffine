@@ -1,4 +1,4 @@
-﻿// ignore_for_file: deprecated_member_use
+// ignore_for_file: deprecated_member_use
 import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart';
 
@@ -17,12 +17,6 @@ class AppwriteDatabaseService {
     String? documentId,
     List<String>? permissions,
   }) async {
-    print('=== DATABASE SERVICE CREATE REQUEST ===');
-    print('DATABASE ID: ${AppwriteDatabaseConstants.databaseId}');
-    print('COLLECTION ID: $collectionId');
-    print('DOCUMENT ID: ${documentId ?? ID.unique()}');
-    print('DATA: $data');
-    print('PERMISSIONS: $permissions');
 
     final document = await _databases.createDocument(
       databaseId: AppwriteDatabaseConstants.databaseId,
@@ -31,11 +25,6 @@ class AppwriteDatabaseService {
       data: data,
       permissions: permissions,
     );
-
-    print('=== DATABASE SERVICE CREATE SUCCESS ===');
-    print('RETURNED DOCUMENT ID: ${document.$id}');
-    print('RETURNED DOCUMENT DATA: ${document.data}');
-    print('RETURNED DOCUMENT PERMISSIONS: ${document.$permissions}');
 
     return document;
   }
@@ -86,4 +75,3 @@ class AppwriteDatabaseService {
     );
   }
 }
-

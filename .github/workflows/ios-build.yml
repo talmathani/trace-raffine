@@ -1,0 +1,45 @@
+name: iOS Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-ios:
+    name: Build TRACÉ RAFFINÉ iOS IPA
+    runs-on: macos-15-intel
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter 3.44.4
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.44.4
+          channel: stable
+          cache: true
+
+      - name: Flutter version
+        run: flutter --version
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build unsigned iOS IPA
+        run: flutter build ipa --release --no-codesign
+
+      - name: Verify IPA
+        run: |
+          test -f build/ios/ipa/Runner.ipa
+          ls -lh build/ios/ipa/Runner.ipa
+
+      - name: Upload unsigned IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: trace-raffine-ios-unsigned
+          path: build/ios/ipa/Runner.ipa
+          if-no-files-found: error
+          retention-days: 7

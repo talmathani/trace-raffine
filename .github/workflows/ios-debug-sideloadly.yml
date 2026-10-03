@@ -1,0 +1,71 @@
+name: iOS Debug IPA (Sideloadly)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-ios-debug:
+    name: Build Flutter Debug IPA for Sideloadly
+    runs-on: macos-15-intel
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter 3.44.4
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.44.4
+          channel: stable
+          cache: true
+
+      - name: Flutter version
+        run: flutter --version
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate iOS Flutter configuration
+        run: flutter build ios --config-only
+
+      - name: Build unsigned Debug archive
+        run: |
+          set -e
+          xcodebuild \
+            -workspace ios/Runner.xcworkspace \
+            -scheme Runner \
+            -configuration Debug \
+            -sdk iphoneos \
+            -archivePath build/ios/debug/Runner.xcarchive \
+            archive \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO
+
+      - name: Package Debug IPA
+        run: |
+          set -e
+          rm -rf build/ios/debug/ipa
+          mkdir -p build/ios/debug/ipa/Payload
+          cp -R build/ios/debug/Runner.xcarchive/Products/Applications/Runner.app build/ios/debug/ipa/Payload/Runner.app
+          cd build/ios/debug/ipa
+          zip -qry Runner-Debug.ipa Payload
+          test -f Runner-Debug.ipa
+
+      - name: Verify Debug IPA contains Flutter debug artifacts
+        run: |
+          set -e
+          test -s build/ios/debug/ipa/Runner-Debug.ipa
+          unzip -l build/ios/debug/ipa/Runner-Debug.ipa | grep -q 'Payload/Runner.app/Runner'
+          unzip -l build/ios/debug/ipa/Runner-Debug.ipa | grep -q 'Payload/Runner.app/Frameworks/App.framework/'
+          unzip -l build/ios/debug/ipa/Runner-Debug.ipa | grep -q 'Payload/Runner.app/flutter_assets/'
+
+      - name: Upload Debug IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: trace-raffine-ios-debug
+          path: build/ios/debug/ipa/Runner-Debug.ipa
+          if-no-files-found: error
+          retention-days: 7

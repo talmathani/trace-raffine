@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
-import '../../core/theme/app_theme.dart';
-import '../../core/ui/appwrite_image.dart';
+import 'package:trace_raffine/core/theme/app_theme.dart';
+import 'package:trace_raffine/core/ui/maison_app_bar.dart';
+import 'package:trace_raffine/core/ui/maison_surface.dart';
+import 'package:trace_raffine/core/responsive/app_breakpoints.dart';
+import 'package:trace_raffine/core/ui/appwrite_image.dart';
 import 'domain/models/designer_design_model.dart';
 
 class DesignerDesignDetailsScreen extends StatelessWidget {
@@ -16,10 +19,10 @@ class DesignerDesignDetailsScreen extends StatelessWidget {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(title: const Text('تفاصيل التصميم')),
+        appBar: MaisonAppBar(title: 'تفاصيل التصميم'),
         body: LayoutBuilder(
           builder: (context, constraints) {
-            final isWide = constraints.maxWidth >= 900;
+            final isWide = context.isExpanded || context.isLarge;
 
             if (isWide) {
               return SingleChildScrollView(
@@ -110,20 +113,15 @@ class DesignerDesignDetailsScreen extends StatelessWidget {
   }
 
   Widget _buildHeader(_StatusConfiguration status, {bool compact = false}) {
-    return Container(
+    return MaisonSurface(
       padding: EdgeInsets.all(compact ? 16 : 20),
-      decoration: BoxDecoration(
-        color: AppTheme.burgundyBlack,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AppTheme.divider),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             design.title.isEmpty ? 'بدون عنوان' : design.title,
             style: TextStyle(
-              fontFamily: 'Cairo',
+              fontFamily: AppTheme.fontArabic,
               fontSize: compact ? 19 : 21,
               fontWeight: FontWeight.w700,
               color: AppTheme.warmIvory,
@@ -133,7 +131,7 @@ class DesignerDesignDetailsScreen extends StatelessWidget {
           Text(
             design.category,
             style: const TextStyle(
-              fontFamily: 'Cairo',
+              fontFamily: AppTheme.fontArabic,
               fontSize: 12,
               color: AppTheme.mutedIvory,
             ),
@@ -153,7 +151,7 @@ class DesignerDesignDetailsScreen extends StatelessWidget {
               Text(
                 design.price.toStringAsFixed(2),
                 style: TextStyle(
-                  fontFamily: 'Inter',
+                  fontFamily: AppTheme.fontTechnical,
                   fontSize: compact ? 17 : 18,
                   fontWeight: FontWeight.w700,
                   color: AppTheme.softRose,
@@ -167,13 +165,8 @@ class DesignerDesignDetailsScreen extends StatelessWidget {
   }
 
   Widget _buildTechnicalDetails() {
-    return Container(
+    return MaisonSurface(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AppTheme.burgundyBlack,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AppTheme.divider),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -188,7 +181,7 @@ class DesignerDesignDetailsScreen extends StatelessWidget {
               Text(
                 'بيانات التنفيذ',
                 style: TextStyle(
-                  fontFamily: 'Cairo',
+                  fontFamily: AppTheme.fontArabic,
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
                   color: AppTheme.warmIvory,
@@ -232,20 +225,15 @@ class DesignerDesignDetailsScreen extends StatelessWidget {
   }
 
   Widget _buildDescription() {
-    return Container(
+    return MaisonSurface(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AppTheme.burgundyBlack,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AppTheme.divider),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
             'الوصف',
             style: TextStyle(
-              fontFamily: 'Cairo',
+              fontFamily: AppTheme.fontArabic,
               fontSize: 16,
               fontWeight: FontWeight.w700,
               color: AppTheme.warmIvory,
@@ -255,7 +243,7 @@ class DesignerDesignDetailsScreen extends StatelessWidget {
           Text(
             design.description!,
             style: const TextStyle(
-              fontFamily: 'Cairo',
+              fontFamily: AppTheme.fontArabic,
               fontSize: 12,
               color: AppTheme.mutedIvory,
               height: 1.8,
@@ -281,19 +269,19 @@ class DesignerDesignDetailsScreen extends StatelessWidget {
       case DesignerDesignStatus.approved:
         return const _StatusConfiguration(
           label: 'مقبول',
-          color: Color(0xFF75B798),
+          color: AppTheme.statusSuccess,
           icon: Icons.verified_rounded,
         );
       case DesignerDesignStatus.published:
         return const _StatusConfiguration(
           label: 'منشور',
-          color: Color(0xFF75B798),
+          color: AppTheme.statusSuccess,
           icon: Icons.storefront_outlined,
         );
       case DesignerDesignStatus.rejected:
         return const _StatusConfiguration(
           label: 'مرفوض',
-          color: Color(0xFFD47A7A),
+          color: AppTheme.statusRejected,
           icon: Icons.cancel_outlined,
         );
     }
@@ -325,7 +313,7 @@ class _DetailRow extends StatelessWidget {
             child: Text(
               title,
               style: const TextStyle(
-                fontFamily: 'Cairo',
+                fontFamily: AppTheme.fontArabic,
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
                 color: AppTheme.mutedIvory,
@@ -337,7 +325,7 @@ class _DetailRow extends StatelessWidget {
             child: Text(
               value,
               style: const TextStyle(
-                fontFamily: 'Cairo',
+                fontFamily: AppTheme.fontArabic,
                 fontSize: 12,
                 color: AppTheme.warmIvory,
                 height: 1.6,
@@ -374,7 +362,7 @@ class _Badge extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              fontFamily: 'Cairo',
+              fontFamily: AppTheme.fontArabic,
               fontSize: 10,
               fontWeight: FontWeight.w700,
               color: color,

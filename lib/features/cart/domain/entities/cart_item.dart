@@ -1,4 +1,4 @@
-﻿class CartItem {
+class CartItem {
   final String? id;
   final String userId;
   final String productId;
@@ -30,20 +30,18 @@
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'user_id': userId,
-      'product_id': productId,
-      'quantity': quantity,
-    };
+    return {'user_id': userId, 'product_id': productId, 'quantity': quantity};
   }
 
   factory CartItem.fromJson(Map<String, dynamic> json) {
     return CartItem(
-      id: json['\$id'],
-      userId: json['user_id'] ?? '',
-      productId: json['product_id'] ?? '',
-      quantity: json['quantity'] ?? 1,
-      createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at']) : null,
+      id: json['\$id']?.toString(),
+      userId: json['user_id']?.toString() ?? '',
+      productId: json['product_id']?.toString() ?? '',
+      quantity: (json['quantity'] as num?)?.toInt() ?? 1,
+      createdAt: DateTime.tryParse(
+        (json['created_at'] ?? json['\$createdAt'] ?? '').toString(),
+      ),
     );
   }
 }

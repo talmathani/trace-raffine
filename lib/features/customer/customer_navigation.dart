@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import '../products/presentation/screens/products_screen.dart';
-import '../products/presentation/screens/product_details_screen.dart';
-import '../categories/presentation/screens/categories_screen.dart';
-import '../favorites/presentation/screens/favorites_screen.dart';
-import '../cart/presentation/screens/cart_screen.dart';
-import '../orders/presentation/screens/orders_screen.dart';
+import '../products/products_screen.dart';
+import '../products/product_details_screen.dart';
+import '../categories/categories_screen.dart';
+import '../favorites/favorites_screen.dart';
+import '../cart/cart_screen.dart';
+import '../orders/orders_screen.dart';
 import '../purchases/presentation/screens/purchases_screen.dart';
-import '../notifications/presentation/screens/notifications_screen.dart';
+import '../notifications/notifications_screen.dart';
 
 class CustomerNavigation {
   static void goToProducts(BuildContext context) {

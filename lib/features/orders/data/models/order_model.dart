@@ -1,4 +1,4 @@
-﻿import '../../domain/entities/order.dart';
+import '../../domain/entities/order.dart';
 
 class OrderModel extends Order {
   const OrderModel({
@@ -18,11 +18,7 @@ class OrderModel extends Order {
     return OrderModel(
       id: json['\$id'],
       userId: json['user_id'] ?? json['customer_id'] ?? '',
-      totalAmount: (
-        json['total'] ??
-        json['total_amount'] ??
-        0
-      ).toDouble(),
+      totalAmount: (json['total'] ?? json['total_amount'] ?? 0).toDouble(),
       currency: json['currency'],
       paymentStatus: json['payment_status'] ?? 'pending',
       orderStatus: status,

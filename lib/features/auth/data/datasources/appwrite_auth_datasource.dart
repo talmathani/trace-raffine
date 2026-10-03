@@ -31,12 +31,21 @@ class AppwriteAuthDataSource {
   Future<models.User> createUser({
     required String email,
     required String password,
+    required String name,
   }) {
     return _account.create(
       userId: ID.unique(),
       email: email.trim(),
       password: password,
+      name: name.trim(),
     );
+  }
+
+  Future<models.User> updatePhone({
+    required String phone,
+    required String password,
+  }) {
+    return _account.updatePhone(phone: phone, password: password);
   }
 
   Future<void> deleteCurrentSession() {
@@ -66,7 +75,7 @@ class AppwriteAuthDataSource {
     return _account.createEmailVerification(url: redirectUrl);
   }
 
-  Future<void> updatePassword({required String password}) {
-    return _account.updatePassword(password: password);
+  Future<void> updatePassword({required String currentPassword, required String newPassword}) {
+    return _account.updatePassword(password: newPassword, oldPassword: currentPassword);
   }
 }

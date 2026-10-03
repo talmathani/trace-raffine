@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 
-import '../../core/guards/role_guard.dart';
-import '../../core/responsive/responsive.dart';
+import 'package:trace_raffine/core/guards/role_guard.dart';
+import 'package:trace_raffine/core/responsive/responsive.dart';
 import '../../domain/entities/user_role.dart';
 import '../account/account_screen.dart';
 import '../designer/designer_earnings_screen.dart';
 import '../designer/designer_my_designs_screen.dart';
 import '../designer/designer_upload_screen.dart';
+import '../designer/designer_review_status_screen.dart';
+import '../designer/designer_notifications_screen.dart';
 import '../home/shared_home_screen.dart';
 
 class DesignerShell extends StatelessWidget {
@@ -36,6 +38,8 @@ class _DesignerNavigationState extends State<_DesignerNavigation> {
     DesignerUploadScreen(),
     DesignerMyDesignsScreen(),
     DesignerEarningsScreen(),
+    DesignerReviewStatusScreen(),
+    DesignerNotificationsScreen(),
     AccountScreen(),
   ];
 
@@ -59,6 +63,16 @@ class _DesignerNavigationState extends State<_DesignerNavigation> {
       icon: Icon(Icons.payments_outlined),
       selectedIcon: Icon(Icons.payments_rounded),
       label: 'الأرباح',
+    ),
+    AdaptiveNavigationItem(
+      icon: Icon(Icons.fact_check_outlined),
+      selectedIcon: Icon(Icons.fact_check_rounded),
+      label: 'المراجعة',
+    ),
+    AdaptiveNavigationItem(
+      icon: Icon(Icons.notifications_none_outlined),
+      selectedIcon: Icon(Icons.notifications_rounded),
+      label: 'الإشعارات',
     ),
     AdaptiveNavigationItem(
       icon: Icon(Icons.person_outline),

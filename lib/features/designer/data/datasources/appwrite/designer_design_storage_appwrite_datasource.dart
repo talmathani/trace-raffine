@@ -1,6 +1,6 @@
-﻿import 'package:flutter/foundation.dart';
-import '../../../../../core/storage/providers/storage_provider.dart';
-import '../../../../../core/storage/providers/appwrite_storage_provider.dart';
+import 'package:flutter/foundation.dart';
+import 'package:trace_raffine/core/storage/providers/storage_provider.dart';
+import 'package:trace_raffine/core/storage/providers/appwrite_storage_provider.dart';
 
 class DesignerDesignStorageAppwriteDataSource {
   final StorageProvider _storageProvider;
@@ -12,11 +12,13 @@ class DesignerDesignStorageAppwriteDataSource {
     required Uint8List bytes,
     required String fileName,
     required String contentType,
+    List<String>? permissions,
   }) async {
     return _storageProvider.uploadFile(
       bytes: bytes,
       fileName: fileName,
       contentType: contentType,
+      permissions: permissions,
     );
   }
 

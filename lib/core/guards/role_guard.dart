@@ -1,15 +1,11 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/entities/user_role.dart';
 import '../../features/profile/services/profile_session_service.dart';
 
 class RoleGuard extends StatelessWidget {
-  const RoleGuard({
-    super.key,
-    required this.requiredRole,
-    required this.child,
-  });
+  const RoleGuard({super.key, required this.requiredRole, required this.child});
 
   final UserRole requiredRole;
   final Widget child;
@@ -33,9 +29,7 @@ class _RoleAccessDenied extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      body: Center(
-        child: Text('هذه الواجهة غير متاحة لهذا الحساب.'),
-      ),
+      body: Center(child: Text('هذه الواجهة غير متاحة لهذا الحساب.')),
     );
   }
 }

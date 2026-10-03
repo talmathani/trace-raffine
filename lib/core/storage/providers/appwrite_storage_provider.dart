@@ -9,8 +9,8 @@ class AppwriteStorageProvider implements StorageProvider {
   final String _bucketId;
 
   AppwriteStorageProvider({Storage? storage, String? bucketId})
-      : _storage = storage ?? AppwriteService.storage,
-        _bucketId = bucketId ?? AppwriteConfig.designFilesBucketId;
+    : _storage = storage ?? AppwriteService.storage,
+      _bucketId = bucketId ?? AppwriteConfig.designFilesBucketId;
 
   @override
   Future<String> uploadFile({
@@ -27,17 +27,16 @@ class AppwriteStorageProvider implements StorageProvider {
         filename: fileName,
         contentType: contentType,
       ),
-      permissions: permissions ?? [
-        Permission.read(Role.any()),
-        Permission.read(Role.users()),
-      ],
+      permissions: permissions ?? const <String>[],
     );
     return file.$id;
   }
 
   @override
   String getFileView({required String fileId}) {
-    return _storage.getFileDownload(bucketId: _bucketId, fileId: fileId).toString();
+    return _storage
+        .getFileDownload(bucketId: _bucketId, fileId: fileId)
+        .toString();
   }
 
   @override

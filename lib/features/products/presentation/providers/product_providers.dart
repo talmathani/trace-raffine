@@ -1,1 +1,2 @@
-export '../../../../core/di/app_dependencies.dart' show productRepositoryProvider;
+export '../../../../core/di/app_dependencies.dart'
+    show productRepositoryProvider;

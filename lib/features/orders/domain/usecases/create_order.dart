@@ -1,4 +1,4 @@
-﻿import '../../domain/entities/order.dart';
+import '../../domain/entities/order.dart';
 import '../../domain/repositories/order_repository.dart';
 
 class CreateOrderUseCase {
@@ -24,6 +24,6 @@ class CreateOrderUseCase {
       orderStatus: 'pending',
     );
 
-    return await orderRepository.createOrder(order);
+    return await orderRepository.createOrder(order, items);
   }
 }

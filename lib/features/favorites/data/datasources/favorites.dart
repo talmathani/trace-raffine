@@ -1,1 +1,1 @@
-﻿class FavoriteDataSource {}
+class FavoriteDataSource {}

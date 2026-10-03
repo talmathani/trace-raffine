@@ -6,4 +6,8 @@ abstract class UserProfileRepository {
   Future<UserProfile> createProfile({required UserProfile profile});
 
   Future<UserProfile> updateProfile({required UserProfile profile});
+
+  Future<UserProfile> touchPresence({required String userId});
+
+  Future<void> clearPresence({required String userId});
 }

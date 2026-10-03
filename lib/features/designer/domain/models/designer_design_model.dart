@@ -1,4 +1,4 @@
-import '../../../../core/appwrite/appwrite_config.dart';
+import 'package:trace_raffine/core/appwrite/appwrite_config.dart';
 
 enum DesignerDesignStatus { pending, approved, published, rejected }
 
@@ -41,7 +41,10 @@ class DesignerDesignModel {
   final DateTime? updatedAt;
   final String? rejectionReason;
 
-  factory DesignerDesignModel.fromAppwrite(String id, Map<String, dynamic> data) {
+  factory DesignerDesignModel.fromAppwrite(
+    String id,
+    Map<String, dynamic> data,
+  ) {
     return DesignerDesignModel(
       id: id,
       designerId: _stringValue(data['designer_id']),
@@ -99,10 +102,12 @@ class DesignerDesignModel {
     if (normalized == null || normalized.isEmpty) return null;
     return normalized;
   }
+
   static double _doubleValue(dynamic value) {
     if (value is num) return value.toDouble();
     return double.tryParse(value?.toString().trim() ?? '') ?? 0;
   }
+
   static DateTime? _dateTimeValue(dynamic value) {
     if (value is DateTime) return value;
     if (value is String) return DateTime.tryParse(value);

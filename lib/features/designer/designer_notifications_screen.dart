@@ -1,6 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/theme/app_theme.dart';
+import 'package:trace_raffine/core/auth/current_user_service.dart';
+import 'package:trace_raffine/core/theme/app_theme.dart';
+import 'package:trace_raffine/core/ui/maison_surface.dart';
+import 'package:trace_raffine/core/ui/maison_app_bar.dart';
+
+import '../notifications/domain/entities/app_notification.dart';
+import '../notifications/manager_chat_screen.dart';
+import '../notifications/presentation/providers/notification_providers.dart';
 
 enum DesignerNotificationType {
   pendingReview,
@@ -28,29 +36,173 @@ class DesignerNotification {
   final bool isRead;
 }
 
-class DesignerNotificationsScreen extends StatelessWidget {
+class DesignerNotificationsScreen extends ConsumerStatefulWidget {
   const DesignerNotificationsScreen({super.key});
 
-  static const List<DesignerNotification> _notifications = [];
+  @override
+  ConsumerState<DesignerNotificationsScreen> createState() =>
+      _DesignerNotificationsScreenState();
+}
+
+class _DesignerNotificationsScreenState
+    extends ConsumerState<DesignerNotificationsScreen> {
+  List<AppNotification> _rawNotifications = const <AppNotification>[];
+  bool _loading = true;
+  String? _error;
+
+  Future<void> _loadNotifications() async {
+    try {
+      final userId = await CurrentUserService.userId;
+      if (userId == null || userId.isEmpty) {
+        if (!mounted) return;
+        setState(() {
+          _rawNotifications = const [];
+          _loading = false;
+          _error = null;
+        });
+        return;
+      }
+
+      final notifications = await ref
+          .read(notificationRepositoryProvider)
+          .getNotifications(userId);
+      if (!mounted) return;
+      setState(() {
+        _rawNotifications = notifications;
+        _loading = false;
+        _error = null;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = error.toString();
+      });
+    }
+  }
+
+  Future<void> _openNotification(int index) async {
+    final notification = _rawNotifications[index];
+    if (notification.isRead ||
+        notification.id == null ||
+        notification.id!.isEmpty) {
+      return;
+    }
+
+    final id = notification.id!;
+    try {
+      await ref.read(notificationRepositoryProvider).markAsRead(id);
+      if (!mounted) return;
+      setState(() {
+        _rawNotifications = [
+          for (final item in _rawNotifications)
+            item.id == id ? item.copyWith(isRead: true) : item,
+        ];
+      });
+
+      if (!mounted) return;
+      if (notification.title.trim() == 'رسالة جديدة من الإدارة') {
+        await Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const ManagerChatScreen()));
+      }
+    } catch (_) {
+      // Keep the unread state if the backend could not persist the change.
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNotifications();
+  }
+
+  static DesignerNotification _mapNotification(AppNotification notification) {
+    final text = '${notification.title} ${notification.body ?? ''}'
+        .toLowerCase();
+    final type = text.contains('رفض') || text.contains('rejected')
+        ? DesignerNotificationType.rejected
+        : text.contains('قبول') ||
+              text.contains('اعتماد') ||
+              text.contains('approved')
+        ? DesignerNotificationType.approved
+        : text.contains('بيع') || text.contains('sale')
+        ? DesignerNotificationType.sale
+        : text.contains('مراجعة') || text.contains('review')
+        ? DesignerNotificationType.pendingReview
+        : DesignerNotificationType.adminMessage;
+
+    final timeLabel = notification.createdAt == null
+        ? ''
+        : _formatDate(notification.createdAt!);
+
+    return DesignerNotification(
+      type: type,
+      title: notification.title,
+      message: notification.body ?? '',
+      timeLabel: timeLabel,
+      isRead: notification.isRead,
+    );
+  }
+
+  static String _formatDate(DateTime value) {
+    final local = value.toLocal();
+    return '${local.day.toString().padLeft(2, '0')}/'
+        '${local.month.toString().padLeft(2, '0')}/'
+        '${local.year}';
+  }
 
   @override
   Widget build(BuildContext context) {
+    final notifications = _rawNotifications
+        .map(_mapNotification)
+        .toList(growable: false);
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(title: const Text('الإشعارات')),
-        body: ListView(
-          padding: const EdgeInsets.all(20),
-          children: [
-            _buildHeader(),
-            const SizedBox(height: 20),
-            _buildNotificationSummary(),
-            const SizedBox(height: 20),
-            if (_notifications.isEmpty)
-              _buildEmptyState()
-            else
-              ..._notifications.map(_buildNotificationCard),
-          ],
+        appBar: MaisonAppBar(title: 'الإشعارات'),
+        body: _loading
+            ? const Center(
+                child: CircularProgressIndicator(color: AppTheme.softRose),
+              )
+            : _error != null
+            ? _buildErrorState(_error!)
+            : ListView(
+                padding: const EdgeInsets.all(20),
+                children: [
+                  _buildHeader(),
+                  const SizedBox(height: 20),
+                  _buildNotificationSummary(notifications),
+                  const SizedBox(height: 20),
+                  if (notifications.isEmpty)
+                    _buildEmptyState()
+                  else
+                    ...List.generate(
+                      notifications.length,
+                      (index) => GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () => _openNotification(index),
+                        child: _buildNotificationCard(notifications[index]),
+                      ),
+                    ),
+                ],
+              ),
+      ),
+    );
+  }
+
+  Widget _buildErrorState(String error) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Text(
+          'تعذر تحميل الإشعارات: $error',
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontFamily: AppTheme.fontArabic,
+            color: AppTheme.softRose,
+          ),
         ),
       ),
     );
@@ -83,7 +235,7 @@ class DesignerNotificationsScreen extends StatelessWidget {
                 Text(
                   'إشعاراتك',
                   style: TextStyle(
-                    fontFamily: 'Cairo',
+                    fontFamily: AppTheme.fontArabic,
                     fontSize: 19,
                     fontWeight: FontWeight.w700,
                     color: AppTheme.warmIvory,
@@ -93,7 +245,7 @@ class DesignerNotificationsScreen extends StatelessWidget {
                 Text(
                   'تابع آخر التحديثات المتعلقة بتصاميمك ومبيعاتك.',
                   style: TextStyle(
-                    fontFamily: 'Cairo',
+                    fontFamily: AppTheme.fontArabic,
                     fontSize: 12,
                     color: AppTheme.mutedIvory,
                     height: 1.6,
@@ -107,7 +259,7 @@ class DesignerNotificationsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildNotificationSummary() {
+  Widget _buildNotificationSummary(List<DesignerNotification> notifications) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
       decoration: BoxDecoration(
@@ -127,7 +279,7 @@ class DesignerNotificationsScreen extends StatelessWidget {
             child: Text(
               'الإشعارات الجديدة',
               style: TextStyle(
-                fontFamily: 'Cairo',
+                fontFamily: AppTheme.fontArabic,
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
                 color: AppTheme.warmIvory,
@@ -135,10 +287,10 @@ class DesignerNotificationsScreen extends StatelessWidget {
             ),
           ),
           Text(
-            '${_notifications.where((item) => !item.isRead).length}',
+            '${notifications.where((item) => !item.isRead).length}',
             textDirection: TextDirection.ltr,
             style: const TextStyle(
-              fontFamily: 'Cairo',
+              fontFamily: AppTheme.fontArabic,
               fontSize: 14,
               fontWeight: FontWeight.w700,
               color: AppTheme.softRose,
@@ -169,7 +321,7 @@ class DesignerNotificationsScreen extends StatelessWidget {
             'لا توجد إشعارات جديدة',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontFamily: 'Cairo',
+              fontFamily: AppTheme.fontArabic,
               fontSize: 18,
               fontWeight: FontWeight.w700,
               color: AppTheme.warmIvory,
@@ -181,7 +333,7 @@ class DesignerNotificationsScreen extends StatelessWidget {
             'حالة المراجعة، ومبيعات تصاميمك.',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontFamily: 'Cairo',
+              fontFamily: AppTheme.fontArabic,
               fontSize: 13,
               color: AppTheme.mutedIvory,
               height: 1.7,
@@ -195,20 +347,13 @@ class DesignerNotificationsScreen extends StatelessWidget {
   Widget _buildNotificationCard(DesignerNotification notification) {
     final icon = _iconFor(notification.type);
 
-    return Container(
+    return MaisonSurface(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: notification.isRead
-            ? AppTheme.burgundyBlack
-            : AppTheme.deepBurgundy,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: notification.isRead
-              ? AppTheme.divider
-              : AppTheme.softRose.withValues(alpha: 0.45),
-        ),
-      ),
+      radius: AppTheme.editorialPanelRadius,
+      color: notification.isRead
+          ? AppTheme.burgundyBlack
+          : AppTheme.deepBurgundy,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -232,7 +377,7 @@ class DesignerNotificationsScreen extends StatelessWidget {
                       child: Text(
                         notification.title,
                         style: const TextStyle(
-                          fontFamily: 'Cairo',
+                          fontFamily: AppTheme.fontArabic,
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
                           color: AppTheme.warmIvory,
@@ -254,7 +399,7 @@ class DesignerNotificationsScreen extends StatelessWidget {
                 Text(
                   notification.message,
                   style: const TextStyle(
-                    fontFamily: 'Cairo',
+                    fontFamily: AppTheme.fontArabic,
                     fontSize: 12,
                     color: AppTheme.mutedIvory,
                     height: 1.7,
@@ -265,7 +410,7 @@ class DesignerNotificationsScreen extends StatelessWidget {
                   Text(
                     notification.designName!,
                     style: const TextStyle(
-                      fontFamily: 'Cairo',
+                      fontFamily: AppTheme.fontArabic,
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
                       color: AppTheme.softRose,
@@ -276,7 +421,7 @@ class DesignerNotificationsScreen extends StatelessWidget {
                 Text(
                   notification.timeLabel,
                   style: const TextStyle(
-                    fontFamily: 'Cairo',
+                    fontFamily: AppTheme.fontArabic,
                     fontSize: 10,
                     color: AppTheme.mutedText,
                   ),

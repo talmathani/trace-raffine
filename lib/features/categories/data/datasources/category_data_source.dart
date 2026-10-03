@@ -1,1 +1,1 @@
-﻿class CategoryDataSource {}
+class CategoryDataSource {}

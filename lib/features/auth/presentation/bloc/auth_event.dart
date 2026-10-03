@@ -27,16 +27,40 @@ class AuthRegisterRequested extends AuthEvent {
   const AuthRegisterRequested({
     required this.email,
     required this.password,
+    required this.name,
+    required this.phone,
     required this.role,
   });
 
   final String email;
   final String password;
+  final String name;
+  final String phone;
   final UserRole role;
+
+  @override
+  List<Object?> get props => [email, password, name, phone, role];
 }
 
 class AuthLogoutRequested extends AuthEvent {
   const AuthLogoutRequested();
+}
+
+class AuthSecurityLockRequested extends AuthEvent {
+  const AuthSecurityLockRequested({
+    required this.action,
+    this.entity,
+    this.entityId,
+    this.metadata,
+  });
+
+  final String action;
+  final String? entity;
+  final String? entityId;
+  final Map<String, dynamic>? metadata;
+
+  @override
+  List<Object?> get props => [action, entity, entityId, metadata];
 }
 
 class AuthPasswordRecoveryRequested extends AuthEvent {

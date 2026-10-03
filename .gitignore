@@ -59,3 +59,60 @@ macos/Flutter/ephemeral/
 *step-backup*
 *before-*
 backup_*
+
+# ============================================================
+# TRACÉ RAFFINÉ - Sensitive / Local Credentials Protection
+# ============================================================
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Private keys and certificates
+*.pem
+*.p12
+*.pfx
+*.key
+*.jks
+*.keystore
+*.mobileprovision
+*.provisionprofile
+*.cer
+*.crt
+
+# Google / Firebase credentials
+google-services.json
+GoogleService-Info.plist
+service-account*.json
+*-service-account*.json
+
+# Local secrets / credentials
+*credentials*.json
+*secret*.json
+*secrets*.json
+
+# Local machine configuration
+*.local
+*.local.json
+
+
+# Local forensic / diagnostic artifacts
+_forensic_backups/
+_runtime/
+backups/
+_audit_*.txt
+_test_verify.txt
+.designer_analyze.txt
+tmp_*.json
+
+# JVM / Android crash dumps
+*.hprof
+
+# Local forensic helper scripts
+.forensic_*.ps1
+.visual_*.ps1
+.tr_*.ps1
+
+# Kotlin/Android local generated state
+android/.kotlin/

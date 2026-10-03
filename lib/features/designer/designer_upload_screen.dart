@@ -1,12 +1,16 @@
-﻿import 'dart:typed_data';
+import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:image/image.dart' as image_processing;
 import 'package:flutter/material.dart';
+import 'package:trace_raffine/core/responsive/app_breakpoints.dart';
+import 'package:trace_raffine/core/theme/app_theme.dart';
+import 'package:trace_raffine/core/ui/maison_surface.dart';
+import 'package:trace_raffine/core/ui/maison_app_bar.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:trace_raffine/core/ui/editorial_button.dart';
 
 import '../auth/domain/repositories/auth_repository.dart';
-import '../../core/files/embroidery_file_policy.dart';
 import 'domain/usecases/create_designer_design.dart';
 
 class DesignerUploadScreen extends StatefulWidget {
@@ -171,20 +175,6 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
 
     final file = result.files.single;
 
-    if (EmbroideryFilePolicy.isRejected(file.name)) {
-      _showMessage(
-        'امتداد .${EmbroideryFilePolicy.extensionOf(file.name).toUpperCase()} '
-        'غير مسموح به. الامتدادات المرفوضة: '
-        '${EmbroideryFilePolicy.rejectedExtensionsLabel()}.',
-      );
-      return;
-    }
-
-    if (!EmbroideryFilePolicy.isAccepted(file.name)) {
-      _showMessage('يرجى اختيار ملف تطريز له امتداد واضح.');
-      return;
-    }
-
     if (file.bytes == null || file.bytes!.isEmpty) {
       _showMessage('تعذر قراءة ملف التطريز.');
       return;
@@ -219,14 +209,6 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
 
     if (embroideryBytes == null || embroideryName == null) {
       _showMessage('يرجى اختيار ملف التطريز.');
-      return;
-    }
-
-    if (!EmbroideryFilePolicy.isAccepted(embroideryName)) {
-      _showMessage(
-        'امتداد ملف التطريز غير مسموح به. الامتدادات المرفوضة: '
-        '${EmbroideryFilePolicy.rejectedExtensionsLabel()}.',
-      );
       return;
     }
 
@@ -339,8 +321,8 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
           content: Text(message),
           behavior: SnackBarBehavior.floating,
           backgroundColor: success
-              ? Colors.green.shade700
-              : Colors.red.shade700,
+              ? AppTheme.statusSuccess
+              : AppTheme.statusRejected,
         ),
       );
   }
@@ -350,7 +332,23 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
       labelText: label,
       hintText: hint,
       prefixIcon: icon == null ? null : Icon(icon),
-      border: const OutlineInputBorder(),
+      filled: false,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 2, vertical: 13),
+      border: const UnderlineInputBorder(
+        borderSide: BorderSide(color: AppTheme.divider),
+      ),
+      enabledBorder: const UnderlineInputBorder(
+        borderSide: BorderSide(color: AppTheme.divider),
+      ),
+      focusedBorder: const UnderlineInputBorder(
+        borderSide: BorderSide(color: AppTheme.roseBurgundy, width: 1.4),
+      ),
+      errorBorder: const UnderlineInputBorder(
+        borderSide: BorderSide(color: AppTheme.statusRejected),
+      ),
+      focusedErrorBorder: const UnderlineInputBorder(
+        borderSide: BorderSide(color: AppTheme.statusRejected, width: 1.4),
+      ),
     );
   }
 
@@ -363,7 +361,8 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
   }) {
     final hasFile = fileName != null && fileName.trim().isNotEmpty;
 
-    return Card(
+    return MaisonSurface(
+      radius: AppTheme.editorialListRadius,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -393,10 +392,10 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
               ],
             ),
             const SizedBox(height: 14),
-            OutlinedButton.icon(
+            EditorialButton(
               onPressed: _isSubmitting ? null : onPressed,
               icon: Icon(hasFile ? Icons.refresh : Icons.upload_file),
-              label: Text(hasFile ? 'تغيير الملف' : 'اختيار الملف'),
+              label: hasFile ? 'تغيير الملف' : 'اختيار الملف',
             ),
           ],
         ),
@@ -432,203 +431,214 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('رفع تصميم جديد'), centerTitle: true),
-      body: SafeArea(
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            padding: const EdgeInsets.all(20),
-            children: [
-              Text(
-                'بيانات التصميم',
-                style: Theme.of(context).textTheme.headlineSmall,
+      appBar: MaisonAppBar(title: 'رفع تصميم جديد'),
+      body: Form(
+        key: _formKey,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: context.responsiveContentMaxWidth,
+            ),
+            child: ListView(
+              padding: EdgeInsets.fromLTRB(
+                context.responsiveHorizontalPadding,
+                context.isCompact ? 16 : 24,
+                context.responsiveHorizontalPadding,
+                40,
               ),
-              const SizedBox(height: 8),
-              Text(
-                'أدخل بيانات التصميم وارفع الملفات الأصلية لإرسالها للمراجعة.',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 20),
-              TextFormField(
-                controller: _titleController,
-                enabled: !_isSubmitting,
-                textInputAction: TextInputAction.next,
-                decoration: _decoration(
-                  'اسم التصميم',
-                  hint: 'مثال: Floral Elegance',
-                  icon: Icons.title,
+              children: [
+                Text(
+                  'بيانات التصميم',
+                  style: Theme.of(context).textTheme.headlineSmall,
                 ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'اسم التصميم مطلوب.';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 14),
-              DropdownButtonFormField<String>(
-                initialValue: _selectedCategoryId,
-                decoration: _decoration(
-                  'القسم',
-                  hint: 'اختر القسم المناسب للتصميم',
-                  icon: Icons.category_outlined,
+                const SizedBox(height: 8),
+                Text(
+                  'أدخل بيانات التصميم وارفع الملفات الأصلية لإرسالها للمراجعة.',
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
-                items: _categories.map((category) {
-                  return DropdownMenuItem<String>(
-                    value: category['id'],
-                    child: Text(category['name']!),
-                  );
-                }).toList(),
-                onChanged: _isSubmitting
-                    ? null
-                    : (value) {
-                        setState(() {
-                          _selectedCategoryId = value;
-                        });
-                      },
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'يرجى اختيار قسم التصميم.';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 14),
-              TextFormField(
-                controller: _descriptionController,
-                enabled: !_isSubmitting,
-                minLines: 3,
-                maxLines: 6,
-                decoration: _decoration(
-                  'الوصف',
-                  hint: 'وصف مختصر للتصميم.',
-                  icon: Icons.description_outlined,
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'الوصف مطلوب.';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 14),
-              TextFormField(
-                controller: _priceController,
-                enabled: !_isSubmitting,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                textInputAction: TextInputAction.done,
-                decoration: _decoration(
-                  'السعر',
-                  hint: '0.00',
-                  icon: Icons.payments_outlined,
-                ),
-                validator: (value) {
-                  final normalized = value?.trim() ?? '';
-
-                  if (normalized.isEmpty) {
-                    return 'السعر مطلوب.';
-                  }
-
-                  final price = double.tryParse(
-                    normalized.replaceAll(',', '.'),
-                  );
-
-                  if (price == null || price < 0) {
-                    return 'أدخل سعرًا صحيحًا.';
-                  }
-
-                  return null;
-                },
-              ),
-              const SizedBox(height: 20),
-              _buildFileCard(
-                title: 'صورة التصميم',
-                description: 'JPG / JPEG / PNG / WEBP',
-                icon: Icons.image_outlined,
-                fileName: _designImageName,
-                onPressed: (_isSubmitting || _isCompressingPreview) ? null : () { _pickDesignImage(); },
-              ),
-              _buildImagePreview(),
-              const SizedBox(height: 12),
-              _buildFileCard(
-                title: 'ملف التطريز',
-                description: 'ملف التطريز الأصلي بأي امتداد مدعوم.',
-                icon: Icons.file_present_outlined,
-                fileName: _embroideryFileName,
-                onPressed: _isSubmitting ? null : () { _pickEmbroideryFile(); },
-              ),
-              const SizedBox(height: 20),
-              ExpansionTile(
-                title: const Text('تفاصيل إضافية'),
-                childrenPadding: const EdgeInsets.only(bottom: 8),
-                children: [
-                  TextFormField(
-                    controller: _stitchDetailsController,
-                    enabled: !_isSubmitting,
-                    decoration: _decoration(
-                      'تفاصيل الغرز',
-                      icon: Icons.timeline_outlined,
-                    ),
+                const SizedBox(height: 20),
+                TextFormField(
+                  controller: _titleController,
+                  enabled: !_isSubmitting,
+                  textInputAction: TextInputAction.next,
+                  decoration: _decoration(
+                    'اسم التصميم',
+                    hint: 'مثال: Floral Elegance',
+                    icon: Icons.title,
                   ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _beadDetailsController,
-                    enabled: !_isSubmitting,
-                    decoration: _decoration(
-                      'تفاصيل الخرز',
-                      icon: Icons.circle_outlined,
-                    ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'اسم التصميم مطلوب.';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 14),
+                DropdownButtonFormField<String>(
+                  initialValue: _selectedCategoryId,
+                  decoration: _decoration(
+                    'القسم',
+                    hint: 'اختر القسم المناسب للتصميم',
+                    icon: Icons.category_outlined,
                   ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _sequinDetailsController,
-                    enabled: !_isSubmitting,
-                    decoration: _decoration(
-                      'تفاصيل الترتر',
-                      icon: Icons.auto_awesome_outlined,
-                    ),
+                  items: _categories.map((category) {
+                    return DropdownMenuItem<String>(
+                      value: category['id'],
+                      child: Text(category['name']!),
+                    );
+                  }).toList(),
+                  onChanged: _isSubmitting
+                      ? null
+                      : (value) {
+                          setState(() {
+                            _selectedCategoryId = value;
+                          });
+                        },
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'يرجى اختيار قسم التصميم.';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 14),
+                TextFormField(
+                  controller: _descriptionController,
+                  enabled: !_isSubmitting,
+                  minLines: 3,
+                  maxLines: 6,
+                  decoration: _decoration(
+                    'الوصف',
+                    hint: 'وصف مختصر للتصميم.',
+                    icon: Icons.description_outlined,
                   ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _additionalDetailsController,
-                    enabled: !_isSubmitting,
-                    minLines: 2,
-                    maxLines: 4,
-                    decoration: _decoration(
-                      'تفاصيل إضافية',
-                      icon: Icons.notes_outlined,
-                    ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'الوصف مطلوب.';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 14),
+                TextFormField(
+                  controller: _priceController,
+                  enabled: !_isSubmitting,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
                   ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                height: 54,
-                child: FilledButton.icon(
-                  onPressed: _isSubmitting ? null : _submit,
-                  icon: _isSubmitting
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.cloud_upload_outlined),
-                  label: Text(
-                    _isSubmitting
+                  textInputAction: TextInputAction.done,
+                  decoration: _decoration(
+                    'السعر',
+                    hint: '0.00',
+                    icon: Icons.payments_outlined,
+                  ),
+                  validator: (value) {
+                    final normalized = value?.trim() ?? '';
+
+                    if (normalized.isEmpty) {
+                      return 'السعر مطلوب.';
+                    }
+
+                    final price = double.tryParse(
+                      normalized.replaceAll(',', '.'),
+                    );
+
+                    if (price == null || price < 0) {
+                      return 'أدخل سعرًا صحيحًا.';
+                    }
+
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 20),
+                _buildFileCard(
+                  title: 'صورة التصميم',
+                  description: 'JPG / JPEG / PNG / WEBP',
+                  icon: Icons.image_outlined,
+                  fileName: _designImageName,
+                  onPressed: (_isSubmitting || _isCompressingPreview)
+                      ? null
+                      : () {
+                          _pickDesignImage();
+                        },
+                ),
+                _buildImagePreview(),
+                const SizedBox(height: 12),
+                _buildFileCard(
+                  title: 'ملف التطريز',
+                  description: 'ملف التطريز الأصلي بأي امتداد مدعوم.',
+                  icon: Icons.file_present_outlined,
+                  fileName: _embroideryFileName,
+                  onPressed: _isSubmitting
+                      ? null
+                      : () {
+                          _pickEmbroideryFile();
+                        },
+                ),
+                const SizedBox(height: 20),
+                ExpansionTile(
+                  title: const Text('تفاصيل إضافية'),
+                  childrenPadding: const EdgeInsets.only(bottom: 8),
+                  children: [
+                    TextFormField(
+                      controller: _stitchDetailsController,
+                      enabled: !_isSubmitting,
+                      decoration: _decoration(
+                        'تفاصيل الغرز',
+                        icon: Icons.timeline_outlined,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _beadDetailsController,
+                      enabled: !_isSubmitting,
+                      decoration: _decoration(
+                        'تفاصيل الخرز',
+                        icon: Icons.circle_outlined,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _sequinDetailsController,
+                      enabled: !_isSubmitting,
+                      decoration: _decoration(
+                        'تفاصيل الترتر',
+                        icon: Icons.auto_awesome_outlined,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _additionalDetailsController,
+                      enabled: !_isSubmitting,
+                      minLines: 2,
+                      maxLines: 4,
+                      decoration: _decoration(
+                        'تفاصيل إضافية',
+                        icon: Icons.notes_outlined,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  height: 56,
+                  child: EditorialButton(
+                    onPressed: _isSubmitting ? null : _submit,
+                    icon: const Icon(Icons.cloud_upload_outlined),
+                    label: _isSubmitting
                         ? 'جارٍ رفع التصميم...'
                         : 'إرسال التصميم للمراجعة',
+                    loading: _isSubmitting,
                   ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'سيتم حفظ التصميم بحالة "قيد المراجعة" بعد نجاح الرفع.',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ],
+                const SizedBox(height: 12),
+                Text(
+                  'سيتم حفظ التصميم بحالة "قيد المراجعة" بعد نجاح الرفع.',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -647,5 +657,3 @@ class _PreviewImagePreparation {
     required this.wasCompressed,
   });
 }
-
-

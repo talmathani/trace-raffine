@@ -1,4 +1,4 @@
-﻿class Purchase {
+class Purchase {
   final String? id;
   final String userId;
   final String productId;
@@ -14,11 +14,7 @@
   });
 
   Map<String, dynamic> toJson() {
-    return {
-      'user_id': userId,
-      'product_id': productId,
-      'order_id': orderId,
-    };
+    return {'user_id': userId, 'product_id': productId, 'order_id': orderId};
   }
 
   factory Purchase.fromJson(Map<String, dynamic> json) {
@@ -27,7 +23,9 @@
       userId: json['user_id'] ?? '',
       productId: json['product_id'] ?? '',
       orderId: json['order_id'] ?? '',
-      purchasedAt: json['purchased_at'] != null ? DateTime.tryParse(json['purchased_at']) : null,
+      purchasedAt: json['purchased_at'] != null
+          ? DateTime.tryParse(json['purchased_at'])
+          : null,
     );
   }
 }

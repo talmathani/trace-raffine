@@ -8,9 +8,8 @@ enum AuthStatus {
   loading,
   unauthenticated,
   authenticated,
-  /// Auth session is valid but no UserProfile document exists in the database.
-  /// The user is NOT logged out — they are authenticated but incomplete.
   authenticatedProfileMissing,
+  securityLocked,
   failure,
   recoverySent,
   recoveryConfirmed,
@@ -39,10 +38,14 @@ class AuthState extends Equatable {
       user = value,
       failure = null;
 
-  /// Auth session is valid but the Profile document was not found in Appwrite.
   const AuthState.authenticatedProfileMissing(AuthUser value)
     : status = AuthStatus.authenticatedProfileMissing,
       user = value,
+      failure = null;
+
+  const AuthState.securityLocked()
+    : status = AuthStatus.securityLocked,
+      user = null,
       failure = null;
 
   const AuthState.failure(AuthFailure value)

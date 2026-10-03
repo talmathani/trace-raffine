@@ -1,4 +1,4 @@
-﻿class Favorite {
+class Favorite {
   final String? id;
   final String userId;
   final String productId;
@@ -12,10 +12,7 @@
   });
 
   Map<String, dynamic> toJson() {
-    return {
-      'user_id': userId,
-      'product_id': productId,
-    };
+    return {'user_id': userId, 'product_id': productId};
   }
 
   factory Favorite.fromJson(Map<String, dynamic> json) {
@@ -23,7 +20,9 @@
       id: json['\$id'],
       userId: json['user_id'] ?? '',
       productId: json['product_id'] ?? '',
-      createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at']) : null,
+      createdAt: json['created_at'] != null
+          ? DateTime.tryParse(json['created_at'])
+          : null,
     );
   }
 }

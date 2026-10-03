@@ -17,7 +17,6 @@ class AppwriteDatabaseService {
     String? documentId,
     List<String>? permissions,
   }) async {
-
     final document = await _databases.createDocument(
       databaseId: AppwriteDatabaseConstants.databaseId,
       collectionId: collectionId,

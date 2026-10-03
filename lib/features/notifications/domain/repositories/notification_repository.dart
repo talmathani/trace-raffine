@@ -1,4 +1,4 @@
-﻿import '../entities/app_notification.dart';
+import '../entities/app_notification.dart';
 
 abstract class NotificationRepository {
   Future<List<AppNotification>> getNotifications(String userId);

@@ -1,15 +1,21 @@
-﻿import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart' as models;
 
 import '../../domain/entities/auth_user.dart';
+import '../../../../domain/entities/user_role.dart';
 import '../../domain/exceptions/auth_failure.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/appwrite_auth_datasource.dart';
+import '../../../../core/functions/function_invoker.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
-  AuthRepositoryImpl({required this._dataSource});
+  AuthRepositoryImpl({
+    required this._dataSource,
+    FunctionInvoker? functionInvoker,
+  }) : _functionInvoker = functionInvoker ?? FunctionInvoker.create();
 
   final AppwriteAuthDataSource _dataSource;
+  final FunctionInvoker _functionInvoker;
 
   AuthUser? _currentUser;
 
@@ -66,10 +72,7 @@ class AuthRepositoryImpl implements AuthRepository {
         code: error.type ?? 'login_failed',
       );
     } catch (error) {
-      throw AuthFailure(
-        message: error.toString(),
-        code: 'login_failed',
-      );
+      throw AuthFailure(message: error.toString(), code: 'login_failed');
     }
   }
 
@@ -77,20 +80,42 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<AuthUser> register({
     required String email,
     required String password,
+    required String name,
+    required String phone,
+    required UserRole role,
   }) async {
+    final normalizedEmail = email.trim().toLowerCase();
+    final normalizedName = name.trim();
+    final normalizedPhone = phone.trim();
+
     try {
-      await _dataSource.createUser(email: email, password: password);
+      final result = await _functionInvoker.registerUser(
+        email: normalizedEmail,
+        password: password,
+        name: normalizedName,
+        phone: normalizedPhone,
+        role: role.value,
+      );
+
+      if (result['success'] != true) {
+        final code = result['code']?.toString() ?? 'registration_failed';
+        final message =
+            result['message']?.toString() ?? 'تعذر إنشاء الحساب حالياً.';
+        throw AuthFailure(code: code, message: message);
+      }
 
       await _dataSource.createEmailPasswordSession(
-        email: email,
+        email: normalizedEmail,
         password: password,
       );
 
       final user = await _dataSource.getCurrentUser();
       return _setCurrentUser(user);
+    } on AuthFailure {
+      rethrow;
     } on AppwriteException catch (error) {
       throw AuthFailure(
-        message: error.message ?? 'Registration failed.',
+        message: error.message ?? 'تعذر إنشاء الحساب حالياً.',
         code: error.type ?? 'registration_failed',
       );
     } catch (error) {
@@ -185,9 +210,30 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<void> updatePassword({required String password}) async {
+  Future<void> updatePhone({
+    required String phone,
+    required String password,
+  }) async {
     try {
-      await _dataSource.updatePassword(password: password);
+      await _dataSource.updatePhone(phone: phone, password: password);
+      await refreshCurrentUser();
+    } on AppwriteException catch (error) {
+      throw AuthFailure(
+        message: error.message ?? 'Phone update failed.',
+        code: error.type ?? 'phone_update_failed',
+      );
+    } catch (error) {
+      throw AuthFailure(message: error.toString(), code: 'phone_update_failed');
+    }
+  }
+
+  @override
+  Future<void> updatePassword({required String currentPassword, required String newPassword}) async {
+    try {
+      await _dataSource.updatePassword(
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+      );
 
       await refreshCurrentUser();
     } on AuthFailure {
@@ -210,10 +256,11 @@ class AuthRepositoryImpl implements AuthRepository {
       id: user.$id,
       email: user.email,
       emailVerified: user.emailVerification,
+      name: user.name,
+      phone: user.phone,
     );
 
     _currentUser = authUser;
     return authUser;
   }
 }
-

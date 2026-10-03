@@ -1,11 +1,14 @@
 import 'package:appwrite/appwrite.dart';
 import 'package:flutter/material.dart';
+import 'package:country_picker/country_picker.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'core/appwrite/appwrite_config.dart';
 import 'core/appwrite/appwrite_service.dart';
 import 'core/appwrite/appwrite_database_service.dart';
 import 'core/localization/app_locale.dart';
+import 'core/security/security_service.dart';
+import 'core/security/security_detection_service.dart';
 import 'core/theme/app_theme.dart';
 import 'domain/repositories/user_profile_repository.dart';
 import 'features/auth/data/datasources/appwrite_auth_datasource.dart';
@@ -39,6 +42,12 @@ class TRApp extends StatelessWidget {
             create: (_) =>
                 AppwriteAuthDataSource(client: AppwriteConfig.createClient()),
           ),
+          RepositoryProvider<SecurityService>(
+            create: (context) => SecurityService(
+              databaseService: context.read<AppwriteDatabaseService>(),
+              authDataSource: context.read<AppwriteAuthDataSource>(),
+            ),
+          ),
           RepositoryProvider<AuthRepository>(
             create: (context) => AuthRepositoryImpl(
               dataSource: context.read<AppwriteAuthDataSource>(),
@@ -65,9 +74,7 @@ class TRApp extends StatelessWidget {
           ),
           RepositoryProvider<UserProfileRepository>(
             create: (context) => UserProfileRepositoryImpl(
-              AppwriteUserProfileDatasource(
-                TablesDB(AppwriteService.client),
-              ),
+              AppwriteUserProfileDatasource(TablesDB(AppwriteService.client)),
             ),
           ),
           RepositoryProvider<GetUserProfile>(
@@ -75,11 +82,16 @@ class TRApp extends StatelessWidget {
                 GetUserProfile(context.read<UserProfileRepository>()),
           ),
           RepositoryProvider<ProfileSessionService>(
-            create: (context) => ProfileSessionService(
-              context.read<AppwriteAuthDataSource>(),
-              context.read<GetUserProfile>(),
-              context.read<UserProfileRepository>(),
-            ),
+            create: (context) {
+              final service = ProfileSessionService(
+                context.read<AppwriteAuthDataSource>(),
+                context.read<GetUserProfile>(),
+                context.read<UserProfileRepository>(),
+              );
+              service.initializeLifecycle();
+              return service;
+            },
+            dispose: (service) => service.dispose(),
           ),
         ],
         child: Builder(
@@ -88,25 +100,35 @@ class TRApp extends StatelessWidget {
               create: (context) => AuthBloc(
                 authRepository: context.read<AuthRepository>(),
                 profileSessionService: context.read<ProfileSessionService>(),
-              )..add(const AuthStarted()),
-              child: RepositoryProvider<CreateDesignerDesign>(
-                create: (context) => CreateDesignerDesign(
-                  repository: context.read<DesignerDesignRepository>(),
+                securityService: context.read<SecurityService>(),
+              ),
+              child: RepositoryProvider<SecurityDetectionService>(
+                create: (context) => SecurityDetectionService(
+                  authBloc: context.read<AuthBloc>(),
                 ),
-                child: MaterialApp(
-                  debugShowCheckedModeBanner: false,
-                  title: 'TRACÉ RAFFINÉ',
-                  theme: AppTheme.darkTheme,
-                  locale: AppLocale.defaultLocale,
-                  supportedLocales: AppLocale.supportedLocales,
-                  localizationsDelegates: AppLocale.localizationsDelegates,
-                  builder: (context, child) {
-                    return Directionality(
-                      textDirection: AppLocale.defaultTextDirection,
-                      child: child ?? const SizedBox.shrink(),
-                    );
-                  },
-                  home: const StartupScreen(),
+                dispose: (service) => service.dispose(),
+                child: RepositoryProvider<CreateDesignerDesign>(
+                  create: (context) => CreateDesignerDesign(
+                    repository: context.read<DesignerDesignRepository>(),
+                  ),
+                  child: MaterialApp(
+                    debugShowCheckedModeBanner: false,
+                    title: 'TRACÉ RAFFINÉ',
+                    theme: AppTheme.darkTheme,
+                    locale: AppLocale.defaultLocale,
+                    supportedLocales: AppLocale.supportedLocales,
+                    localizationsDelegates: [
+                      CountryLocalizations.delegate,
+                      ...AppLocale.localizationsDelegates,
+                    ],
+                    builder: (context, child) {
+                      return Directionality(
+                        textDirection: AppLocale.defaultTextDirection,
+                        child: child ?? const SizedBox.shrink(),
+                      );
+                    },
+                    home: const StartupScreen(),
+                  ),
                 ),
               ),
             );
@@ -116,8 +138,3 @@ class TRApp extends StatelessWidget {
     );
   }
 }
-
-
-
-
-

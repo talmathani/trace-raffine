@@ -1,4 +1,4 @@
-﻿import 'dart:typed_data';
+import 'dart:typed_data';
 
 abstract class StorageProvider {
   Future<String> uploadFile({

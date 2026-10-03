@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../core/responsive/responsive.dart';
+import 'package:trace_raffine/core/responsive/responsive.dart';
 import '../home/shared_home_screen.dart';
 import '../account/account_screen.dart';
 import 'designer_upload_screen.dart';
@@ -67,7 +67,7 @@ class _DesignerNavigationState extends State<DesignerNavigation> {
         });
       },
       destinations: _destinations,
-      body: IndexedStack(index: _currentIndex, children: _pages),
+      body: _pages[_currentIndex],
     );
   }
 }

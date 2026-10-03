@@ -1,4 +1,4 @@
-﻿import '../entities/review.dart';
+import '../entities/review.dart';
 
 abstract class ReviewRepository {
   Future<List<Review>> getReviews(String productId);

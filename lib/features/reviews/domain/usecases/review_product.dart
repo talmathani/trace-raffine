@@ -1,4 +1,4 @@
-﻿import '../../domain/entities/review.dart';
+import '../../domain/entities/review.dart';
 import '../../domain/repositories/review_repository.dart';
 import '../../../purchases/domain/repositories/purchase_repository.dart';
 
@@ -17,7 +17,10 @@ class ReviewProductUseCase {
     required int rating,
     String? reviewText,
   }) async {
-    final hasPurchased = await purchaseRepository.hasPurchased(userId, productId);
+    final hasPurchased = await purchaseRepository.hasPurchased(
+      userId,
+      productId,
+    );
     if (!hasPurchased) {
       throw Exception('User has not purchased this product');
     }

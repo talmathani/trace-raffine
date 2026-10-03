@@ -2,11 +2,13 @@
 from appwrite.query import Query
 from appwrite.services.databases import Databases
 from appwrite.services.teams import Teams
+import json
 import os
 
 
 DATABASE_ID = "tr_database"
-DESIGNS_COLLECTION_ID = "designer_designs"
+DESIGNS_COLLECTION_ID = "products"
+DESIGN_REVIEWS_COLLECTION_ID = "design_reviews"
 ADMINS_TEAM_ID = "tr-admins"
 
 
@@ -76,18 +78,22 @@ def main(context):
 
         design_id = ""
         status = ""
+        feedback = ""
 
-        if context.req.body:
-            body = context.req.body
+        raw_body = context.req.body
 
-            if isinstance(body, dict):
-                design_id = str(
-                    body.get("designId", "")
-                ).strip()
+        if isinstance(raw_body, str):
+            try:
+                body = json.loads(raw_body) if raw_body.strip() else {}
+            except json.JSONDecodeError:
+                body = {}
+        else:
+            body = raw_body if isinstance(raw_body, dict) else {}
 
-                status = str(
-                    body.get("status", "")
-                ).strip().lower()
+        if body:
+            design_id = str(body.get("designId", "")).strip()
+            status = str(body.get("status", "")).strip().lower()
+            feedback = str(body.get("feedback", "")).strip()
 
         if not design_id:
             return context.res.json(
@@ -98,32 +104,79 @@ def main(context):
                 400,
             )
 
-        if status not in ("approved", "rejected"):
+        if status not in ("approved", "rejected", "needs_revision"):
             return context.res.json(
                 {
                     "success": False,
-                    "error": "status must be approved or rejected",
+                    "error": "status must be approved, rejected or needs_revision",
                 },
                 400,
             )
 
-        databases.get_document(
+        if status in ("rejected", "needs_revision") and not feedback:
+            return context.res.json(
+                {
+                    "success": False,
+                    "error": "feedback is required for rejected or needs_revision designs",
+                },
+                400,
+            )
+
+        document = databases.get_document(
             database_id=DATABASE_ID,
             collection_id=DESIGNS_COLLECTION_ID,
             document_id=design_id,
         )
+
+        data = document.data if hasattr(document, "data") else document.get("data", {})
+        designer_id = str(
+            data.get("designer_id")
+            or data.get("designerId")
+            or data.get("ownerId")
+            or ""
+        ).strip()
+
+        if not designer_id:
+            return context.res.json(
+                {
+                    "success": False,
+                    "error": "designer_id is missing on the design",
+                    "designId": design_id,
+                },
+                422,
+            )
+
+        stored_status = "published" if status == "approved" else status
 
         databases.update_document(
             database_id=DATABASE_ID,
             collection_id=DESIGNS_COLLECTION_ID,
             document_id=design_id,
             data={
-                "status": status,
+                "status": stored_status,
             },
         )
 
+        review_data = {
+            "design_id": design_id,
+            "designer_id": designer_id,
+            "status": status,
+            "feedback": feedback,
+            "reviewer_id": user_id,
+        }
+
+        try:
+            databases.create_document(
+                database_id=DATABASE_ID,
+                collection_id=DESIGN_REVIEWS_COLLECTION_ID,
+                document_id="unique()",
+                data=review_data,
+            )
+        except Exception as review_error:
+            context.log(f"DESIGN REVIEW LOG ERROR: {review_error}")
+
         context.log(
-            f"DESIGN {design_id} UPDATED TO {status}"
+            f"DESIGN {design_id} UPDATED TO {stored_status} BY {user_id}"
         )
 
         return context.res.json(
@@ -131,7 +184,8 @@ def main(context):
                 "success": True,
                 "service": "design-approval",
                 "designId": design_id,
-                "status": status,
+                "status": stored_status,
+                "reviewStatus": status,
             }
         )
 

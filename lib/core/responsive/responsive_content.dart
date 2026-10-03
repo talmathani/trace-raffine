@@ -1,4 +1,4 @@
-﻿import 'package:flutter/widgets.dart';
+import 'package:flutter/widgets.dart';
 
 import 'app_breakpoints.dart';
 
@@ -25,18 +25,14 @@ class ResponsiveContent extends StatelessWidget {
     final horizontalPadding = width < AppBreakpoints.compact
         ? compactPadding
         : width < AppBreakpoints.expanded
-            ? tabletPadding
-            : desktopPadding;
+        ? tabletPadding
+        : desktopPadding;
 
     return Center(
       child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: maxWidth,
-        ),
+        constraints: BoxConstraints(maxWidth: maxWidth),
         child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: horizontalPadding,
-          ),
+          padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
           child: child,
         ),
       ),

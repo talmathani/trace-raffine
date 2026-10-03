@@ -4,6 +4,16 @@ from appwrite.client import Client
 from appwrite.services.databases import Databases
 from appwrite.id import ID
 
+
+def _authenticated_user_id(context) -> str:
+    headers = context.req.headers or {}
+    for key in ('x-appwrite-user-id', 'X-Appwrite-User-Id'):
+        value = str(headers.get(key, '')).strip()
+        if value:
+            return value
+    return ''
+
+
 def main(context):
     try:
         client = Client()
@@ -21,15 +31,37 @@ def main(context):
 
         payload = json.loads(context.req.body)
 
-        user_id = payload.get('userId')
-        product_id = payload.get('productId')
-        order_id = payload.get('orderId')
+        requested_user_id = str(payload.get('userId', '')).strip()
+        user_id = _authenticated_user_id(context)
+        product_id = str(payload.get('productId', '')).strip()
+        order_id = str(payload.get('orderId', '')).strip()
 
-        if not user_id or not product_id or not order_id:
+        if not user_id:
+            return context.res.json({
+                'success': False,
+                'error': 'Authenticated user is required',
+            })
+        if requested_user_id and requested_user_id != user_id:
+            return context.res.json({
+                'success': False,
+                'error': 'Authenticated user does not match userId',
+            })
+        if not product_id or not order_id:
             return context.res.json({
                 'success': False,
                 'error': 'Missing required fields',
             })
+
+        order = databases.get_document(
+            database_id=database_id,
+            collection_id='orders',
+            document_id=order_id,
+        )
+        if order.get('user_id') != user_id and order.get('customerId') != user_id:
+            return context.res.json({
+                'success': False,
+                'error': 'Order does not belong to authenticated user',
+            }, 403)
 
         existing = databases.list_documents(
             database_id=database_id,

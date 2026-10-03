@@ -1,4 +1,4 @@
-﻿import 'dart:typed_data';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../appwrite/appwrite_config.dart';
 import '../appwrite/appwrite_service.dart';
@@ -29,7 +29,8 @@ class AppwriteImage extends StatefulWidget {
   final Widget? errorWidget;
 
   static final Map<String, Uint8List> _imageCache = <String, Uint8List>{};
-  static final Map<String, Future<Uint8List>> _pendingRequests = <String, Future<Uint8List>>{};
+  static final Map<String, Future<Uint8List>> _pendingRequests =
+      <String, Future<Uint8List>>{};
 
   static void clearCache() {
     _imageCache.clear();
@@ -54,7 +55,8 @@ class _AppwriteImageState extends State<AppwriteImage> {
   @override
   void didUpdateWidget(covariant AppwriteImage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.imageSource != widget.imageSource || oldWidget.bucketId != widget.bucketId) {
+    if (oldWidget.imageSource != widget.imageSource ||
+        oldWidget.bucketId != widget.bucketId) {
       _loadImage();
     }
   }
@@ -102,7 +104,8 @@ class _AppwriteImageState extends State<AppwriteImage> {
       return;
     }
 
-    final effectiveBucketId = widget.bucketId ?? AppwriteConfig.designFilesBucketId;
+    final effectiveBucketId =
+        widget.bucketId ?? AppwriteConfig.designFilesBucketId;
     final cacheKey = '$effectiveBucketId:$fileId';
 
     // فحص الكاش المحلي
@@ -161,7 +164,10 @@ class _AppwriteImageState extends State<AppwriteImage> {
     final fileId = _extractFileId(widget.imageSource);
 
     // إذا كان رابط إنترنت عادي وليس Appwrite File
-    if (fileId == null && widget.imageSource != null && (widget.imageSource!.startsWith('http://') || widget.imageSource!.startsWith('https://'))) {
+    if (fileId == null &&
+        widget.imageSource != null &&
+        (widget.imageSource!.startsWith('http://') ||
+            widget.imageSource!.startsWith('https://'))) {
       return ClipRRect(
         borderRadius: borderRadius,
         child: Image.network(

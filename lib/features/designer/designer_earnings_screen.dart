@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/theme/app_theme.dart';
+import 'package:trace_raffine/core/responsive/app_breakpoints.dart';
+import 'package:trace_raffine/core/theme/app_theme.dart';
+import 'package:trace_raffine/core/ui/maison_surface.dart';
+import 'package:trace_raffine/core/ui/maison_app_bar.dart';
 import 'domain/models/designer_design_model.dart';
 import 'presentation/providers/designer_dashboard_providers.dart';
+import 'designer_notifications_screen.dart';
+import 'designer_review_status_screen.dart';
 
 class DesignerEarningsScreen extends ConsumerWidget {
   const DesignerEarningsScreen({super.key});
@@ -16,19 +21,57 @@ class DesignerEarningsScreen extends ConsumerWidget {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(title: const Text('لوحة المصمم')),
+        appBar: MaisonAppBar(
+          title: 'استوديو المصمم',
+          actions: [
+            IconButton(
+              tooltip: 'الإشعارات',
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const DesignerNotificationsScreen(),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.notifications_none_rounded),
+            ),
+            IconButton(
+              tooltip: 'حالة المراجعة',
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const DesignerReviewStatusScreen(),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.fact_check_outlined),
+            ),
+          ],
+        ),
         body: RefreshIndicator(
           onRefresh: () async => ref.invalidate(designerDesignsProvider),
-          child: ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(20),
-            children: [
-              _buildBalanceCard(),
-              const SizedBox(height: 18),
-              _buildStats(stats),
-              const SizedBox(height: 24),
-              _buildDesignStatusSection(designsAsync, stats),
-            ],
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: context.responsiveContentMaxWidth,
+              ),
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: EdgeInsets.fromLTRB(
+                  context.responsiveHorizontalPadding,
+                  context.isCompact ? 16 : 24,
+                  context.responsiveHorizontalPadding,
+                  40,
+                ),
+                children: [
+                  _buildBalanceCard(),
+                  const SizedBox(height: 18),
+                  _buildStats(stats),
+                  const SizedBox(height: 24),
+                  _buildDesignStatusSection(designsAsync, stats),
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -55,19 +98,19 @@ class DesignerEarningsScreen extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'الرصيد المتاح',
+            'مساحة عمل المصمم',
             style: TextStyle(
-              fontFamily: 'Cairo',
+              fontFamily: AppTheme.fontArabic,
               fontSize: 13,
               color: AppTheme.mutedIvory,
             ),
           ),
           SizedBox(height: 10),
           Text(
-            '0.00',
+            'ATELIER',
             textDirection: TextDirection.ltr,
             style: TextStyle(
-              fontFamily: 'CormorantGaramond',
+              fontFamily: AppTheme.fontEditorial,
               fontSize: 38,
               fontWeight: FontWeight.w700,
               color: AppTheme.warmIvory,
@@ -75,10 +118,10 @@ class DesignerEarningsScreen extends ConsumerWidget {
           ),
           SizedBox(height: 2),
           Text(
-            'USD',
+            'DESIGN · REVIEW · STATUS',
             textDirection: TextDirection.ltr,
             style: TextStyle(
-              fontFamily: 'Cairo',
+              fontFamily: AppTheme.fontArabic,
               fontSize: 12,
               fontWeight: FontWeight.w600,
               color: AppTheme.softRose,
@@ -91,24 +134,45 @@ class DesignerEarningsScreen extends ConsumerWidget {
   }
 
   Widget _buildStats(DesignerDashboardStats stats) {
-    return Row(
-      children: [
-        Expanded(
-          child: _SummaryCard(
-            icon: Icons.design_services_outlined,
-            title: 'إجمالي التصاميم',
-            value: '${stats.total}',
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _SummaryCard(
-            icon: Icons.pending_actions_outlined,
-            title: 'قيد المراجعة',
-            value: '${stats.pending}',
-          ),
-        ),
-      ],
+    final cards = [
+      _SummaryCard(
+        icon: Icons.design_services_outlined,
+        title: 'إجمالي التصاميم',
+        value: '${stats.total}',
+      ),
+      _SummaryCard(
+        icon: Icons.pending_actions_outlined,
+        title: 'قيد المراجعة',
+        value: '${stats.pending}',
+      ),
+    ];
+
+    return contextResponsiveWrap(cards);
+  }
+
+  Widget contextResponsiveWrap(List<Widget> children) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < AppBreakpoints.compact) {
+          return Column(
+            children: [
+              for (var i = 0; i < children.length; i++) ...[
+                if (i > 0) const SizedBox(height: 12),
+                children[i],
+              ],
+            ],
+          );
+        }
+
+        return Row(
+          children: [
+            for (var i = 0; i < children.length; i++) ...[
+              if (i > 0) const SizedBox(width: 12),
+              Expanded(child: children[i]),
+            ],
+          ],
+        );
+      },
     );
   }
 
@@ -138,7 +202,7 @@ class DesignerEarningsScreen extends ConsumerWidget {
             const Text(
               'حالة التصاميم',
               style: TextStyle(
-                fontFamily: 'Cairo',
+                fontFamily: AppTheme.fontArabic,
                 fontSize: 19,
                 fontWeight: FontWeight.w700,
                 color: AppTheme.warmIvory,
@@ -152,7 +216,7 @@ class DesignerEarningsScreen extends ConsumerWidget {
                 child: Text(
                   'لديك ${stats.rejected} تصميم مرفوض يحتاج إلى مراجعة.',
                   style: const TextStyle(
-                    fontFamily: 'Cairo',
+                    fontFamily: AppTheme.fontArabic,
                     color: AppTheme.softRose,
                   ),
                 ),
@@ -177,21 +241,31 @@ class _SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return MaisonSurface(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.burgundyBlack,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppTheme.divider),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, color: AppTheme.softRose, size: 24),
           const SizedBox(height: 12),
-          Text(title, style: const TextStyle(fontFamily: 'Cairo', fontSize: 11, color: AppTheme.mutedIvory)),
+          Text(
+            title,
+            style: const TextStyle(
+              fontFamily: AppTheme.fontArabic,
+              fontSize: 11,
+              color: AppTheme.mutedIvory,
+            ),
+          ),
           const SizedBox(height: 4),
-          Text(value, style: const TextStyle(fontFamily: 'Cairo', fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.warmIvory)),
+          Text(
+            value,
+            style: const TextStyle(
+              fontFamily: AppTheme.fontArabic,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.warmIvory,
+            ),
+          ),
         ],
       ),
     );
@@ -206,26 +280,53 @@ class _DesignStatusTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (label, color, icon) = switch (design.status) {
-      DesignerDesignStatus.approved => ('معتمد', Colors.greenAccent, Icons.check_circle_outline),
-      DesignerDesignStatus.published => ('منشور', Colors.greenAccent, Icons.storefront_outlined),
-      DesignerDesignStatus.rejected => ('مرفوض', Colors.redAccent, Icons.cancel_outlined),
-      DesignerDesignStatus.pending => ('قيد المراجعة', AppTheme.softRose, Icons.pending_actions_outlined),
+      DesignerDesignStatus.approved => (
+        'معتمد',
+        AppTheme.statusSuccess,
+        Icons.check_circle_outline,
+      ),
+      DesignerDesignStatus.published => (
+        'منشور',
+        AppTheme.statusSuccess,
+        Icons.storefront_outlined,
+      ),
+      DesignerDesignStatus.rejected => (
+        'مرفوض',
+        AppTheme.statusRejected,
+        Icons.cancel_outlined,
+      ),
+      DesignerDesignStatus.pending => (
+        'قيد المراجعة',
+        AppTheme.softRose,
+        Icons.pending_actions_outlined,
+      ),
     };
 
-    return Container(
+    return MaisonSurface(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: AppTheme.burgundyBlack,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.divider),
-      ),
+      radius: AppTheme.editorialListRadius,
       child: Row(
         children: [
           Icon(icon, color: color),
           const SizedBox(width: 12),
-          Expanded(child: Text(design.title.isEmpty ? 'تصميم بلا عنوان' : design.title, style: const TextStyle(fontFamily: 'Cairo', color: AppTheme.warmIvory))),
-          Text(label, style: TextStyle(fontFamily: 'Cairo', color: color, fontSize: 12)),
+          Expanded(
+            child: Text(
+              design.title.isEmpty ? 'تصميم بلا عنوان' : design.title,
+              style: const TextStyle(
+                fontFamily: AppTheme.fontArabic,
+                color: AppTheme.warmIvory,
+              ),
+            ),
+          ),
+          Text(
+            label,
+            style: TextStyle(
+              fontFamily: AppTheme.fontArabic,
+              color: color,
+              fontSize: 12,
+            ),
+          ),
         ],
       ),
     );
@@ -233,7 +334,11 @@ class _DesignStatusTile extends StatelessWidget {
 }
 
 class _MessageCard extends StatelessWidget {
-  const _MessageCard({required this.icon, required this.title, required this.message});
+  const _MessageCard({
+    required this.icon,
+    required this.title,
+    required this.message,
+  });
 
   final IconData icon;
   final String title;
@@ -241,20 +346,34 @@ class _MessageCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return MaisonSurface(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 36),
-      decoration: BoxDecoration(
-        color: AppTheme.burgundyBlack,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppTheme.divider),
-      ),
+      radius: AppTheme.editorialPanelRadius,
       child: Column(
         children: [
           Icon(icon, color: AppTheme.softRose, size: 44),
           const SizedBox(height: 14),
-          Text(title, textAlign: TextAlign.center, style: const TextStyle(fontFamily: 'Cairo', fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.warmIvory)),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontFamily: AppTheme.fontArabic,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.warmIvory,
+            ),
+          ),
           const SizedBox(height: 8),
-          Text(message, textAlign: TextAlign.center, style: const TextStyle(fontFamily: 'Cairo', fontSize: 12, color: AppTheme.mutedIvory, height: 1.7)),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontFamily: AppTheme.fontArabic,
+              fontSize: 12,
+              color: AppTheme.mutedIvory,
+              height: 1.7,
+            ),
+          ),
         ],
       ),
     );

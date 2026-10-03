@@ -1,3 +1,4 @@
+import 'package:appwrite/appwrite.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../domain/models/designer_design_model.dart';
@@ -12,10 +13,10 @@ class DesignerDesignAppwriteRepositoryImpl implements DesignerDesignRepository {
   DesignerDesignAppwriteRepositoryImpl({
     DesignerDesignAppwriteDataSource? databaseDataSource,
     DesignerDesignStorageAppwriteDataSource? storageDataSource,
-  })  : _databaseDataSource =
-            databaseDataSource ?? DesignerDesignAppwriteDataSource(),
-        _storageDataSource = storageDataSource ??
-            DesignerDesignStorageAppwriteDataSource();
+  }) : _databaseDataSource =
+           databaseDataSource ?? DesignerDesignAppwriteDataSource(),
+       _storageDataSource =
+           storageDataSource ?? DesignerDesignStorageAppwriteDataSource();
 
   @override
   Future<String> createDesign({
@@ -46,18 +47,25 @@ class DesignerDesignAppwriteRepositoryImpl implements DesignerDesignRepository {
     );
 
     // Both Storage requests start immediately and run concurrently.
-    final uploadResults = await Future.wait<_UploadOutcome>(<Future<_UploadOutcome>>[
-      _uploadImage(
-        bytes: designImageBytes,
-        extension: imageExt,
-      ),
-      _uploadEmbroidery(
-        bytes: embroideryFileBytes,
-        fileName: embroideryFileName.trim().isNotEmpty
-            ? embroideryFileName.trim()
-            : 'embroidery.$embroideryExt',
-      ),
-    ]);
+    final uploadResults = await Future.wait<_UploadOutcome>(
+      <Future<_UploadOutcome>>[
+        _uploadImage(
+          bytes: designImageBytes,
+          extension: imageExt,
+          permissions: <String>[Permission.read(Role.any())],
+        ),
+        _uploadEmbroidery(
+          bytes: embroideryFileBytes,
+          fileName: embroideryFileName.trim().isNotEmpty
+              ? embroideryFileName.trim()
+              : 'embroidery.$embroideryExt',
+          permissions: <String>[
+            Permission.read(Role.user(designerId)),
+            Permission.read(Role.team('tr-admins')),
+          ],
+        ),
+      ],
+    );
 
     final imageResult = uploadResults[0];
     final embroideryResult = uploadResults[1];
@@ -143,6 +151,7 @@ class DesignerDesignAppwriteRepositoryImpl implements DesignerDesignRepository {
   Future<_UploadOutcome> _uploadImage({
     required Uint8List bytes,
     required String extension,
+    required List<String> permissions,
   }) async {
     final stopwatch = Stopwatch()..start();
     final fileName = 'design.$extension';
@@ -157,6 +166,7 @@ class DesignerDesignAppwriteRepositoryImpl implements DesignerDesignRepository {
         bytes: bytes,
         fileName: fileName,
         contentType: contentType,
+        permissions: permissions,
       );
       stopwatch.stop();
       debugPrint(
@@ -177,6 +187,7 @@ class DesignerDesignAppwriteRepositoryImpl implements DesignerDesignRepository {
   Future<_UploadOutcome> _uploadEmbroidery({
     required Uint8List bytes,
     required String fileName,
+    required List<String> permissions,
   }) async {
     final stopwatch = Stopwatch()..start();
     debugPrint(
@@ -189,6 +200,7 @@ class DesignerDesignAppwriteRepositoryImpl implements DesignerDesignRepository {
         bytes: bytes,
         fileName: fileName,
         contentType: 'application/octet-stream',
+        permissions: permissions,
       );
       stopwatch.stop();
       debugPrint(
@@ -210,9 +222,7 @@ class DesignerDesignAppwriteRepositoryImpl implements DesignerDesignRepository {
     if (fileIds.isEmpty) {
       return;
     }
-    debugPrint(
-      'DESIGN PERFORMANCE: rollback START count=${fileIds.length}',
-    );
+    debugPrint('DESIGN PERFORMANCE: rollback START count=${fileIds.length}');
     for (final fileId in fileIds) {
       try {
         await _storageDataSource.deleteFile(fileId: fileId);
@@ -235,20 +245,36 @@ class DesignerDesignAppwriteRepositoryImpl implements DesignerDesignRepository {
   }
 
   @override
-  Future<DesignerDesignModel?> getDesign({required String designId}) async => null;
+  Future<DesignerDesignModel?> getDesign({required String designId}) {
+    return _databaseDataSource.getDesign(designId: designId);
+  }
 
   @override
   Future<void> updateDesign({
     required String designId,
     required Map<String, dynamic> data,
-  }) async {}
+  }) {
+    return _databaseDataSource.updateDesign(designId: designId, data: data);
+  }
 
   @override
   Future<void> deleteDesign({
     required String designId,
     required String? imagePath,
     required String? embroideryPath,
-  }) async {}
+  }) async {
+    await _databaseDataSource.deleteDesign(designId: designId);
+    for (final path in <String?>[imagePath, embroideryPath]) {
+      final fileId = path?.trim() ?? '';
+      if (fileId.isNotEmpty) {
+        try {
+          await _storageDataSource.deleteFile(fileId: fileId);
+        } catch (error) {
+          debugPrint('DESIGN DELETE FILE WARNING: fileId=$fileId error=$error');
+        }
+      }
+    }
+  }
 
   String _extensionOf(String fileName) {
     final normalized = fileName.trim();

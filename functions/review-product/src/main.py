@@ -4,6 +4,16 @@ from appwrite.client import Client
 from appwrite.services.databases import Databases
 from appwrite.id import ID
 
+
+def _authenticated_user_id(context) -> str:
+    headers = context.req.headers or {}
+    for key in ('x-appwrite-user-id', 'X-Appwrite-User-Id'):
+        value = str(headers.get(key, '')).strip()
+        if value:
+            return value
+    return ''
+
+
 def main(context):
     try:
         client = Client()
@@ -16,12 +26,23 @@ def main(context):
         
         payload = json.loads(context.req.body)
         
-        user_id = payload.get('userId')
-        product_id = payload.get('productId')
+        requested_user_id = str(payload.get('userId', '')).strip()
+        user_id = _authenticated_user_id(context)
+        product_id = str(payload.get('productId', '')).strip()
         rating = payload.get('rating')
         review_text = payload.get('reviewText', '')
-        
-        if not user_id or not product_id or not rating:
+
+        if not user_id:
+            return context.res.json({
+                'success': False,
+                'error': 'Authenticated user is required',
+            }, 401)
+        if requested_user_id and requested_user_id != user_id:
+            return context.res.json({
+                'success': False,
+                'error': 'Authenticated user does not match userId',
+            }, 403)
+        if not product_id or not isinstance(rating, int) or isinstance(rating, bool) or rating < 1 or rating > 5:
             return context.res.json({'success': False, 'error': 'Missing required fields'})
         
         purchases = databases.list_documents(

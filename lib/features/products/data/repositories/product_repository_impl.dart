@@ -1,4 +1,4 @@
-﻿import '../../domain/entities/product.dart';
+import '../../domain/entities/product.dart';
 import '../../domain/repositories/product_repository.dart';
 import '../datasources/product_data_source.dart';
 
@@ -11,10 +11,12 @@ class ProductRepositoryImpl implements ProductRepository {
   Future<List<Product>> getProducts({
     int limit = 20,
     int offset = 0,
+    String? categoryId,
   }) {
     return dataSource.getProducts(
       limit: limit,
       offset: offset,
+      categoryId: categoryId,
     );
   }
 

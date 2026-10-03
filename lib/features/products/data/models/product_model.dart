@@ -1,4 +1,4 @@
-﻿import '../../domain/entities/product.dart';
+import '../../domain/entities/product.dart';
 
 class ProductModel extends Product {
   const ProductModel({
@@ -11,7 +11,6 @@ class ProductModel extends Product {
     super.currency,
     super.status,
     super.coverImageUrl,
-    super.fileKey,
     super.salesCount,
     super.rating,
     super.reviewCount,
@@ -34,13 +33,18 @@ class ProductModel extends Product {
         orElse: () => ProductStatus.draft,
       ),
       coverImageUrl: json['cover_image_url'],
-      fileKey: json['file_key'],
       salesCount: json['sales_count'] ?? 0,
       rating: (json['rating'] ?? 0).toDouble(),
       reviewCount: json['review_count'] ?? 0,
-      createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at']) : null,
-      updatedAt: json['updated_at'] != null ? DateTime.tryParse(json['updated_at']) : null,
-      publishedAt: json['published_at'] != null ? DateTime.tryParse(json['published_at']) : null,
+      createdAt: json['created_at'] != null
+          ? DateTime.tryParse(json['created_at'])
+          : null,
+      updatedAt: json['updated_at'] != null
+          ? DateTime.tryParse(json['updated_at'])
+          : null,
+      publishedAt: json['published_at'] != null
+          ? DateTime.tryParse(json['published_at'])
+          : null,
     );
   }
 }

@@ -1,5 +1,5 @@
-import '../../../../core/appwrite/appwrite_database_constants.dart';
-import '../../../../core/appwrite/appwrite_database_service.dart';
+import 'package:trace_raffine/core/appwrite/appwrite_database_constants.dart';
+import 'package:trace_raffine/core/appwrite/appwrite_database_service.dart';
 import '../../domain/entities/category.dart';
 import '../../domain/repositories/category_repository.dart';
 import '../models/category_model.dart';
@@ -16,10 +16,7 @@ class CategoryRepositoryImpl implements CategoryRepository {
     );
 
     return response.documents
-        .map((doc) => CategoryModel.fromJson({
-              ...doc.data,
-              r'$id': doc.$id,
-            }))
+        .map((doc) => CategoryModel.fromJson({...doc.data, r'$id': doc.$id}))
         .toList();
   }
 
@@ -31,10 +28,7 @@ class CategoryRepositoryImpl implements CategoryRepository {
         documentId: categoryId,
       );
 
-      return CategoryModel.fromJson({
-        ...doc.data,
-        r'$id': doc.$id,
-      });
+      return CategoryModel.fromJson({...doc.data, r'$id': doc.$id});
     } catch (_) {
       return null;
     }
@@ -51,8 +45,9 @@ class CategoryRepositoryImpl implements CategoryRepository {
       isActive: category.isActive,
     );
 
-    final documentId =
-        model.id != null && model.id!.isNotEmpty ? model.id : null;
+    final documentId = model.id != null && model.id!.isNotEmpty
+        ? model.id
+        : null;
 
     final doc = await _databaseService.createDocument(
       collectionId: AppwriteDatabaseConstants.categoriesCollectionId,
@@ -66,10 +61,7 @@ class CategoryRepositoryImpl implements CategoryRepository {
       documentId: documentId,
     );
 
-    return CategoryModel.fromJson({
-      ...doc.data,
-      r'$id': doc.$id,
-    });
+    return CategoryModel.fromJson({...doc.data, r'$id': doc.$id});
   }
 
   @override
@@ -86,10 +78,7 @@ class CategoryRepositoryImpl implements CategoryRepository {
       },
     );
 
-    return CategoryModel.fromJson({
-      ...doc.data,
-      r'$id': doc.$id,
-    });
+    return CategoryModel.fromJson({...doc.data, r'$id': doc.$id});
   }
 
   @override

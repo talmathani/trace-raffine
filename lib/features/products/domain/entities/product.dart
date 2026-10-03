@@ -1,10 +1,10 @@
-﻿enum ProductStatus {
+enum ProductStatus {
   draft,
   pendingReview,
   published,
   unpublished,
   rejected,
-  archived
+  archived,
 }
 
 class Product {
@@ -17,7 +17,6 @@ class Product {
   final String? currency;
   final ProductStatus status;
   final String? coverImageUrl;
-  final String? fileKey;
   final int salesCount;
   final double rating;
   final int reviewCount;
@@ -35,7 +34,6 @@ class Product {
     this.currency,
     this.status = ProductStatus.draft,
     this.coverImageUrl,
-    this.fileKey,
     this.salesCount = 0,
     this.rating = 0,
     this.reviewCount = 0,
@@ -54,7 +52,6 @@ class Product {
     String? currency,
     ProductStatus? status,
     String? coverImageUrl,
-    String? fileKey,
     int? salesCount,
     double? rating,
     int? reviewCount,
@@ -72,7 +69,6 @@ class Product {
       currency: currency ?? this.currency,
       status: status ?? this.status,
       coverImageUrl: coverImageUrl ?? this.coverImageUrl,
-      fileKey: fileKey ?? this.fileKey,
       salesCount: salesCount ?? this.salesCount,
       rating: rating ?? this.rating,
       reviewCount: reviewCount ?? this.reviewCount,
@@ -92,7 +88,6 @@ class Product {
       'currency': currency,
       'status': status.name,
       'cover_image_url': coverImageUrl,
-      'file_key': fileKey,
       'sales_count': salesCount,
       'rating': rating,
       'review_count': reviewCount,
@@ -110,13 +105,18 @@ class Product {
       currency: json['currency'],
       status: _parseStatus(json['status']),
       coverImageUrl: json['cover_image_url'],
-      fileKey: json['file_key'],
       salesCount: json['sales_count'] ?? 0,
       rating: (json['rating'] ?? 0).toDouble(),
       reviewCount: json['review_count'] ?? 0,
-      createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at']) : null,
-      updatedAt: json['updated_at'] != null ? DateTime.tryParse(json['updated_at']) : null,
-      publishedAt: json['published_at'] != null ? DateTime.tryParse(json['published_at']) : null,
+      createdAt: json['created_at'] != null
+          ? DateTime.tryParse(json['created_at'])
+          : null,
+      updatedAt: json['updated_at'] != null
+          ? DateTime.tryParse(json['updated_at'])
+          : null,
+      publishedAt: json['published_at'] != null
+          ? DateTime.tryParse(json['published_at'])
+          : null,
     );
   }
 

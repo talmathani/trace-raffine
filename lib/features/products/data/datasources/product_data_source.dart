@@ -2,8 +2,8 @@
 
 import 'package:appwrite/appwrite.dart';
 
-import '../../../../core/appwrite/appwrite_config.dart';
-import '../../../../core/appwrite/appwrite_database_constants.dart';
+import 'package:trace_raffine/core/appwrite/appwrite_config.dart';
+import 'package:trace_raffine/core/appwrite/appwrite_database_constants.dart';
 import '../../domain/entities/product.dart';
 import '../models/product_model.dart';
 
@@ -17,30 +17,45 @@ class ProductDataSource {
     return ProductDataSource(Databases(client));
   }
 
-  ProductModel _toModel(Map<String, dynamic> data) {
-    return ProductModel.fromJson(Map<String, dynamic>.from(data));
+  ProductModel _toModel(
+    Map<String, dynamic> data, {
+    bool exposeDesignerId = false,
+  }) {
+    final publicData = Map<String, dynamic>.from(data)
+      ..remove('file_key')
+      ..remove('embroideryFilePath')
+      ..remove('embroideryFileUrl');
+
+    if (!exposeDesignerId) {
+      publicData.remove('designer_id');
+      publicData['designer_id'] = '';
+    }
+
+    return ProductModel.fromJson(publicData);
   }
 
   Future<List<ProductModel>> getProducts({
     int limit = 20,
     int offset = 0,
+    String? categoryId,
   }) async {
+    final queries = <String>[
+      Query.equal('status', 'published'),
+      if (categoryId != null && categoryId.trim().isNotEmpty)
+        Query.equal('category_id', categoryId.trim()),
+      Query.orderDesc(r'$createdAt'),
+      Query.limit(limit),
+      Query.offset(offset),
+    ];
+
     final response = await databases.listDocuments(
       databaseId: AppwriteDatabaseConstants.databaseId,
       collectionId: AppwriteDatabaseConstants.productsCollection,
-      queries: [
-        Query.equal('status', 'published'),
-        Query.orderDesc(r'$createdAt'),
-        Query.limit(limit),
-        Query.offset(offset),
-      ],
+      queries: queries,
     );
 
     return response.documents
-        .map((doc) => _toModel({
-              ...doc.data,
-              r'$id': doc.$id,
-            }))
+        .map((doc) => _toModel({...doc.data, r'$id': doc.$id}))
         .toList(growable: false);
   }
 
@@ -52,19 +67,16 @@ class ProductDataSource {
         documentId: id,
       );
 
-      return _toModel({
-        ...doc.data,
-        r'$id': doc.$id,
-      });
+      final status = doc.data['status']?.toString().toLowerCase();
+      if (status != 'published') return null;
+      return _toModel({...doc.data, r'$id': doc.$id});
     } on AppwriteException catch (e) {
       if (e.code == 404) return null;
       rethrow;
     }
   }
 
-  Future<List<ProductModel>> getProductsByDesigner(
-    String designerId,
-  ) async {
+  Future<List<ProductModel>> getProductsByDesigner(String designerId) async {
     final response = await databases.listDocuments(
       databaseId: AppwriteDatabaseConstants.databaseId,
       collectionId: AppwriteDatabaseConstants.productsCollection,
@@ -75,10 +87,10 @@ class ProductDataSource {
     );
 
     return response.documents
-        .map((doc) => _toModel({
-              ...doc.data,
-              r'$id': doc.$id,
-            }))
+        .map(
+          (doc) =>
+              _toModel({...doc.data, r'$id': doc.$id}, exposeDesignerId: true),
+        )
         .toList(growable: false);
   }
 
@@ -93,10 +105,7 @@ class ProductDataSource {
     );
 
     return response.documents
-        .map((doc) => _toModel({
-              ...doc.data,
-              r'$id': doc.$id,
-            }))
+        .map((doc) => _toModel({...doc.data, r'$id': doc.$id}))
         .toList(growable: false);
   }
 
@@ -110,10 +119,7 @@ class ProductDataSource {
       data: product.toJson(),
     );
 
-    return _toModel({
-      ...doc.data,
-      r'$id': doc.$id,
-    });
+    return _toModel({...doc.data, r'$id': doc.$id});
   }
 
   Future<ProductModel> updateProduct(Product product) async {
@@ -128,10 +134,7 @@ class ProductDataSource {
       data: product.toJson(),
     );
 
-    return _toModel({
-      ...doc.data,
-      r'$id': doc.$id,
-    });
+    return _toModel({...doc.data, r'$id': doc.$id});
   }
 
   Future<void> deleteProduct(String id) async {

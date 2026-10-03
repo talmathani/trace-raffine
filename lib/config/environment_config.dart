@@ -1,4 +1,4 @@
-﻿class EnvironmentConfig {
+class EnvironmentConfig {
   // Appwrite
   static const String appwriteEndpoint = 'https://fra.cloud.appwrite.io/v1';
   static const String appwriteProjectId = 'trace-raffine';

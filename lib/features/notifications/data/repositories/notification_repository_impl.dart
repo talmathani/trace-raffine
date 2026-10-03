@@ -1,52 +1,63 @@
-﻿import '../../../../core/appwrite/appwrite_database_constants.dart';
-import '../../../../core/appwrite/appwrite_database_service.dart';
+import 'package:trace_raffine/core/appwrite/appwrite_service.dart';
+import 'package:trace_raffine/core/functions/function_invoker.dart';
 import '../../domain/entities/app_notification.dart';
 import '../../domain/repositories/notification_repository.dart';
 import '../models/app_notification_model.dart';
 
 class NotificationRepositoryImpl implements NotificationRepository {
-  final AppwriteDatabaseService _databaseService;
+  final FunctionInvoker _functionInvoker;
 
-  NotificationRepositoryImpl(this._databaseService);
+  NotificationRepositoryImpl({FunctionInvoker? functionInvoker})
+    : _functionInvoker = functionInvoker ?? FunctionInvoker.create();
 
   @override
   Future<List<AppNotification>> getNotifications(String userId) async {
-    final response = await _databaseService.listDocuments(
-      collectionId: AppwriteDatabaseConstants.notificationsCollection,
-    );
+    final result = await _functionInvoker.listNotifications(userId: userId);
+    if (result['success'] != true) {
+      throw StateError(
+        result['error']?.toString() ?? 'Unable to load notifications.',
+      );
+    }
 
-    return response.documents
-        .map((doc) => AppNotificationModel.fromJson({
-              ...doc.data,
-              r'$id': doc.$id,
-            }))
-        .where((notification) => notification.userId == userId)
-        .toList();
+    final notifications = result['notifications'];
+    if (notifications is! List) return const <AppNotification>[];
+
+    return notifications
+        .whereType<Map>()
+        .map((raw) {
+          final data = raw['data'] is Map
+              ? Map<String, dynamic>.from(raw['data'] as Map)
+              : Map<String, dynamic>.from(raw);
+          final id = raw[r'$id']?.toString() ?? raw['id']?.toString();
+          if (id != null && id.isNotEmpty) data[r'$id'] = id;
+          return AppNotificationModel.fromJson(data);
+        })
+        .toList(growable: false);
   }
 
   @override
   Future<void> markAsRead(String notificationId) async {
-    await _databaseService.updateDocument(
-      collectionId: AppwriteDatabaseConstants.notificationsCollection,
-      documentId: notificationId,
-      data: {'is_read': true},
+    final userId = (await AppwriteService.account.get()).$id;
+    final result = await _functionInvoker.markNotificationRead(
+      userId: userId,
+      notificationId: notificationId,
     );
+    if (result['success'] != true) {
+      throw StateError(
+        result['error']?.toString() ?? 'Unable to mark notification as read.',
+      );
+    }
   }
 
   @override
   Future<void> markAllAsRead(String userId) async {
-    final response = await _databaseService.listDocuments(
-      collectionId: AppwriteDatabaseConstants.notificationsCollection,
+    final result = await _functionInvoker.markAllNotificationsRead(
+      userId: userId,
     );
-
-    for (final doc in response.documents) {
-      if (doc.data['user_id'] == userId) {
-        await _databaseService.updateDocument(
-          collectionId: AppwriteDatabaseConstants.notificationsCollection,
-          documentId: doc.$id,
-          data: {'is_read': true},
-        );
-      }
+    if (result['success'] != true) {
+      throw StateError(
+        result['error']?.toString() ?? 'Unable to mark notifications as read.',
+      );
     }
   }
 }

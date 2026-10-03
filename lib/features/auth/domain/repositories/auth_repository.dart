@@ -1,4 +1,5 @@
 import '../entities/auth_user.dart';
+import '../../../../domain/entities/user_role.dart';
 
 abstract interface class AuthRepository {
   AuthUser? get currentUser;
@@ -7,7 +8,13 @@ abstract interface class AuthRepository {
 
   Future<AuthUser> signIn({required String email, required String password});
 
-  Future<AuthUser> register({required String email, required String password});
+  Future<AuthUser> register({
+    required String email,
+    required String password,
+    required String name,
+    required String phone,
+    required UserRole role,
+  });
 
   Future<void> signOut();
 
@@ -26,5 +33,7 @@ abstract interface class AuthRepository {
 
   Future<AuthUser> refreshCurrentUser();
 
-  Future<void> updatePassword({required String password});
+  Future<void> updatePassword({required String currentPassword, required String newPassword});
+
+  Future<void> updatePhone({required String phone, required String password});
 }

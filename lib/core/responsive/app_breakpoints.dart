@@ -1,4 +1,4 @@
-﻿import 'package:flutter/widgets.dart';
+import 'package:flutter/widgets.dart';
 
 abstract final class AppBreakpoints {
   static const double compact = 600;
@@ -8,11 +8,9 @@ abstract final class AppBreakpoints {
 
   static bool isCompact(double width) => width < compact;
 
-  static bool isMedium(double width) =>
-      width >= compact && width < medium;
+  static bool isMedium(double width) => width >= compact && width < medium;
 
-  static bool isExpanded(double width) =>
-      width >= medium && width < expanded;
+  static bool isExpanded(double width) => width >= medium && width < expanded;
 
   static bool isLarge(double width) => width >= expanded;
 
@@ -21,12 +19,7 @@ abstract final class AppBreakpoints {
   static bool isDesktop(double width) => width >= expanded;
 }
 
-enum AppScreenClass {
-  compact,
-  medium,
-  expanded,
-  large,
-}
+enum AppScreenClass { compact, medium, expanded, large }
 
 extension AppScreenClassX on BuildContext {
   AppScreenClass get screenClass {
@@ -47,13 +40,45 @@ extension AppScreenClassX on BuildContext {
     return AppScreenClass.large;
   }
 
-  bool get isCompact =>
-      screenClass == AppScreenClass.compact;
+  bool get isCompact => screenClass == AppScreenClass.compact;
+
+  bool get isMedium => screenClass == AppScreenClass.medium;
+
+  bool get isExpanded => screenClass == AppScreenClass.expanded;
+
+  bool get isLarge => screenClass == AppScreenClass.large;
+
+  bool get isPhone => isCompact;
 
   bool get isTablet =>
       screenClass == AppScreenClass.medium ||
       screenClass == AppScreenClass.expanded;
 
-  bool get isDesktop =>
-      screenClass == AppScreenClass.large;
+  bool get isDesktop => screenClass == AppScreenClass.large;
+
+  double get responsiveHorizontalPadding {
+    switch (screenClass) {
+      case AppScreenClass.compact:
+        return 16;
+      case AppScreenClass.medium:
+        return 24;
+      case AppScreenClass.expanded:
+        return 32;
+      case AppScreenClass.large:
+        return 32;
+    }
+  }
+
+  double get responsiveContentMaxWidth {
+    switch (screenClass) {
+      case AppScreenClass.compact:
+        return 680;
+      case AppScreenClass.medium:
+        return 960;
+      case AppScreenClass.expanded:
+        return 1200;
+      case AppScreenClass.large:
+        return 1440;
+    }
+  }
 }

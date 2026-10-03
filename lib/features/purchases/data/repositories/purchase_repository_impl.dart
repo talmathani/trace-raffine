@@ -1,27 +1,37 @@
-import '../../../../core/appwrite/appwrite_database_constants.dart';
-import '../../../../core/appwrite/appwrite_database_service.dart';
+import 'package:trace_raffine/core/functions/function_invoker.dart';
 import '../../domain/entities/purchase.dart';
 import '../../domain/repositories/purchase_repository.dart';
 import '../models/purchase_model.dart';
 
 class PurchaseRepositoryImpl implements PurchaseRepository {
-  final AppwriteDatabaseService _databaseService;
+  final FunctionInvoker _functionInvoker;
 
-  PurchaseRepositoryImpl(this._databaseService);
+  PurchaseRepositoryImpl({FunctionInvoker? functionInvoker})
+    : _functionInvoker = functionInvoker ?? FunctionInvoker.create();
 
   @override
   Future<List<Purchase>> getPurchases(String userId) async {
-    final response = await _databaseService.listDocuments(
-      collectionId: AppwriteDatabaseConstants.purchasesCollectionId,
-    );
+    final result = await _functionInvoker.listPurchases(userId: userId);
+    if (result['success'] != true) {
+      throw StateError(
+        result['error']?.toString() ?? 'Unable to load purchases.',
+      );
+    }
 
-    return response.documents
-        .map((doc) => PurchaseModel.fromJson({
-              ...doc.data,
-              r'$id': doc.$id,
-            }))
-        .where((purchase) => purchase.userId == userId)
-        .toList();
+    final purchases = result['purchases'];
+    if (purchases is! List) return const <Purchase>[];
+
+    return purchases
+        .whereType<Map>()
+        .map((raw) {
+          final data = raw['data'] is Map
+              ? Map<String, dynamic>.from(raw['data'] as Map)
+              : Map<String, dynamic>.from(raw);
+          final id = raw[r'$id']?.toString() ?? raw['id']?.toString();
+          if (id != null && id.isNotEmpty) data[r'$id'] = id;
+          return PurchaseModel.fromJson(data);
+        })
+        .toList(growable: false);
   }
 
   @override
@@ -34,24 +44,25 @@ class PurchaseRepositoryImpl implements PurchaseRepository {
       purchasedAt: purchase.purchasedAt,
     );
 
-    final documentId =
-        model.id != null && model.id!.isNotEmpty ? model.id : null;
-
-    final doc = await _databaseService.createDocument(
-      collectionId: AppwriteDatabaseConstants.purchasesCollectionId,
-      data: {
-        'user_id': model.userId,
-        'product_id': model.productId,
-        'order_id': model.orderId,
-        'purchased_at': model.purchasedAt?.toIso8601String(),
-      },
-      documentId: documentId,
+    final result = await _functionInvoker.purchaseProduct(
+      userId: model.userId,
+      productId: model.productId,
+      orderId: model.orderId,
     );
 
-    return PurchaseModel.fromJson({
-      ...doc.data,
-      r'$id': doc.$id,
-    });
+    if (result['success'] != true) {
+      throw StateError(
+        result['error']?.toString() ?? 'Purchase could not be completed.',
+      );
+    }
+
+    return PurchaseModel(
+      id: result['purchaseId']?.toString() ?? model.id,
+      userId: model.userId,
+      productId: model.productId,
+      orderId: model.orderId,
+      purchasedAt: model.purchasedAt,
+    );
   }
 
   @override

@@ -1,4 +1,4 @@
-﻿import '../../domain/entities/purchase.dart';
+import '../../domain/entities/purchase.dart';
 
 class PurchaseModel extends Purchase {
   const PurchaseModel({
@@ -15,7 +15,9 @@ class PurchaseModel extends Purchase {
       userId: json['user_id'] ?? '',
       productId: json['product_id'] ?? '',
       orderId: json['order_id'] ?? '',
-      purchasedAt: json['purchased_at'] != null ? DateTime.tryParse(json['purchased_at']) : null,
+      purchasedAt: json['purchased_at'] != null
+          ? DateTime.tryParse(json['purchased_at'])
+          : null,
     );
   }
 }

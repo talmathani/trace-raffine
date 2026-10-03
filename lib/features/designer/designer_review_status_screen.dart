@@ -1,59 +1,88 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/theme/app_theme.dart';
+import 'package:trace_raffine/core/responsive/app_breakpoints.dart';
+import 'package:trace_raffine/core/theme/app_theme.dart';
+import 'package:trace_raffine/core/ui/maison_surface.dart';
+import 'package:trace_raffine/core/ui/maison_app_bar.dart';
+import 'presentation/providers/designer_dashboard_providers.dart';
+import 'domain/models/designer_design_model.dart';
 
-class DesignerReviewStatusScreen extends StatelessWidget {
+class DesignerReviewStatusScreen extends ConsumerWidget {
   const DesignerReviewStatusScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final designsAsync = ref.watch(designerDesignsProvider);
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(title: const Text('حالة المراجعة')),
-        body: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
-          children: [
-            _buildHeader(),
-            const SizedBox(height: 20),
-            _buildOverview(),
-            const SizedBox(height: 20),
-            _buildSectionTitle(),
-            const SizedBox(height: 12),
-            _buildStatusCard(
-              icon: Icons.pending_actions_rounded,
-              title: 'قيد المراجعة',
-              description:
-                  'التصاميم التي تم إرسالها إلى فريق المراجعة ولم يصدر بشأنها قرار بعد.',
-              color: AppTheme.softRose,
+        appBar: MaisonAppBar(title: 'حالة المراجعة'),
+        body: designsAsync.when(
+          loading: () => const Center(
+            child: CircularProgressIndicator(color: AppTheme.softRose),
+          ),
+          error: (error, _) => Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Text(
+                'تعذر تحميل حالات المراجعة: $error',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontFamily: AppTheme.fontArabic,
+                  color: AppTheme.softRose,
+                ),
+              ),
             ),
-            const SizedBox(height: 12),
-            _buildStatusCard(
-              icon: Icons.check_circle_outline_rounded,
-              title: 'مقبول',
-              description:
-                  'التصاميم التي تم اعتمادها وأصبحت مؤهلة للظهور في المنصة.',
-              color: AppTheme.softRose,
+          ),
+          data: (designs) => Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: context.responsiveContentMaxWidth,
+              ),
+              child: ListView(
+                padding: EdgeInsets.fromLTRB(
+                  context.responsiveHorizontalPadding,
+                  context.isCompact ? 16 : 24,
+                  context.responsiveHorizontalPadding,
+                  40,
+                ),
+                children: [
+                  _buildHeader(),
+                  const SizedBox(height: 20),
+                  _buildOverview(designs),
+                  const SizedBox(height: 20),
+                  _buildSectionTitle(),
+                  const SizedBox(height: 12),
+                  _buildStatusCard(
+                    icon: Icons.pending_actions_rounded,
+                    title: 'قيد المراجعة',
+                    description:
+                        'التصاميم التي أُرسلت للمراجعة ولم يصدر بشأنها قرار بعد.',
+                    color: AppTheme.softRose,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildStatusCard(
+                    icon: Icons.check_circle_outline_rounded,
+                    title: 'مقبول',
+                    description:
+                        'التصاميم التي تم اعتمادها وأصبحت مؤهلة للظهور في المنصة.',
+                    color: AppTheme.softRose,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildStatusCard(
+                    icon: Icons.cancel_outlined,
+                    title: 'مرفوض',
+                    description: 'التصاميم التي لم تستوفِ متطلبات المنصة.',
+                    color: AppTheme.softRose,
+                  ),
+                  const SizedBox(height: 24),
+                  _buildCurrentState(designs),
+                ],
+              ),
             ),
-            const SizedBox(height: 12),
-            _buildStatusCard(
-              icon: Icons.edit_note_rounded,
-              title: 'يحتاج إلى تعديل',
-              description:
-                  'التصاميم التي طلب فريق المراجعة تعديل بعض تفاصيلها قبل الاعتماد.',
-              color: AppTheme.softRose,
-            ),
-            const SizedBox(height: 12),
-            _buildStatusCard(
-              icon: Icons.cancel_outlined,
-              title: 'مرفوض',
-              description:
-                  'التصاميم التي لم تستوفِ متطلبات المنصة مع إمكانية الاطلاع على سبب الرفض لاحقًا.',
-              color: AppTheme.softRose,
-            ),
-            const SizedBox(height: 24),
-            _buildCurrentState(),
-          ],
+          ),
         ),
       ),
     );
@@ -82,7 +111,7 @@ class DesignerReviewStatusScreen extends StatelessWidget {
                 Text(
                   'متابعة التصاميم',
                   style: TextStyle(
-                    fontFamily: 'Cairo',
+                    fontFamily: AppTheme.fontArabic,
                     fontSize: 19,
                     fontWeight: FontWeight.w700,
                     color: AppTheme.warmIvory,
@@ -92,7 +121,7 @@ class DesignerReviewStatusScreen extends StatelessWidget {
                 Text(
                   'تابع حالة التصاميم التي أرسلتها للمراجعة واعرف آخر تحديث عليها.',
                   style: TextStyle(
-                    fontFamily: 'Cairo',
+                    fontFamily: AppTheme.fontArabic,
                     fontSize: 12,
                     color: AppTheme.mutedIvory,
                     height: 1.6,
@@ -106,7 +135,18 @@ class DesignerReviewStatusScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildOverview() {
+  Widget _buildOverview(List<DesignerDesignModel> designs) {
+    final pending = designs
+        .where((design) => design.status == DesignerDesignStatus.pending)
+        .length;
+    final approved = designs
+        .where(
+          (design) =>
+              design.status == DesignerDesignStatus.approved ||
+              design.status == DesignerDesignStatus.published,
+        )
+        .length;
+
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -114,28 +154,28 @@ class DesignerReviewStatusScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppTheme.divider),
       ),
-      child: const Row(
+      child: Row(
         children: [
           Expanded(
             child: _OverviewItem(
               icon: Icons.upload_file_rounded,
-              value: '0',
+              value: designs.length.toString(),
               label: 'إجمالي التصاميم',
             ),
           ),
-          _OverviewDivider(),
+          const _OverviewDivider(),
           Expanded(
             child: _OverviewItem(
               icon: Icons.pending_actions_rounded,
-              value: '0',
+              value: pending.toString(),
               label: 'قيد المراجعة',
             ),
           ),
-          _OverviewDivider(),
+          const _OverviewDivider(),
           Expanded(
             child: _OverviewItem(
               icon: Icons.check_circle_outline_rounded,
-              value: '0',
+              value: approved.toString(),
               label: 'مقبولة',
             ),
           ),
@@ -152,7 +192,7 @@ class DesignerReviewStatusScreen extends StatelessWidget {
         Text(
           'حالات المراجعة',
           style: TextStyle(
-            fontFamily: 'Cairo',
+            fontFamily: AppTheme.fontArabic,
             fontSize: 16,
             fontWeight: FontWeight.w700,
             color: AppTheme.warmIvory,
@@ -168,13 +208,9 @@ class DesignerReviewStatusScreen extends StatelessWidget {
     required String description,
     required Color color,
   }) {
-    return Container(
+    return MaisonSurface(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AppTheme.burgundyBlack,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppTheme.divider),
-      ),
+      radius: AppTheme.editorialPanelRadius,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -195,7 +231,7 @@ class DesignerReviewStatusScreen extends StatelessWidget {
                 Text(
                   title,
                   style: const TextStyle(
-                    fontFamily: 'Cairo',
+                    fontFamily: AppTheme.fontArabic,
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
                     color: AppTheme.warmIvory,
@@ -205,7 +241,7 @@ class DesignerReviewStatusScreen extends StatelessWidget {
                 Text(
                   description,
                   style: const TextStyle(
-                    fontFamily: 'Cairo',
+                    fontFamily: AppTheme.fontArabic,
                     fontSize: 12,
                     color: AppTheme.mutedIvory,
                     height: 1.7,
@@ -219,45 +255,107 @@ class DesignerReviewStatusScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCurrentState() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 30),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topRight,
-          end: Alignment.bottomLeft,
-          colors: [AppTheme.deepBurgundy, AppTheme.burgundyBlack],
+  Widget _buildCurrentState(List<DesignerDesignModel> designs) {
+    if (designs.isEmpty) {
+      return MaisonSurface(
+        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 30),
+        radius: AppTheme.editorialPanelRadius,
+        color: AppTheme.deepBurgundy,
+        child: const Column(
+          children: [
+            Icon(
+              Icons.hourglass_empty_rounded,
+              color: AppTheme.softRose,
+              size: 44,
+            ),
+            SizedBox(height: 14),
+            Text(
+              'لا توجد مراجعات حالية',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: AppTheme.fontArabic,
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.warmIvory,
+              ),
+            ),
+            SizedBox(height: 7),
+            Text(
+              'عند إرسال تصميم جديد سيظهر هنا مع حالته وتفاصيل آخر تحديث.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: AppTheme.fontArabic,
+                fontSize: 12,
+                color: AppTheme.mutedIvory,
+                height: 1.8,
+              ),
+            ),
+          ],
         ),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AppTheme.divider),
+      );
+    }
+
+    return Column(
+      children: designs.map(_buildDesignEntry).toList(growable: false),
+    );
+  }
+
+  Widget _buildDesignEntry(DesignerDesignModel design) {
+    final status = switch (design.status) {
+      DesignerDesignStatus.pending => (
+        'قيد المراجعة',
+        Icons.pending_actions_rounded,
       ),
-      child: const Column(
+      DesignerDesignStatus.approved => (
+        'مقبول',
+        Icons.check_circle_outline_rounded,
+      ),
+      DesignerDesignStatus.published => ('منشور', Icons.public_rounded),
+      DesignerDesignStatus.rejected => ('مرفوض', Icons.cancel_outlined),
+    };
+
+    return MaisonSurface(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      radius: AppTheme.editorialListRadius,
+      child: Row(
         children: [
-          Icon(
-            Icons.hourglass_empty_rounded,
-            color: AppTheme.softRose,
-            size: 44,
-          ),
-          SizedBox(height: 14),
-          Text(
-            'لا توجد مراجعات حالية',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: 'Cairo',
-              fontSize: 17,
-              fontWeight: FontWeight.w700,
-              color: AppTheme.warmIvory,
+          Icon(status.$2, color: AppTheme.softRose, size: 24),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  design.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontFamily: AppTheme.fontArabic,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.warmIvory,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  status.$1,
+                  style: const TextStyle(
+                    fontFamily: AppTheme.fontArabic,
+                    fontSize: 12,
+                    color: AppTheme.softRose,
+                  ),
+                ),
+              ],
             ),
           ),
-          SizedBox(height: 7),
           Text(
-            'عند إرسال تصميم جديد سيظهر هنا مع حالته وتفاصيل آخر تحديث.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: 'Cairo',
-              fontSize: 12,
+            design.price.toStringAsFixed(2),
+            textDirection: TextDirection.ltr,
+            style: const TextStyle(
+              fontFamily: AppTheme.fontTechnical,
+              fontSize: 14,
               color: AppTheme.mutedIvory,
-              height: 1.8,
             ),
           ),
         ],
@@ -286,7 +384,7 @@ class _OverviewItem extends StatelessWidget {
         Text(
           value,
           style: const TextStyle(
-            fontFamily: 'Inter',
+            fontFamily: AppTheme.fontTechnical,
             fontSize: 20,
             fontWeight: FontWeight.w700,
             color: AppTheme.warmIvory,
@@ -297,7 +395,7 @@ class _OverviewItem extends StatelessWidget {
           label,
           textAlign: TextAlign.center,
           style: const TextStyle(
-            fontFamily: 'Cairo',
+            fontFamily: AppTheme.fontArabic,
             fontSize: 10,
             color: AppTheme.mutedIvory,
           ),

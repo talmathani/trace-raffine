@@ -1,4 +1,4 @@
-﻿import '../../domain/entities/app_notification.dart';
+import '../../domain/entities/app_notification.dart';
 
 class AppNotificationModel extends AppNotification {
   const AppNotificationModel({
@@ -17,7 +17,9 @@ class AppNotificationModel extends AppNotification {
       title: json['title'] ?? '',
       body: json['body'],
       isRead: json['is_read'] ?? false,
-      createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at']) : null,
+      createdAt: json['created_at'] != null
+          ? DateTime.tryParse(json['created_at'])
+          : null,
     );
   }
 }

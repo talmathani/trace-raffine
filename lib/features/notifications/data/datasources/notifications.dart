@@ -1,1 +1,1 @@
-﻿class NotificationDataSource {}
+class NotificationDataSource {}

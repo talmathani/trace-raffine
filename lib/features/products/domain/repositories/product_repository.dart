@@ -1,7 +1,11 @@
-﻿import '../entities/product.dart';
+import '../entities/product.dart';
 
 abstract class ProductRepository {
-  Future<List<Product>> getProducts({int limit = 20, int offset = 0});
+  Future<List<Product>> getProducts({
+    int limit = 20,
+    int offset = 0,
+    String? categoryId,
+  });
   Future<Product?> getProductById(String id);
   Future<List<Product>> getProductsByDesigner(String designerId);
   Future<Product> createProduct(Product product);

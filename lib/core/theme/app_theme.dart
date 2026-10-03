@@ -33,12 +33,150 @@ class AppTheme {
   static const Color warmIvory = Color(0xFFF3ECE8);
 
   static const Color mutedIvory = Color(0xFFD6C9CD);
+  static const Color cardSurface = Color(0xFF241017);
+  static const Color secondarySurface = Color(0xFF2A1017);
+
+  static const Color secondaryText = Color(0xFFBFA9AE);
+
+  static const Color editorialIvory = Color(0xFFE8D6C5);
+
+  static const Color imagePlaceholder = Color(0xFF722F37);
 
   static const Color mutedText = Color(0xFFA9979E);
 
   static const Color divider = Color(0xFF3A202B);
+  static const Color productAccent = Color(0xFFC28A9A);
+
+  static const Color unavailableRose = Color(0xFFE8A0A8);
+  static const Color statusSuccess = Color(0xFF75B798);
+  static const Color statusRejected = Color(0xFFD47A7A);
 
   // ---------------------------------------------------------------------------
+  // Design Tokens
+  //
+  // Central spatial, surface, typography, radius, and touch language.
+  // Existing public color tokens above remain unchanged for compatibility.
+
+  // Spacing
+  static const double spaceXs = 4;
+  static const double spaceSm = 8;
+  static const double spaceMd = 12;
+  static const double spaceLg = 16;
+  static const double spaceXl = 24;
+  static const double space2Xl = 32;
+  static const double space3Xl = 48;
+  static const double space4Xl = 64;
+
+  // Layout
+  static const double pageHorizontal = 20;
+  static const double sectionGap = 32;
+  static const double contentMaxWidth = 760;
+
+  // Radii
+  static const double radiusSm = 10;
+  static const double radiusMd = 14;
+  static const double radiusLg = 18;
+  static const double radiusXl = 22;
+  static const double radiusEditorial = 28;
+
+  // Touch Targets
+  static const double touchTargetMin = 48;
+  static const double touchTargetComfort = 52;
+
+  // Typography
+  static const String fontArabic = 'Cairo';
+  static const String fontEditorial = 'CormorantGaramond';
+  static const String fontTechnical = 'Inter';
+
+  static const TextStyle editorialDisplay = TextStyle(
+    fontFamily: fontEditorial,
+    fontSize: 42,
+    fontWeight: FontWeight.w600,
+    color: warmIvory,
+    height: 1.05,
+    letterSpacing: 0.4,
+  );
+
+  static const TextStyle editorialTitle = TextStyle(
+    fontFamily: fontEditorial,
+    fontSize: 30,
+    fontWeight: FontWeight.w600,
+    color: warmIvory,
+    height: 1.12,
+    letterSpacing: 0.25,
+  );
+
+  static const TextStyle arabicTitle = TextStyle(
+    fontFamily: fontArabic,
+    fontSize: 22,
+    fontWeight: FontWeight.w700,
+    color: warmIvory,
+    height: 1.3,
+  );
+
+  static const TextStyle arabicBody = TextStyle(
+    fontFamily: fontArabic,
+    fontSize: 14,
+    fontWeight: FontWeight.w400,
+    color: mutedIvory,
+    height: 1.65,
+  );
+
+  static const TextStyle technical = TextStyle(
+    fontFamily: fontTechnical,
+    fontSize: 13,
+    fontWeight: FontWeight.w500,
+    color: warmIvory,
+    height: 1.4,
+  );
+
+  // Login-derived editorial tokens
+  //
+  // These values are extracted from the protected Login screen and become
+  // centralized design tokens for the rest of the Maison.
+  //
+  // Login remains the visual source of truth; this block does not modify it.
+
+  // Editorial Typography
+  static const double editorialHeroSize = 58;
+  static const double editorialHeroCompactSize = 42;
+  static const double editorialSectionSize = 28;
+  static const double editorialCompactSize = 16;
+
+  // Arabic Typography
+  static const double arabicLargeSize = 19;
+  static const double arabicBodySize = 16;
+  static const double arabicMediumSize = 14;
+  static const double arabicSmallSize = 13;
+  static const double arabicMetaSize = 11.5;
+  static const double arabicMicroSize = 10.5;
+
+  // Editorial Geometry
+  static const double controlHeight = 56;
+  static const double compactControlHeight = 54;
+  static const double editorialPanelRadius = 26;
+  static const double editorialControlRadius = 24;
+  static const double editorialFieldRadius = 14;
+  static const double editorialListRadius = 16;
+
+  // Login-derived spacing
+  static const double spaceLoginXs = 5;
+  static const double spaceLoginSm = 10;
+  static const double spaceLoginMd = 12;
+  static const double spaceLoginLg = 18;
+  static const double spaceLoginXl = 24;
+  static const double spaceLogin2Xl = 34;
+  static const double spaceLogin3Xl = 42;
+
+  // Editorial Motion
+  static const Duration editorialFast = Duration(milliseconds: 220);
+  static const Duration editorialReveal = Duration(milliseconds: 300);
+  static const Duration editorialFluid = Duration(milliseconds: 420);
+  // Semantic Surfaces
+  static const Color surfacePrimary = obsidian;
+  static const Color surfaceSecondary = burgundyBlack;
+  static const Color surfaceElevated = deepBurgundy;
+  static const Color surfaceAccent = primaryBurgundy;
   // Color Scheme
   // ---------------------------------------------------------------------------
 
@@ -80,77 +218,77 @@ class AppTheme {
   static const TextTheme textTheme = TextTheme(
     displayLarge: TextStyle(
       fontFamily: 'Cairo',
-      fontSize: 34,
+      fontSize: 28,
       fontWeight: FontWeight.w700,
       color: warmIvory,
       height: 1.25,
     ),
     displayMedium: TextStyle(
       fontFamily: 'Cairo',
-      fontSize: 30,
+      fontSize: 28,
       fontWeight: FontWeight.w700,
       color: warmIvory,
       height: 1.25,
     ),
     displaySmall: TextStyle(
       fontFamily: 'Cairo',
-      fontSize: 26,
+      fontSize: 22,
       fontWeight: FontWeight.w700,
       color: warmIvory,
       height: 1.3,
     ),
     headlineLarge: TextStyle(
       fontFamily: 'Cairo',
-      fontSize: 24,
+      fontSize: 22,
       fontWeight: FontWeight.w700,
       color: warmIvory,
       height: 1.3,
     ),
     headlineMedium: TextStyle(
       fontFamily: 'Cairo',
-      fontSize: 21,
+      fontSize: 17,
       fontWeight: FontWeight.w700,
       color: warmIvory,
       height: 1.35,
     ),
     headlineSmall: TextStyle(
       fontFamily: 'Cairo',
-      fontSize: 19,
+      fontSize: 17,
       fontWeight: FontWeight.w600,
       color: warmIvory,
       height: 1.4,
     ),
     titleLarge: TextStyle(
       fontFamily: 'Cairo',
-      fontSize: 18,
+      fontSize: 17,
       fontWeight: FontWeight.w700,
       color: warmIvory,
       height: 1.4,
     ),
     titleMedium: TextStyle(
       fontFamily: 'Cairo',
-      fontSize: 16,
+      fontSize: 13,
       fontWeight: FontWeight.w600,
       color: warmIvory,
       height: 1.45,
     ),
     titleSmall: TextStyle(
       fontFamily: 'Cairo',
-      fontSize: 14,
+      fontSize: 13,
       fontWeight: FontWeight.w600,
       color: warmIvory,
       height: 1.45,
     ),
     bodyLarge: TextStyle(
       fontFamily: 'Cairo',
-      fontSize: 16,
+      fontSize: 13,
       fontWeight: FontWeight.w400,
       color: warmIvory,
       height: 1.6,
     ),
     bodyMedium: TextStyle(
       fontFamily: 'Cairo',
-      fontSize: 14,
+      fontSize: 13,
       fontWeight: FontWeight.w400,
       color: mutedIvory,
       height: 1.6,
@@ -164,7 +302,7 @@ class AppTheme {
     ),
     labelLarge: TextStyle(
       fontFamily: 'Cairo',
-      fontSize: 14,
+      fontSize: 13,
       fontWeight: FontWeight.w600,
       color: warmIvory,
       height: 1.4,
@@ -206,7 +344,7 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
         titleTextStyle: TextStyle(
           fontFamily: 'Cairo',
-          fontSize: 18,
+          fontSize: 17,
           fontWeight: FontWeight.w700,
           color: warmIvory,
         ),
@@ -219,6 +357,7 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(18)),
+          side: BorderSide(color: divider),
         ),
       ),
 
@@ -229,34 +368,25 @@ class AppTheme {
       ),
 
       inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: burgundyBlack,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 18,
-          vertical: 16,
+        filled: false,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 2, vertical: 13),
+        border: const UnderlineInputBorder(
+          borderSide: BorderSide(color: divider),
         ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: divider),
+        enabledBorder: const UnderlineInputBorder(
+          borderSide: BorderSide(color: divider),
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: divider),
+        focusedBorder: const UnderlineInputBorder(
+          borderSide: BorderSide(color: roseBurgundy, width: 1.4),
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: roseBurgundy, width: 1.4),
+        errorBorder: const UnderlineInputBorder(
+          borderSide: BorderSide(color: Color(0xFFE57373)),
         ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFFE57373)),
+        focusedErrorBorder: const UnderlineInputBorder(
+          borderSide: BorderSide(color: Color(0xFFE57373), width: 1.4),
         ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFFE57373), width: 1.4),
-        ),
-        hintStyle: const TextStyle(fontFamily: 'Cairo', color: mutedText),
-        labelStyle: const TextStyle(fontFamily: 'Cairo', color: mutedIvory),
+        hintStyle: TextStyle(fontFamily: 'Cairo', color: mutedText),
+        labelStyle: TextStyle(fontFamily: 'Cairo', color: mutedIvory),
       ),
 
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -264,14 +394,14 @@ class AppTheme {
           backgroundColor: richBurgundy,
           foregroundColor: warmIvory,
           elevation: 0,
-          minimumSize: const Size(0, 52),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          minimumSize: const Size(0, 46),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
           textStyle: const TextStyle(
             fontFamily: 'Cairo',
-            fontSize: 15,
+            fontSize: 13,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -280,15 +410,15 @@ class AppTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: warmIvory,
-          minimumSize: const Size(0, 52),
+          minimumSize: const Size(0, 46),
           side: const BorderSide(color: roseBurgundy, width: 1),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
           textStyle: const TextStyle(
             fontFamily: 'Cairo',
-            fontSize: 15,
+            fontSize: 13,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -299,24 +429,89 @@ class AppTheme {
           foregroundColor: softRose,
           textStyle: const TextStyle(
             fontFamily: 'Cairo',
-            fontSize: 14,
+            fontSize: 13,
             fontWeight: FontWeight.w600,
           ),
         ),
       ),
 
-      navigationBarTheme: const NavigationBarThemeData(
-        backgroundColor: burgundyBlack,
-        elevation: 0,
-        indicatorColor: deepBurgundy,
-        labelTextStyle: WidgetStatePropertyAll(
-          TextStyle(
-            fontFamily: 'Cairo',
-            fontSize: 11,
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: richBurgundy,
+          foregroundColor: warmIvory,
+          disabledBackgroundColor: deepBurgundy,
+          disabledForegroundColor: mutedText,
+          elevation: 0,
+          minimumSize: const Size(0, 46),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          textStyle: const TextStyle(
+            fontFamily: fontArabic,
+            fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: warmIvory,
           ),
         ),
+      ),
+
+      chipTheme: ChipThemeData(
+        backgroundColor: burgundyBlack,
+        selectedColor: deepBurgundy,
+        disabledColor: obsidian,
+        side: const BorderSide(color: divider),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        labelStyle: const TextStyle(
+          fontFamily: fontArabic,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: mutedIvory,
+        ),
+        secondaryLabelStyle: const TextStyle(
+          fontFamily: fontArabic,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: warmIvory,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      ),
+
+      iconButtonTheme: IconButtonThemeData(
+        style: IconButton.styleFrom(
+          foregroundColor: mutedIvory,
+          minimumSize: const Size(touchTargetMin, touchTargetMin),
+          padding: const EdgeInsets.all(12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+      ),
+
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: obsidian,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        indicatorColor: deepBurgundy,
+        indicatorShape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(editorialControlRadius),
+          side: const BorderSide(color: divider),
+        ),
+        labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>((states) {
+          final selected = states.contains(WidgetState.selected);
+          return TextStyle(
+            fontFamily: 'Cairo',
+            fontSize: 11,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+            color: selected ? warmIvory : mutedIvory,
+          );
+        }),
+        iconTheme: WidgetStateProperty.resolveWith<IconThemeData>((states) {
+          final selected = states.contains(WidgetState.selected);
+          return IconThemeData(
+            color: selected ? softRose : mutedIvory,
+            size: selected ? 23 : 21,
+          );
+        }),
       ),
 
       dialogTheme: const DialogThemeData(
@@ -333,7 +528,7 @@ class AppTheme {
         ),
         contentTextStyle: TextStyle(
           fontFamily: 'Cairo',
-          fontSize: 14,
+          fontSize: 13,
           color: mutedIvory,
           height: 1.6,
         ),
@@ -343,7 +538,7 @@ class AppTheme {
         backgroundColor: deepBurgundy,
         contentTextStyle: TextStyle(
           fontFamily: 'Cairo',
-          fontSize: 14,
+          fontSize: 13,
           color: warmIvory,
         ),
         behavior: SnackBarBehavior.floating,

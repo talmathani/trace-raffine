@@ -1,1 +1,1 @@
-﻿class PurchaseDataSource {}
+class PurchaseDataSource {}

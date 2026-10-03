@@ -1,10 +1,10 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
-import '../../core/guards/role_guard.dart';
-import '../../core/responsive/responsive.dart';
+import 'package:trace_raffine/core/guards/role_guard.dart';
+import 'package:trace_raffine/core/responsive/responsive.dart';
 import '../../domain/entities/user_role.dart';
 import '../account/account_screen.dart';
-import '../cart/presentation/screens/cart_screen.dart';
+import '../cart/cart_screen.dart';
 import '../home/shared_home_screen.dart';
 import '../purchases/presentation/screens/purchases_screen.dart';
 
@@ -29,12 +29,13 @@ class _CustomerNavigation extends StatefulWidget {
 
 class _CustomerNavigationState extends State<_CustomerNavigation> {
   int _currentIndex = 0;
+  int _cartRefreshKey = 0;
 
-  static const List<Widget> _pages = [
-    SharedHomeScreen(),
-    CartScreen(),
-    PurchasesScreen(),
-    AccountScreen(),
+  List<Widget> get _pages => [
+    const SharedHomeScreen(),
+    CartScreen(key: ValueKey('cart-$_cartRefreshKey')),
+    const PurchasesScreen(),
+    const AccountScreen(),
   ];
 
   static const List<AdaptiveNavigationItem> _destinations = [
@@ -71,13 +72,14 @@ class _CustomerNavigationState extends State<_CustomerNavigation> {
 
         setState(() {
           _currentIndex = index;
+
+          if (index == 1) {
+            _cartRefreshKey++;
+          }
         });
       },
       destinations: _destinations,
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _pages,
-      ),
+      body: IndexedStack(index: _currentIndex, children: _pages),
     );
   }
 }

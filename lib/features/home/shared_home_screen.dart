@@ -1,11 +1,10 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+
+import 'package:trace_raffine/core/motion/maison_motion.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/theme/app_theme.dart';
-import '../../core/ui/luxury_ui.dart';
-import '../products/presentation/controllers/product_list_controller.dart';
-import '../products/presentation/screens/products_screen.dart';
-import '../products/presentation/widgets/product_card.dart';
-import '../widgets/luxury_categories_header.dart';
+
+import 'package:trace_raffine/core/theme/app_theme.dart';
+import '../products/products_screen.dart';
 
 class SharedHomeScreen extends ConsumerStatefulWidget {
   const SharedHomeScreen({super.key});
@@ -15,441 +14,498 @@ class SharedHomeScreen extends ConsumerStatefulWidget {
 }
 
 class _SharedHomeScreenState extends ConsumerState<SharedHomeScreen> {
-
   static const List<HomeCategory> categories = [
     HomeCategory(
       title: 'فساتين السهرة والهوت كوتور',
-      subtitle: 'Evening Couture Designs',
+      subtitle: 'تصاميم السهرة الراقية',
       icon: Icons.checkroom_rounded,
       categoryId: 'evening_couture',
     ),
     HomeCategory(
       title: 'تصاميم الساري الهندي',
-      subtitle: 'Indian Saree Designs',
+      subtitle: 'تصاميم الساري الهندي',
       icon: Icons.auto_awesome_rounded,
       categoryId: 'saree',
     ),
     HomeCategory(
       title: 'العبايات والبالطوهات',
-      subtitle: 'Abayas & Coats',
+      subtitle: 'العبايات والمعاطف',
       icon: Icons.layers_rounded,
       categoryId: 'abayas',
     ),
     HomeCategory(
       title: 'الجلابيات والمخاور',
-      subtitle: 'Jalabiyas & Makhawer',
+      subtitle: 'الجلابيات والمخاوير',
       icon: Icons.pattern_rounded,
       categoryId: 'jalabiyas',
     ),
     HomeCategory(
       title: 'تصاميم موزعة',
-      subtitle: 'Distributed Designs',
+      subtitle: 'التصاميم الموزعة',
       icon: Icons.scatter_plot_rounded,
       categoryId: 'distributed',
     ),
     HomeCategory(
       title: 'تصاميم الحواشي',
-      subtitle: 'Border Designs',
-      icon: Icons.border_style_rounded,
+      subtitle: 'تصاميم الحواف',
       categoryId: 'borders',
+      icon: Icons.border_style_rounded,
     ),
     HomeCategory(
       title: 'الشعارات واللوغوهات',
-      subtitle: 'Logos & Symbols',
-      icon: Icons.diamond_rounded,
+      subtitle: 'الشعارات واللوغوهات',
       categoryId: 'logos',
+      icon: Icons.diamond_rounded,
     ),
     HomeCategory(
       title: 'جديد الأسبوع',
-      subtitle: 'New This Week',
-      icon: Icons.auto_awesome_mosaic_rounded,
+      subtitle: 'جديد هذا الأسبوع',
       categoryId: 'new_week',
+      icon: Icons.auto_awesome_mosaic_rounded,
     ),
   ];
+
+  // لا يوجد تحميل بيانات عند فتح الصفحة.
+  // المنتجات تُطلب فقط عندما يختار المستخدم قسمًا فعليًا.
+  @override
+  Widget build(BuildContext context) {
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        backgroundColor: AppTheme.obsidian,
+        body: _EditorialHero(
+          categories: categories,
+          onCategoryTap: (category) => _openCategory(context, category),
+        ),
+      ),
+    );
+  }
+
+  void _openCategory(BuildContext context, HomeCategory category) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ProductsScreen(
+          categoryId: category.categoryId,
+          categoryTitle: category.title,
+        ),
+      ),
+    );
+  }
+}
+
+class _EditorialHero extends StatefulWidget {
+  const _EditorialHero({required this.categories, required this.onCategoryTap});
+
+  final List<HomeCategory> categories;
+  final ValueChanged<HomeCategory> onCategoryTap;
+
+  @override
+  State<_EditorialHero> createState() => _EditorialHeroState();
+}
+
+class _EditorialHeroState extends State<_EditorialHero> {
+  bool _entered = false;
 
   @override
   void initState() {
     super.initState();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      ref.read(productListControllerProvider.notifier).loadProducts();
+      if (mounted) {
+        setState(() => _entered = true);
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.sizeOf(context).width;
-    final columns = width >= 1200
-        ? 4
-        : width >= 800
-        ? 3
-        : width >= 520
-        ? 2
-        : 1;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final height = MediaQuery.sizeOf(context).height;
 
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
-        backgroundColor: AppTheme.obsidian,
-        appBar: AppBar(title: const Text('الرئيسية')),
-        body: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(child: _buildHero()),
-            SliverToBoxAdapter(child: _buildNewsTicker()),
-            const SliverToBoxAdapter(child: _PublishedDesignsSection()),
-            const SliverToBoxAdapter(child: LuxuryCategoriesHeader(height: 82)),
-            SliverToBoxAdapter(child: _buildSectionHeader()),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 36),
-              sliver: SliverGrid(
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  final category = categories[index];
-                  return _CategoryCard(
-                    category: category,
-                    index: index,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ProductsScreen(
-                            categoryId: category.categoryId,
-                            categoryTitle: category.title,
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                }, childCount: categories.length),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: columns,
-                  crossAxisSpacing: 14,
-                  mainAxisSpacing: 14,
-                  childAspectRatio: columns == 1 ? 3.2 : 1.18,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+        final isMobile = width < 600;
+        final isTablet = width >= 600 && width < 1000;
 
-  Widget _buildHero() {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-      padding: const EdgeInsets.all(28),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topRight,
-          end: Alignment.bottomLeft,
-          colors: [
-            AppTheme.deepBurgundy,
-            AppTheme.burgundyBlack,
-            AppTheme.obsidian,
-          ],
-        ),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: AppTheme.divider),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.obsidian.withValues(alpha: 0.45),
-            blurRadius: 28,
-            offset: const Offset(0, 14),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+        final brandSize = isMobile
+            ? 14.0
+            : isTablet
+            ? 16.0
+            : 19.0;
+
+        return SizedBox(
+          width: double.infinity,
+          height: height,
+          child: Stack(
+            fit: StackFit.expand,
             children: [
-              Container(
-                width: 38,
-                height: 2,
-                decoration: BoxDecoration(
-                  color: AppTheme.softRose,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(width: 10),
-              const Text(
-                'DIGITAL EMBROIDERY',
-                textDirection: TextDirection.ltr,
-                style: TextStyle(
-                  fontFamily: 'CormorantGaramond',
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 2.8,
-                  color: AppTheme.softRose,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          const Text(
-            'TRACÉ RAFFINÉ',
-            textDirection: TextDirection.ltr,
-            style: TextStyle(
-              fontFamily: 'CormorantGaramond',
-              fontSize: 34,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 3.5,
-              color: AppTheme.warmIvory,
-            ),
-          ),
-          const SizedBox(height: 10),
-          const Text(
-            'عالم الحِرفة الرقمية',
-            style: TextStyle(
-              fontFamily: 'Cairo',
-              fontSize: 25,
-              fontWeight: FontWeight.w700,
-              color: AppTheme.warmIvory,
-            ),
-          ),
-          const SizedBox(height: 9),
-          const Text(
-            'اكتشف تصاميم التطريز الرقمي المختارة بعناية، واستكشف مجموعاتنا المتخصصة في مساحة واحدة.',
-            style: TextStyle(
-              fontFamily: 'Cairo',
-              fontSize: 13,
-              height: 1.8,
-              color: AppTheme.mutedIvory,
-            ),
-          ),
-          const SizedBox(height: 22),
-          Row(
-            children: [
-              const LuxuryBadge(
-                label: 'تصاميم احترافية',
-                icon: Icons.verified_rounded,
-              ),
-              const SizedBox(width: 8),
-              LuxuryBadge(
-                label: 'TR Collection',
-                icon: Icons.auto_awesome_rounded,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+              const _HeroPhotography(),
 
-  Widget _buildNewsTicker() {
-    return Container(
-      height: 48,
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      decoration: BoxDecoration(
-        color: AppTheme.burgundyBlack,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppTheme.divider),
-      ),
-      child: const Row(
-        children: [
-          SizedBox(width: 14),
-          LuxuryIcon(
-            icon: Icons.campaign_outlined,
-            size: 17,
-            background: AppTheme.deepBurgundy,
-            borderRadius: 9,
-          ),
-          SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              'اكتشف أحدث التصاميم والمجموعات الجديدة في TRACÉ RAFFINÉ',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontFamily: 'Cairo',
-                fontSize: 12,
-                color: AppTheme.mutedIvory,
-              ),
-            ),
-          ),
-          SizedBox(width: 14),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSectionHeader() {
-    return const Padding(
-      padding: EdgeInsets.fromLTRB(20, 30, 20, 16),
-      child: LuxurySectionHeader(
-        title: 'الأقسام',
-        subtitle: 'استكشف مجموعات التطريز الرقمي',
-        trailing: LuxuryIcon(
-          icon: Icons.auto_awesome_rounded,
-          size: 18,
-          background: AppTheme.deepBurgundy,
-          borderRadius: 10,
-        ),
-      ),
-    );
-  }
-}
-
-class _CategoryCard extends StatelessWidget {
-  const _CategoryCard({
-    required this.category,
-    required this.index,
-    required this.onTap,
-  });
-  final HomeCategory category;
-  final int index;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return LuxuryCard(
-      padding: EdgeInsets.zero,
-      borderRadius: 20,
-      onTap: onTap,
-      hoverLift: true,
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Row(
-          children: [
-            _LuxuryCategoryIcon(icon: category.icon, index: index),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    category.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontFamily: 'Cairo',
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.warmIvory,
-                      height: 1.5,
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                        colors: [
+                          AppTheme.obsidian.withValues(alpha: 0.84),
+                          AppTheme.obsidian.withValues(alpha: 0.34),
+                          Colors.transparent,
+                        ],
+                        stops: const [0.0, 0.30, 0.68],
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    category.subtitle,
-                    textDirection: TextDirection.ltr,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontFamily: 'CormorantGaramond',
-                      fontSize: 12,
-                      color: AppTheme.softRose,
-                      letterSpacing: 0.7,
+                ),
+              ),
+
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                        colors: [
+                          AppTheme.obsidian.withValues(alpha: 0.70),
+                          Colors.transparent,
+                        ],
+                        stops: const [0.0, 0.42],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              Stack(
+                fit: StackFit.expand,
+                children: [
+                  Positioned(
+                    left: isMobile
+                        ? (24 - width * 0.10).clamp(16.0, double.infinity)
+                        : isTablet
+                        ? (46 - width * 0.10).clamp(16.0, double.infinity)
+                        : width >= 1400
+                        ? (86 - width * 0.10).clamp(24.0, double.infinity)
+                        : (68 - width * 0.10).clamp(24.0, double.infinity),
+                    top: height * 0.10,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: isMobile
+                            ? width * 0.62
+                            : isTablet
+                            ? 390
+                            : 430,
+                      ),
+                      child: AnimatedOpacity(
+                        duration: const Duration(milliseconds: 1100),
+                        curve: MaisonMotion.easeOut,
+                        opacity: _entered ? 1 : 0,
+                        child: AnimatedSlide(
+                          duration: const Duration(milliseconds: 1100),
+                          curve: MaisonMotion.easeOut,
+                          offset: _entered
+                              ? Offset.zero
+                              : const Offset(-0.035, 0),
+                          child: _EditorialHeroContent(
+                            isMobile: isMobile,
+                            categories: widget.categories,
+                            onCategoryTap: widget.onCategoryTap,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: isMobile ? 22 : 34,
+                    right: isMobile
+                        ? 18
+                        : isTablet
+                        ? 28
+                        : 48,
+                    child: AnimatedOpacity(
+                      duration: const Duration(milliseconds: 1300),
+                      curve: MaisonMotion.easeOut,
+                      opacity: _entered ? 0.88 : 0,
+                      child: _RightBrandMark(
+                        fontSize: brandSize,
+                        compact: isMobile,
+                      ),
                     ),
                   ),
                 ],
               ),
-            ),
-            const SizedBox(width: 8),
-            const Icon(
-              Icons.chevron_left_rounded,
-              color: AppTheme.mutedText,
-              size: 20,
-            ),
-          ],
-        ),
-      ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
 
-class _LuxuryCategoryIcon extends StatelessWidget {
-  const _LuxuryCategoryIcon({required this.icon, required this.index});
-  final IconData icon;
-  final int index;
+class _HeroPhotography extends StatelessWidget {
+  const _HeroPhotography();
 
   @override
   Widget build(BuildContext context) {
-    final opacity = 0.10 + ((index % 4) * 0.025);
-    return Container(
-      width: 56,
-      height: 56,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppTheme.softRose.withValues(alpha: opacity + 0.08),
-            AppTheme.deepBurgundy,
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.softRose.withValues(alpha: 0.20)),
-      ),
-      child: ShaderMask(
-        blendMode: BlendMode.srcIn,
-        shaderCallback: (bounds) => const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFE0B5BE), Color(0xFFC98F9C), Color(0xFF8F5968)],
-        ).createShader(bounds),
-        child: Icon(icon, size: 28),
+    return Image.asset(
+      'assets/images/IMG_4123.PNG',
+      fit: BoxFit.cover,
+      alignment: Alignment.centerRight,
+      filterQuality: FilterQuality.high,
+    );
+  }
+}
+
+class _RightBrandMark extends StatelessWidget {
+  const _RightBrandMark({required this.fontSize, required this.compact});
+
+  final double fontSize;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      'TRACÉ RAFFINÉ',
+      textDirection: TextDirection.ltr,
+      maxLines: 1,
+      softWrap: false,
+      overflow: TextOverflow.visible,
+      style: TextStyle(
+        fontFamily: AppTheme.fontEditorial,
+        fontSize: fontSize,
+        fontWeight: FontWeight.w600,
+        height: 1.0,
+        letterSpacing: compact ? 0.7 : 1.2,
+        color: AppTheme.warmIvory,
       ),
     );
   }
 }
 
-class _PublishedDesignsSection extends ConsumerWidget {
-  const _PublishedDesignsSection();
+class _EditorialHeroContent extends StatelessWidget {
+  const _EditorialHeroContent({
+    required this.isMobile,
+    required this.categories,
+    required this.onCategoryTap,
+  });
+
+  final bool isMobile;
+  final List<HomeCategory> categories;
+  final ValueChanged<HomeCategory> onCategoryTap;
+
+  static const List<String> _arabicLabels = <String>[
+    'فساتين السهرة',
+    'القوالب وفصوص الكرستال',
+    'العبايات والبالطوهات',
+    'الجلابيات والمخاوير',
+    'التصاميم الموزعة',
+    'تصاميم الحواشي',
+    'الشعارات واللوغوهات',
+    'جديد الأسبوع',
+  ];
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(productListControllerProvider);
+  Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const LuxurySectionHeader(
-            title: 'التصاميم المعروضة للبيع',
-            subtitle: 'تصاميم منشورة ومتاحة للاقتناء',
-            trailing: LuxuryIcon(
-              icon: Icons.shopping_bag_outlined,
-              size: 18,
-              background: AppTheme.deepBurgundy,
-              borderRadius: 10,
-            ),
-          ),
-          const SizedBox(height: 14),
-          if (state.isLoading && state.products.isEmpty)
-            const SizedBox(
-              height: 260,
-              child: Center(child: CircularProgressIndicator()),
-            )
-          else if (state.error != null && state.products.isEmpty)
-            SizedBox(
-              height: 120,
-              child: Center(child: Text('تعذر تحميل التصاميم المعروضة.')),
-            )
-          else if (state.products.isEmpty)
-            const SizedBox(
-              height: 120,
-              child: Center(child: Text('لا توجد تصاميم منشورة للبيع حاليًا.')),
-            )
-          else
-            SizedBox(
-              height: 290,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: state.products.length,
-                separatorBuilder: (_, _) => const SizedBox(width: 14),
-                itemBuilder: (context, index) {
-                  final product = state.products[index];
-                  return SizedBox(
-                    width: 220,
-                    child: ProductCard(product: product),
-                  );
-                },
+    final visibleCategories = categories.take(8).toList(growable: false);
+
+    final indexWidth = width * 0.35;
+
+    return SizedBox(
+      width: indexWidth,
+      child: ClipRect(
+        child: _FashionIndexPanel(
+          categories: visibleCategories,
+          labels: _arabicLabels,
+          isMobile: isMobile,
+          onCategoryTap: onCategoryTap,
+        ),
+      ),
+    );
+  }
+}
+
+class _FashionIndexPanel extends StatefulWidget {
+  const _FashionIndexPanel({
+    required this.categories,
+    required this.labels,
+    required this.isMobile,
+    required this.onCategoryTap,
+  });
+
+  final List<HomeCategory> categories;
+  final List<String> labels;
+  final bool isMobile;
+  final ValueChanged<HomeCategory> onCategoryTap;
+
+  @override
+  State<_FashionIndexPanel> createState() => _FashionIndexPanelState();
+}
+
+class _FashionIndexPanelState extends State<_FashionIndexPanel> {
+  @override
+  Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.sizeOf(context).height;
+    final panelHeight = screenHeight * (widget.isMobile ? 0.72 : 0.78);
+    final horizontalPadding = widget.isMobile ? 0.0 : 2.0;
+
+    return SizedBox(
+      height: panelHeight,
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'عوالم التصميم الراقية',
+              textDirection: TextDirection.rtl,
+              style: TextStyle(
+                fontFamily: AppTheme.fontArabic,
+                fontSize: widget.isMobile ? 15.0 : 19.0,
+                fontWeight: FontWeight.w700,
+                height: 1.15,
+                color: AppTheme.warmIvory,
               ),
             ),
-        ],
+            const SizedBox(height: 7),
+            Text(
+              'ثمانية عوالم تجمع فساتين السهرة والساري والعبايات والجلابيات والزخارف والشعارات وأحدث التصاميم.',
+              textDirection: TextDirection.rtl,
+              maxLines: widget.isMobile ? 3 : 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontFamily: AppTheme.fontArabic,
+                fontSize: widget.isMobile ? 9.0 : AppTheme.arabicMetaSize,
+                fontWeight: FontWeight.w400,
+                height: 1.65,
+                color: AppTheme.warmIvory.withValues(alpha: 0.66),
+              ),
+            ),
+            const SizedBox(height: 13),
+            Container(
+              width: double.infinity,
+              height: 0.6,
+              color: AppTheme.warmIvory.withValues(alpha: 0.34),
+            ),
+            SizedBox(height: screenHeight * 0.10),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: List.generate(
+                  widget.categories.length,
+                  (index) => _FashionIndexEntry(
+                    index: index,
+                    editorialLabel: widget.labels[index],
+                    category: widget.categories[index],
+                    isMobile: widget.isMobile,
+                    onTap: () => widget.onCategoryTap(widget.categories[index]),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FashionIndexEntry extends StatefulWidget {
+  const _FashionIndexEntry({
+    required this.index,
+    required this.editorialLabel,
+    required this.category,
+    required this.isMobile,
+    required this.onTap,
+  });
+
+  final int index;
+  final String editorialLabel;
+  final HomeCategory category;
+  final bool isMobile;
+  final VoidCallback onTap;
+
+  @override
+  State<_FashionIndexEntry> createState() => _FashionIndexEntryState();
+}
+
+class _FashionIndexEntryState extends State<_FashionIndexEntry> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final categoryFontSize = widget.isMobile ? 15.5 : 19.5;
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) {
+        if (!widget.isMobile && mounted) {
+          setState(() => _hovered = true);
+        }
+      },
+      onExit: (_) {
+        if (!widget.isMobile && mounted) {
+          setState(() => _hovered = false);
+        }
+      },
+      child: Semantics(
+        button: true,
+        label: widget.category.title,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: widget.onTap,
+          child: AnimatedContainer(
+            duration: MaisonMotion.editorialInteraction,
+            curve: MaisonMotion.easeOut,
+            transform: Matrix4.translationValues(
+              _hovered ? 12.0 : 0.0,
+              _hovered ? -1.0 : 0.0,
+              0.0,
+            ),
+            padding: EdgeInsets.symmetric(
+              vertical: widget.isMobile ? 5.0 : 6.5,
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: AnimatedScale(
+                    scale: _hovered ? 1.07 : 1.0,
+                    alignment: Alignment.centerLeft,
+                    duration: MaisonMotion.editorialInteraction,
+                    curve: MaisonMotion.easeOut,
+                    child: AnimatedDefaultTextStyle(
+                      duration: MaisonMotion.editorialInteraction,
+                      curve: MaisonMotion.easeOut,
+                      style: TextStyle(
+                        fontFamily: AppTheme.fontArabic,
+                        fontSize: categoryFontSize,
+                        fontWeight: _hovered
+                            ? FontWeight.w700
+                            : FontWeight.w600,
+                        height: 1.25,
+                        color: AppTheme.warmIvory.withValues(
+                          alpha: _hovered ? 1.0 : 0.88,
+                        ),
+                      ),
+                      child: Text(
+                        widget.editorialLabel,
+                        textDirection: TextDirection.rtl,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -462,10 +518,9 @@ class HomeCategory {
     required this.icon,
     required this.categoryId,
   });
+
   final String title;
   final String subtitle;
   final IconData icon;
   final String categoryId;
 }
-
-

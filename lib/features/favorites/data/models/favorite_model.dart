@@ -1,4 +1,4 @@
-﻿import '../../domain/entities/favorite.dart';
+import '../../domain/entities/favorite.dart';
 
 class FavoriteModel extends Favorite {
   const FavoriteModel({
@@ -13,7 +13,9 @@ class FavoriteModel extends Favorite {
       id: json['\$id'],
       userId: json['user_id'] ?? '',
       productId: json['product_id'] ?? '',
-      createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at']) : null,
+      createdAt: json['created_at'] != null
+          ? DateTime.tryParse(json['created_at'])
+          : null,
     );
   }
 }

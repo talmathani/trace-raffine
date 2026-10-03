@@ -1,75 +1,86 @@
-import '../../../../core/appwrite/appwrite_database_constants.dart';
-import '../../../../core/appwrite/appwrite_database_service.dart';
+import 'package:trace_raffine/core/appwrite/appwrite_service.dart';
+import 'package:trace_raffine/core/functions/function_invoker.dart';
 import '../../domain/entities/order.dart';
 import '../../domain/repositories/order_repository.dart';
 import '../models/order_model.dart';
 
 class OrderRepositoryImpl implements OrderRepository {
-  final AppwriteDatabaseService _databaseService;
+  final FunctionInvoker _functionInvoker;
 
-  OrderRepositoryImpl(this._databaseService);
+  OrderRepositoryImpl({FunctionInvoker? functionInvoker})
+    : _functionInvoker = functionInvoker ?? FunctionInvoker.create();
 
   @override
   Future<List<Order>> getOrders(String userId) async {
-    final response = await _databaseService.listDocuments(
-      collectionId: AppwriteDatabaseConstants.ordersCollection,
-    );
-    return response.documents
-        .map((doc) => OrderModel.fromJson({...doc.data, 'id': doc.$id}))
-        .toList();
+    final result = await _functionInvoker.listOrders(userId: userId);
+    if (result['success'] != true) {
+      throw StateError(result['error']?.toString() ?? 'Unable to load orders.');
+    }
+
+    final orders = result['orders'];
+    if (orders is! List) return const <Order>[];
+
+    return orders
+        .whereType<Map>()
+        .map((raw) {
+          final data = raw['data'] is Map
+              ? Map<String, dynamic>.from(raw['data'] as Map)
+              : Map<String, dynamic>.from(raw);
+          final id = raw['\$id']?.toString() ?? raw['id']?.toString();
+          if (id != null && id.isNotEmpty) data['\$id'] = id;
+          return OrderModel.fromJson(data);
+        })
+        .toList(growable: false);
   }
 
   @override
   Future<Order?> getOrderById(String orderId) async {
-    try {
-      final doc = await _databaseService.getDocument(
-        collectionId: AppwriteDatabaseConstants.ordersCollection,
-        documentId: orderId,
-      );
-      return OrderModel.fromJson({...doc.data, 'id': doc.$id});
-    } catch (_) {
-      return null;
-    }
+    final userId = (await AppwriteService.account.get()).$id;
+    if (userId.isEmpty) return null;
+
+    final result = await _functionInvoker.getOrder(
+      userId: userId,
+      orderId: orderId,
+    );
+    if (result['success'] != true) return null;
+
+    final raw = result['order'];
+    if (raw is! Map) return null;
+    final data = raw['data'] is Map
+        ? Map<String, dynamic>.from(raw['data'] as Map)
+        : Map<String, dynamic>.from(raw);
+    final id = raw['\$id']?.toString() ?? raw['id']?.toString() ?? orderId;
+    data['\$id'] = id;
+    return OrderModel.fromJson(data);
   }
 
   @override
-  Future<Order> createOrder(Order order) async {
-    final model = OrderModel(
-      id: order.id,
+  Future<Order> createOrder(
+    Order order,
+    List<Map<String, dynamic>> items,
+  ) async {
+    final result = await _functionInvoker.createOrder(
       userId: order.userId,
-      totalAmount: order.totalAmount,
-      currency: order.currency,
-      paymentStatus: order.paymentStatus,
-      orderStatus: order.orderStatus,
-      createdAt: order.createdAt,
-      completedAt: order.completedAt,
+      items: items,
+      currency: order.currency ?? 'USD',
     );
 
-    final doc = await _databaseService.createDocument(
-      collectionId: AppwriteDatabaseConstants.ordersCollection,
-      data: {
-        'user_id': model.userId,
-        'total_amount': model.totalAmount,
-        'currency': model.currency,
-        'payment_status': model.paymentStatus,
-        'order_status': model.orderStatus,
-        'created_at': model.createdAt?.toIso8601String(),
-        'completed_at': model.completedAt?.toIso8601String(),
-      },
-      documentId: model.id != null && model.id!.isNotEmpty ? model.id : null,
-    );
+    if (result['success'] != true) {
+      throw StateError(result['error']?.toString() ?? 'Order creation failed.');
+    }
 
-    return OrderModel.fromJson({...doc.data, 'id': doc.$id});
-  }
+    final orderId = result['orderId']?.toString().trim() ?? '';
+    if (orderId.isEmpty) {
+      throw StateError('Order creation succeeded without an orderId.');
+    }
 
-  @override
-  Future<void> updateOrderStatus(String orderId, String status) async {
-    await _databaseService.updateDocument(
-      collectionId: AppwriteDatabaseConstants.ordersCollection,
-      documentId: orderId,
-      data: {
-        'order_status': status,
-      },
-    );
+    final createdOrder = await getOrderById(orderId);
+    if (createdOrder == null) {
+      throw StateError(
+        'Order $orderId was created but could not be read back.',
+      );
+    }
+
+    return createdOrder;
   }
 }

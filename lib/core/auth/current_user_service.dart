@@ -1,4 +1,4 @@
-﻿import 'package:appwrite/models.dart' as models;
+import 'package:appwrite/models.dart' as models;
 import '../appwrite/appwrite_service.dart';
 
 abstract final class CurrentUserService {

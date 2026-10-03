@@ -1,4 +1,4 @@
-﻿class Review {
+class Review {
   final String? id;
   final String userId;
   final String productId;
@@ -31,7 +31,9 @@
       productId: json['product_id'] ?? '',
       rating: json['rating'] ?? 0,
       reviewText: json['review_text'],
-      createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at']) : null,
+      createdAt: json['created_at'] != null
+          ? DateTime.tryParse(json['created_at'])
+          : null,
     );
   }
 }

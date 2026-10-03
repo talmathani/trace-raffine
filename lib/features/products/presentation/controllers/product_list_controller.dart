@@ -1,4 +1,4 @@
-﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/product.dart';
 import '../../domain/repositories/product_repository.dart';
 import '../providers/product_providers.dart';
@@ -37,51 +37,74 @@ class ProductListState {
 
 class ProductListController extends StateNotifier<ProductListState> {
   final ProductRepository repository;
+  String? _categoryId;
+  String _sortBy = 'newest';
 
   ProductListController(this.repository) : super(const ProductListState());
 
-  Future<void> loadProducts({String? categoryId, String sortBy = 'newest'}) async {
-    state = state.copyWith(isLoading: true, error: null);
+  Future<void> loadProducts({
+    String? categoryId,
+    String sortBy = 'newest',
+  }) async {
+    _categoryId = categoryId;
+    _sortBy = sortBy;
+    state = state.copyWith(
+      isLoading: true,
+      error: null,
+      products: const [],
+      offset: 0,
+      hasMore: true,
+    );
     try {
-      final products = await repository.getProducts(limit: 20, offset: 0);
-      
-      var filtered = products;
-      if (categoryId != null) {
-        filtered = products.where((p) => p.categoryId == categoryId).toList();
-      }
-      
-      filtered.sort((a, b) {
-        switch (sortBy) {
-          case 'price_high':
-            return b.price.compareTo(a.price);
-          case 'price_low':
-            return a.price.compareTo(b.price);
-          case 'newest':
-          default:
-            return (b.createdAt ?? DateTime(0)).compareTo(a.createdAt ?? DateTime(0));
-        }
-      });
+      final products = await repository.getProducts(
+        limit: 20,
+        offset: 0,
+        categoryId: _categoryId,
+      );
+
+      _sort(products);
 
       state = state.copyWith(
-        products: filtered,
+        products: products,
         isLoading: false,
-        offset: 20,
-        hasMore: filtered.length == 20,
+        offset: products.length,
+        hasMore: products.length == 20,
       );
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
+  void _sort(List<Product> products) {
+    products.sort((a, b) {
+      switch (_sortBy) {
+        case 'price_high':
+          return b.price.compareTo(a.price);
+        case 'price_low':
+          return a.price.compareTo(b.price);
+        case 'newest':
+        default:
+          return (b.createdAt ?? DateTime(0)).compareTo(
+            a.createdAt ?? DateTime(0),
+          );
+      }
+    });
+  }
+
   Future<void> loadMore() async {
     if (state.isLoading || !state.hasMore) return;
     state = state.copyWith(isLoading: true);
     try {
-      final products = await repository.getProducts(limit: 20, offset: state.offset);
+      final products = await repository.getProducts(
+        limit: 20,
+        offset: state.offset,
+        categoryId: _categoryId,
+      );
+      _sort(products);
       state = state.copyWith(
         products: [...state.products, ...products],
         isLoading: false,
-        offset: state.offset + 20,
+        offset: state.offset + products.length,
         hasMore: products.length == 20,
       );
     } catch (e) {
@@ -100,6 +123,7 @@ class ProductListController extends StateNotifier<ProductListState> {
   }
 }
 
-final productListControllerProvider = StateNotifierProvider<ProductListController, ProductListState>((ref) {
-  return ProductListController(ref.watch(productRepositoryProvider));
-});
+final productListControllerProvider =
+    StateNotifierProvider<ProductListController, ProductListState>((ref) {
+      return ProductListController(ref.watch(productRepositoryProvider));
+    });

@@ -1,4 +1,4 @@
-﻿class Order {
+class Order {
   final String? id;
   final String userId;
   final double totalAmount;
@@ -37,9 +37,12 @@
       currency: json['currency'],
       paymentStatus: json['payment_status'] ?? 'pending',
       orderStatus: json['status'] ?? json['order_status'] ?? 'pending',
-      createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at']) : null,
-      completedAt: json['completed_at'] != null ? DateTime.tryParse(json['completed_at']) : null,
+      createdAt: json['created_at'] != null
+          ? DateTime.tryParse(json['created_at'])
+          : null,
+      completedAt: json['completed_at'] != null
+          ? DateTime.tryParse(json['completed_at'])
+          : null,
     );
   }
 }
-

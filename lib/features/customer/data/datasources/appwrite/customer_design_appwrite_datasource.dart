@@ -1,13 +1,12 @@
-﻿import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart';
 
-import '../../../../../core/appwrite/appwrite_database_constants.dart';
-import '../../../../../core/appwrite/appwrite_database_service.dart';
+import 'package:trace_raffine/core/appwrite/appwrite_database_constants.dart';
+import 'package:trace_raffine/core/appwrite/appwrite_database_service.dart';
 
 class CustomerDesignAppwriteDataSource {
-  CustomerDesignAppwriteDataSource({
-    AppwriteDatabaseService? databaseService,
-  }) : _databaseService = databaseService ?? AppwriteDatabaseService();
+  CustomerDesignAppwriteDataSource({AppwriteDatabaseService? databaseService})
+    : _databaseService = databaseService ?? AppwriteDatabaseService();
 
   final AppwriteDatabaseService _databaseService;
 
@@ -39,18 +38,20 @@ class CustomerDesignAppwriteDataSource {
       documents.documents.map(_resolveDocument),
     );
 
-    return DocumentList(
-      total: documents.total,
-      documents: resolvedDocuments,
-    );
+    return DocumentList(total: documents.total, documents: resolvedDocuments);
   }
 
   Future<Document> _resolveDocument(Document document) async {
     final data = Map<String, dynamic>.from(document.data);
 
-    final coverImageFileId = _nullableString(
-      data['cover_image_url'],
-    );
+    final coverImageFileId = _nullableString(data['cover_image_url']);
+
+    // Customer clients must never receive designer identity or private file keys.
+    data.remove('designer_id');
+    data.remove('file_key');
+    data.remove('embroideryFilePath');
+    data.remove('embroideryFileUrl');
+    data['designer_id'] = '';
 
     data['designImagePath'] = coverImageFileId;
     data['designImageBytes'] = null;
@@ -66,16 +67,19 @@ class CustomerDesignAppwriteDataSource {
       data: data,
     );
   }
-  Future<Document> getDesign({
-    required String designId,
-  }) async {
+
+  Future<Document> getDesign({required String designId}) async {
     final document = await _databaseService.getDocument(
       collectionId: AppwriteDatabaseConstants.designsCollectionId,
       documentId: designId,
     );
+    if (document.data['status']?.toString().toLowerCase() != 'published') {
+      throw AppwriteException('Design is not publicly available', 403);
+    }
 
     return _resolveDocument(document);
   }
+
   String? _nullableString(dynamic value) {
     if (value == null) {
       return null;
@@ -90,14 +94,3 @@ class CustomerDesignAppwriteDataSource {
     return valueString;
   }
 }
-
-
-
-
-
-
-
-
-
-
-

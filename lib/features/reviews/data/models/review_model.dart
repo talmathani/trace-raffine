@@ -1,4 +1,4 @@
-﻿import '../../domain/entities/review.dart';
+import '../../domain/entities/review.dart';
 
 class ReviewModel extends Review {
   const ReviewModel({
@@ -17,7 +17,9 @@ class ReviewModel extends Review {
       productId: json['product_id'] ?? '',
       rating: json['rating'] ?? 0,
       reviewText: json['review_text'],
-      createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at']) : null,
+      createdAt: json['created_at'] != null
+          ? DateTime.tryParse(json['created_at'])
+          : null,
     );
   }
 }

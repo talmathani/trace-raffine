@@ -1,4 +1,4 @@
-﻿export 'domain/entities/purchase.dart';
+export 'domain/entities/purchase.dart';
 export 'domain/repositories/purchase_repository.dart';
 export 'data/datasources/purchase_data_source.dart';
 export 'data/models/purchase_model.dart';

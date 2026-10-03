@@ -1,4 +1,4 @@
-﻿export 'domain/entities/order.dart';
+export 'domain/entities/order.dart';
 export 'domain/repositories/order_repository.dart';
 export 'data/datasources/order_data_source.dart';
 export 'data/models/order_model.dart';

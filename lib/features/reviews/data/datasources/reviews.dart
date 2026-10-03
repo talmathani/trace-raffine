@@ -1,1 +1,1 @@
-﻿class ReviewDataSource {}
+class ReviewDataSource {}

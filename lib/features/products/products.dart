@@ -1,4 +1,4 @@
-﻿export 'domain/entities/product.dart';
+export 'domain/entities/product.dart';
 export 'domain/repositories/product_repository.dart';
 export 'data/datasources/product_data_source.dart';
 export 'data/models/product_model.dart';

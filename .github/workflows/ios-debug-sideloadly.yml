@@ -34,15 +34,7 @@ jobs:
       - name: Build unsigned Debug archive
         run: |
           set -e
-          xcodebuild \
-            -workspace ios/Runner.xcworkspace \
-            -scheme Runner \
-            -configuration Debug \
-            -sdk iphoneos \
-            -archivePath build/ios/debug/Runner.xcarchive \
-            archive \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO
+          xcodebuild             -workspace ios/Runner.xcworkspace             -scheme Runner             -configuration Debug             -sdk iphoneos             -archivePath build/ios/debug/Runner.xcarchive             archive             CODE_SIGNING_ALLOWED=NO             CODE_SIGNING_REQUIRED=NO
 
       - name: Package Debug IPA
         run: |
@@ -52,14 +44,14 @@ jobs:
           cp -R build/ios/debug/Runner.xcarchive/Products/Applications/Runner.app build/ios/debug/ipa/Payload/Runner.app
           cd build/ios/debug/ipa
           zip -qry Runner-Debug.ipa Payload
-          test -f Runner-Debug.ipa
+          test -s Runner-Debug.ipa
 
       - name: Verify Debug IPA contains Flutter debug artifacts
         run: |
           set -e
           test -s build/ios/debug/ipa/Runner-Debug.ipa
-          unzip -l build/ios/debug/ipa/Runner-Debug.ipa | grep -q 'Payload/Runner.app/Runner'
-          unzip -l build/ios/debug/ipa/Runner-Debug.ipa | grep -q 'Payload/Runner.app/Frameworks/App.framework/'
+          unzip -l build/ios/debug/ipa/Runner-Debug.ipa | grep -q 'Payload/Runner.app/Runner$'
+          unzip -l build/ios/debug/ipa/Runner-Debug.ipa | grep -q 'Payload/Runner.app/Frameworks/App.framework'
           unzip -l build/ios/debug/ipa/Runner-Debug.ipa | grep -q 'Payload/Runner.app/flutter_assets/'
 
       - name: Upload Debug IPA

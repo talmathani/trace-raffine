@@ -28,8 +28,8 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Generate iOS Flutter configuration
-        run: flutter build ios --config-only --debug
+      - name: Prepare Flutter iOS artifacts
+        run: flutter precache --ios
 
       - name: Build unsigned Debug archive
         run: |

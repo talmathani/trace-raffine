@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TRACÉ RAFFINÉ — Authentication</title>
+</head>
+<body>
+  <p>Authentication complete. Returning to TRACÉ RAFFINÉ…</p>
+
+  <script>
+    (function () {
+      const callbackUrl = window.location.href;
+      const message = {
+        'flutter-web-auth-2': callbackUrl
+      };
+
+      if (window.opener && !window.opener.closed) {
+        window.opener.postMessage(message, window.location.origin);
+        window.close();
+        return;
+      }
+
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage(message, window.location.origin);
+        return;
+      }
+
+      try {
+        window.localStorage.setItem(
+          'flutter-web-auth-2',
+          callbackUrl
+        );
+      } catch (_) {}
+
+      setTimeout(function () {
+        window.close();
+      }, 100);
+    })();
+  </script>
+</body>
+</html>

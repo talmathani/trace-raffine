@@ -1,0 +1,9 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  exclude:
+    - third_party/**
+    - lib/**/*.before_*.dart
+    - lib/**/before_*.dart
+    - security_audit_backups/**
+

@@ -7,6 +7,7 @@ import 'package:trace_raffine/core/ui/maison_surface.dart';
 import 'package:trace_raffine/core/ui/maison_app_bar.dart';
 import 'package:trace_raffine/core/appwrite/appwrite_service.dart';
 import 'package:trace_raffine/core/functions/function_invoker.dart';
+import 'designer_review_status_screen.dart';
 import '../orders/domain/entities/order.dart';
 import 'domain/models/designer_design_model.dart';
 import 'presentation/providers/designer_dashboard_providers.dart';
@@ -54,7 +55,20 @@ class DesignerEarningsScreen extends ConsumerWidget {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        appBar: const MaisonAppBar(title: 'أرباح المصمم'),
+        appBar: MaisonAppBar(
+          title: 'أرباح المصمم',
+          actions: [
+            IconButton(
+              tooltip: 'حالة المراجعة',
+              icon: const Icon(Icons.fact_check_outlined),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const DesignerReviewStatusScreen(),
+                ),
+              ),
+            ),
+          ],
+        ),
         body: RefreshIndicator(
           onRefresh: () async {
             ref.invalidate(designerEarningsOrdersProvider);
@@ -327,7 +341,9 @@ Future<void> _showDesignerWithdrawalDialog(
               try {
                 final user = await AppwriteService.account.get();
                 final result = await FunctionInvoker.create().requestDesignerWithdrawal(userId: user.$id, amount: amount, method: method, currency: currency);
-                if (result['success'] != true) throw StateError(result['error']?.toString() ?? 'تعذر إنشاء طلب السحب.');
+                if (result['success'] != true) {
+                  throw StateError(result['error']?.toString() ?? 'تعذر إنشاء طلب السحب.');
+                }
                 if (context.mounted) {
                   Navigator.pop(dialogContext);
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم إرسال طلب السحب للمراجعة.')));
@@ -542,9 +558,12 @@ class _EarningsBars extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 6),
-                      FractionallySizedBox(
-                        heightFactor: maxValue == 0 ? 0.02 : (values[i] / maxValue).clamp(0.02, 1.0),
-                        widthFactor: 0.55,
+                      SizedBox(
+                        height: 90 *
+                            (maxValue == 0
+                                ? 0.02
+                                : (values[i] / maxValue).clamp(0.02, 1.0)),
+                        width: double.infinity,
                         child: DecoratedBox(
                           decoration: BoxDecoration(
                             color: AppTheme.primaryBurgundy,

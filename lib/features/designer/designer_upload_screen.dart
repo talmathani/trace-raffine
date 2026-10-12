@@ -4,6 +4,7 @@ import 'package:appwrite/appwrite.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:image/image.dart' as image_processing;
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:trace_raffine/core/responsive/app_breakpoints.dart';
 import 'package:trace_raffine/core/theme/app_theme.dart';
 import 'package:trace_raffine/core/ui/maison_surface.dart';
@@ -99,10 +100,20 @@ class _DesignerUploadScreenState extends State<DesignerUploadScreen> {
 
     // Give the browser one frame before any CPU-heavy image work.
     await Future<void>.delayed(Duration.zero);
-    final preparation = _preparePreviewImage(
-      bytes: originalBytes,
-      originalName: file.name,
-    );
+    // Flutter Web runs this synchronous image codec work on the UI event loop.
+    // Keep the original bytes on web so selecting a large image cannot freeze
+    // the form while decode/resize/JPEG encoding runs. Native builds retain the
+    // existing compression path to reduce upload size.
+    final preparation = kIsWeb
+        ? _PreviewImagePreparation(
+            bytes: originalBytes,
+            fileName: file.name,
+            wasCompressed: false,
+          )
+        : _preparePreviewImage(
+            bytes: originalBytes,
+            originalName: file.name,
+          );
     compressionStopwatch.stop();
 
     debugPrint(

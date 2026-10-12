@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:appwrite/appwrite.dart';
+import 'package:trace_raffine/core/appwrite/appwrite_config.dart';
 import 'package:flutter/foundation.dart';
 import 'package:trace_raffine/core/appwrite/appwrite_database_constants.dart';
 import 'package:trace_raffine/core/appwrite/appwrite_database_service.dart';
@@ -33,6 +34,7 @@ class DesignerDesignAppwriteDataSource {
       data: data,
       permissions: [
         Permission.read(Role.user(data['designer_id']?.toString() ?? '')),
+        Permission.read(Role.team(AppwriteConfig.adminsTeamId)),
         Permission.update(Role.user(data['designer_id']?.toString() ?? '')),
         Permission.delete(Role.user(data['designer_id']?.toString() ?? '')),
       ],

@@ -19,18 +19,22 @@ void main() {
             (ref) async => <String, dynamic>{'success': true, 'sales': []},
           ),
           designerDesignsProvider.overrideWith(
-            (ref) async => <DesignerDesignModel>[],
+            (ref) => Stream<List<DesignerDesignModel>>.value(
+              <DesignerDesignModel>[],
+            ),
           ),
         ],
         child: const MaterialApp(home: DesignerEarningsScreen()),
       ),
     );
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.byTooltip('حالة المراجعة'), findsOneWidget);
 
     await tester.tap(find.byTooltip('حالة المراجعة'));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.byType(DesignerReviewStatusScreen), findsOneWidget);
   });

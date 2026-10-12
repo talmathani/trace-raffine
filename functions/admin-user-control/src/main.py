@@ -577,10 +577,32 @@ def _handle_grant_design_admin_file_access(context, user_id: str, body):
             403,
         )
 
+    # Storage file permissions in this project reject team roles. Resolve confirmed
+    # administrators server-side and grant explicit per-user read permissions.
+    teams = Teams(client)
+    memberships = teams.list_memberships(team_id=ADMINS_TEAM_ID)
+    membership_items = (
+        memberships.get("memberships", [])
+        if isinstance(memberships, dict)
+        else getattr(memberships, "memberships", [])
+    )
+    admin_user_ids = sorted({
+        str(item.get("userId", "")).strip()
+        for item in membership_items
+        if isinstance(item, dict)
+        and bool(item.get("confirm", False))
+        and str(item.get("userId", "")).strip()
+    })
+    if not admin_user_ids:
+        return context.res.json(
+            {"success": False, "error": "No confirmed administrators found in tr-admins"},
+            503,
+        )
+
     updated_permissions = [
         owner_read,
         f'delete("user:{user_id}")',
-        'read("team:tr-admins")',
+        *[f'read("user:{admin_id}")' for admin_id in admin_user_ids],
     ]
     storage.update_file(
         bucket_id="design-files",
